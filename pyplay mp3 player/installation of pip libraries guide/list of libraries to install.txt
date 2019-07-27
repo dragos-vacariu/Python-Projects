@@ -1,0 +1,44 @@
+List of libraries to install after installing Python:
+
+Here is how to do it:
+Open command prompt and enter the command:
+
+For Windows 7:
+cd "filepath to Python executable" -> EX: cd C:/Python34/python.exe
+
+For Windows 10:
+cd /d "filepath to Python executable" -> EX: cd /d C:/Python34/python.exe
+
+
+
+The libraries to install are the following:
+
+1. Name: Pygame
+Cmd Command: python -m pip install pygame
+
+2. Name: Mutagen
+Cmd Command: python -m pip install mutagen
+
+3. Name: PIL
+Cmd Command: python -m pip install pillow
+
+4. Name: urllib3
+Cmd Command: python -m pip install urllib3
+
+5. Name: BeautifulSoup
+Cmd Command: python -m pip install beautifulsoup
+
+
+You can also download each library, and install it by using .tar, .egg or .whl file
+You can download the preinstalled version also.
+
+
+To create a .bat file, open Notepad and write:
+
+"filepath to python\python.exe" "filepath to project location\mp3player_main_py34.py" pause
+
+OR if you are going to save the file in the project directory:
+"filepath to python\python.exe" "mp3player_main_py34.py" pause
+
+Save the file with the extension .bat
+
