@@ -135,7 +135,10 @@ class Window(ABC): #let this class be abstract
     def destroy(self):
         global dialog
         self.top.destroy()
-        dialog = None        
+        if type(dialog) == Mp3TagModifierTool:
+           global progressViewRealTime
+           progressViewRealTime = 0.8 # set back the default value for progress.
+        dialog = None
         
     def take_focus(self):
         self.top.wm_attributes("-topmost", 1)
@@ -1371,6 +1374,7 @@ class Mp3TagModifierTool(Window):
         self.GenreTag.insert(0, self.Song.Genre)
         self.GenreTag.place(x=columnOne, y=65)
         self.GenreTag.bind("<Key>", self.setNAOnTags)
+        
         tk.Label(self.top, text="Tagging Case:", fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=500, y=65)
         self.tagTextFormat = StringVar()
         self.tagTextFormat.set("NA")
@@ -1383,21 +1387,25 @@ class Mp3TagModifierTool(Window):
         self.YearTag.insert(0, self.Song.Year)
         self.YearTag.place(x=columnTwo, y=65)
         self.YearTag.bind("<Key>", self.setNAOnTags)
+        
         tk.Label(self.top, text="Album:", fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=columnThree, y=45)
         self.AlbumTag = tk.Entry(self.top, width=30)
         self.AlbumTag.insert(0, self.Song.Album)
         self.AlbumTag.place(x=columnThree, y=65)
         self.AlbumTag.bind("<Key>", self.setNAOnTags)
+        
         tk.Label(self.top, text="Artist:", fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=columnOne, y=85)
         self.ArtistTag = tk.Entry(self.top, width=35)
         self.ArtistTag.insert(0, self.Song.Artist)
         self.ArtistTag.place(x=columnOne, y=105)
         self.ArtistTag.bind("<Key>", self.setNAOnTags)
+        
         tk.Label(self.top, text="Title:", fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=250, y=85)
         self.TitleTag = tk.Entry(self.top, width=35)
         self.TitleTag.insert(0, self.Song.Title)
         self.TitleTag.place(x=250, y=105)
         self.TitleTag.bind("<Key>", self.setNAOnTags)
+        
         RemoveCharsButton = tk.Button(self.top, text="Remove Special Characters", command=self.removeChars, fg=fontColor.get(), font=allButtonsFont,
                                 bg=color)
         RemoveCharsButton.place(x=columnOne, y=145)
@@ -1458,6 +1466,10 @@ class Mp3TagModifierTool(Window):
         self.top.bind("<Tab>", self.focus_out)
         self.top.bind("<Escape>", self.destroyEsc)
         dialog = self
+        
+        #this is for input-speed purposes:
+        global progressViewRealTime
+        progressViewRealTime = 0.1 # the main progress function will influence the input speed. Make sure it's close to instant while this window is openened. 
     
     def filterArtistTitleForWebSearch(self, value):
         if value != "Various":
