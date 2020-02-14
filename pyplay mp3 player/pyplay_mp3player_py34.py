@@ -1846,20 +1846,22 @@ class Mp3TagModifierTool(Window):
                         value = song.fileName.split("-")
                         song.Artist = value[0].strip(" ")
                         value[1] = value[1].strip(" ")
-                        song.Title = value[1].rstrip(".mp3 ")
-                        song.Title = value[1].rstrip(".MP3 ")
-                        song.Title = value[1].rstrip(".mP3 ")
-                        song.Title = value[1].rstrip(".Mp3 ")
+                        value[1] = value[1].rstrip(".mp3")
+                        value[1] = value[1].rstrip(".MP3")
+                        value[1] = value[1].rstrip(".mP3")
+                        value[1] = value[1].rstrip(".Mp3")
+                        song.Title = value[1]
                         mp3file["artist"] = song.Artist
                         mp3file["title"] = song.Title
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = song.Title
                     else:
-                        song.Artist = value[0].strip(" ")
-                        song.Artist = value[0].rstrip(".MP3 ")
-                        song.Artist = value[0].rstrip(".mP3 ")
-                        song.Artist = value[0].rstrip(".Mp3 ")
-                        song.Artist = value[0].rstrip(".mp3 ")
+                        value[0] = value[0].strip(" ")
+                        value[0] = value[0].rstrip(".MP3")
+                        value[0] = value[0].rstrip(".mP3")
+                        value[0] = value[0].rstrip(".Mp3")
+                        value[0] = value[0].rstrip(".mp3")
+                        song.Artist = value[0]
                         mp3file["artist"] = song.Artist
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = ""
@@ -2090,7 +2092,7 @@ class Mp3TagModifierTool(Window):
                 self.TitleTag.insert(0, value[1])
             else:
                 self.ArtistTag.delete(0, tk.END)
-                self.ArtistTag.insert(0, self.NameTag.get().rstrip(".mp3 "))
+                self.ArtistTag.insert(0, self.NameTag.get().rstrip(".mp3"))
         else:
             messagebox.showinfo("Information", "The name should not be empty.")
 
