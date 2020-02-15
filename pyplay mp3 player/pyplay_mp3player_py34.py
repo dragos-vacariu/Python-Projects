@@ -1440,7 +1440,7 @@ class Mp3TagModifierTool(Window):
         else:
             self.undoMassRenameButton.config(state = tk.DISABLED)
 
-        self.MassArtistTitleComposeButton = tk.Button(self.top, text="Compose Artist/Title from Filename to All Files'", command=self.composeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont,
+        self.MassArtistTitleComposeButton = tk.Button(self.top, text="Compose Artist/Title from Filename to All Files", command=self.composeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont,
                                       bg=color)
         if play_list.useMassFileEditor:
             self.MassArtistTitleComposeButton.config(state = tk.NORMAL)
@@ -1705,12 +1705,16 @@ class Mp3TagModifierTool(Window):
                     else:
                         if MassFileEditor == False:
                             messagebox.showinfo("Information", "There is no webpage available to find the year.")
+                        else:
+                            return objectSong.fileName #return the name of item which was not found on web
                 else:
                     if MassFileEditor == False:
                         messagebox.showinfo("Information", "There is no webpage available for this album.")
                     else:
                         return objectSong.fileName #return the name of item which was not found on web
-        return None                    
+        else:
+            return objectSong.fileName #return the name of item which was not found on web
+        return None  #File was found.                  
 
     def removeSpecialChars(self, originalNameValue):
         originalNameValue = originalNameValue.replace(" & ", " and ")

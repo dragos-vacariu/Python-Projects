@@ -18,6 +18,9 @@ ALLARTISTTITLE.backup -> is the file created to keep tracking of the Artist and 
 MASS FILE EDITOR to compose these 2 tags from FileName. If you remove this file, you will not be able to undo the changes
 the Script has performed to all your Mp3 file Tags.
 
+SongStats.sts -> is the file which will store information about each file in your library. Information such us: No. of Plays, Song Time 
+Listened, Song Rating, Favorite Song, etc.
+
 
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
 
