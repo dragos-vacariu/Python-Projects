@@ -1342,6 +1342,7 @@ class Mp3TagModifierTool(Window):
         global dialog
         self.undoRenameBackupFile = "RENAMEALLFILES.backup"
         self.undoArtistTitleBackupFile = "ALLARTISTTITLE.backup"
+        self.undoAlbumYearBackupFile = "PREVIOUSALBUMYEAR.backup"
         color = OpenFileButton["bg"]  # get the color which the rest of elements is using at the moment
         self.top = tk.Toplevel(window, bg=color)
         Window_Title = "Mp3TagModifier Tool"
@@ -1416,7 +1417,7 @@ class Mp3TagModifierTool(Window):
         
         SaveChangesButton = tk.Button(self.top, text="Save Changes", command=self.SaveChanges, fg=fontColor.get(), font=allButtonsFont,
                                 bg=color)
-        SaveChangesButton.place(x=columnOne, y=265)
+        SaveChangesButton.place(x=columnOne, y=295)
         
         ComposeFileNameButton = tk.Button(self.top, text="Compose Filename from 'Artist - Title'", command=self.composeFileName, fg=fontColor.get(), font=allButtonsFont,
                                         bg=color)
@@ -1452,17 +1453,33 @@ class Mp3TagModifierTool(Window):
             self.undoMassArtistTitleComposeButton.config(state = tk.NORMAL)
         else:
             self.undoMassArtistTitleComposeButton.config(state = tk.DISABLED)
-
+        
+        GrabAlbumYearToAll = tk.Button(self.top, text="Grab missing Album\Year to All Files", command=self.grabAlbumYearToAllFiles, fg=fontColor.get(), font=allButtonsFont,
+                              bg=color)
+        if play_list.useMassFileEditor:
+            GrabAlbumYearToAll.config(state = tk.NORMAL)
+        else:
+            GrabAlbumYearToAll.config(state = tk.DISABLED)
+        
+        undoAlbumYearToAll = tk.Button(self.top, text="Undo Album/Year to All Files", command=self.undoAlbumYearToAllFiles, fg=fontColor.get(), font=allButtonsFont,
+                              bg=color)
+        if play_list.useMassFileEditor and os.path.exists(self.undoArtistTitleBackupFile):
+            undoAlbumYearToAll.config(state = tk.NORMAL)
+        else:
+            undoAlbumYearToAll.config(state = tk.DISABLED)
+        
         buttonColumnTwo = columnOne + ComposeFileNameButton.winfo_reqwidth() + 50 #50 will be the margin between the 2 columns
         self.MassRenameButton.place(x=buttonColumnTwo, y=145)
         self.undoMassRenameButton.place(x=buttonColumnTwo, y=175)
         self.MassArtistTitleComposeButton.place(x=buttonColumnTwo, y=205)
         self.undoMassArtistTitleComposeButton.place(x=buttonColumnTwo, y=235)
+        GrabAlbumYearToAll.place(x=buttonColumnTwo, y=265)
+        undoAlbumYearToAll.place(x=buttonColumnTwo, y=295)
         
         windowWidth = buttonColumnTwo + self.MassArtistTitleComposeButton.winfo_reqwidth() + 20 #  #20 will be the margin between button and end of window.
         if FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50 > windowWidth: #make sure this element is also visible in the given window.
             windowWidth = FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50
-        self.top.geometry(str(windowWidth)+"x320+100+100")
+        self.top.geometry(str(windowWidth)+"x360+100+100")
         self.top.bind("<Tab>", self.focus_out)
         self.top.bind("<Escape>", self.destroyEsc)
         dialog = self
@@ -1471,6 +1488,96 @@ class Mp3TagModifierTool(Window):
         global progressViewRealTime
         progressViewRealTime = 0.1 # the main progress function will influence the input speed. Make sure it's close to instant while this window is openened. 
     
+    def undoAlbumYearToAllFiles(self):
+        if os.path.exists(self.undoAlbumYearBackupFile):
+            try:
+                file = open(self.undoAlbumYearBackupFile, "rb")
+                dict_list = pickle.load(file)
+                file.close()
+            except Exception:
+                print("Exception when loading File: " + str(self.undoArtistTitleBackupFile))
+                print("The content of backup file has been corrupted.")
+            else:
+                for song in play_list.validFiles:
+                    for element in dict_list:
+                        if element['fileName'] == song.fileName:
+                            if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                pygame.mixer.music.stop()
+                                pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                            mp3file = EasyID3(song.filePath)
+                            song.Album = element['oldAlbum']
+                            song.Year = element['oldYear']
+                            mp3file["album"] = song.Album
+                            mp3file["date"] = song.Year
+                            if song.Album == "":
+                                song.Album = "Various"
+                            if song.Year == "":
+                                song.Year = "Various"
+                            mp3file.save(v2_version=3)
+                            del dict_list[dict_list.index(element)]
+                            break
+                            
+                if len(dict_list) > 0 :
+                    message = ""
+                    for element in dict_list:
+                        message += element['fileName'] + "\n"
+                    messagebox.showinfo("Information", "Some files not found within playlist:\n" + message)
+                else:
+                    messagebox.showinfo("Information", "Operation Done\n\nPrevious Album/Year tags have been restored.")
+                self.AlbumTag.delete(0, tk.END)
+                self.AlbumTag.insert(0, self.Song.Album)
+                self.YearTag.delete(0, tk.END)
+                self.YearTag.insert(0, self.Song.Year)
+                file = open(self.undoAlbumYearBackupFile, "wb")
+                pickle.dump(dict_list, file)
+                file.close()
+    
+    def grabAlbumYearToAllFiles(self): 
+        dictionary={}
+        dict_list=[]
+        not_found = []
+        dict_loaded=False
+        alreadyContained = False
+        if os.path.exists(self.undoAlbumYearBackupFile):
+            try:
+                file = open(self.undoAlbumYearBackupFile, "rb")
+                dict_list = pickle.load(file)
+            except Exception:
+                dict_list = [] #make sure it's empty
+                print("Exception when loading File: " + str(self.undoAlbumYearBackupFile))
+                print("Since the content has been corrupted, your file will be replaced.")
+            else:
+                dict_loaded = True
+                file.close()
+        
+        for song in play_list.validFiles:
+            dictionary['fileName'] = song.fileName
+            dictionary['oldAlbum'] = song.Album if song.Album != "Various" else ""
+            dictionary['oldYear'] = song.Year if song.Year != "Various" else ""
+            ret_val = self.grabAlbumAndYear(song)
+            if ret_val != None:
+                not_found.append(ret_val)
+            else:
+                dictionary['newAlbum'] = song.Album
+                dictionary['newYear'] = song.Year
+                if dict_loaded:
+                    for element in dict_list:
+                        if element["fileName"] == song.fileName:
+                            dictionary['oldAlbum'] = element["oldAlbum"]
+                            dictionary['oldYear'] = element["oldYear"]
+                            break
+                dict_list.append(dictionary)
+            dictionary = {}
+        if len(not_found) > 0:
+            messagebox.showinfo("Information", "Operation Done\n\nThe data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
+        else:
+            messagebox.showinfo("Information", "Operation Done\n\nThe data was collected from the Internet.")
+
+        if len(dict_list) > 0: # we have files changes
+            file = open(self.undoAlbumYearBackupFile, "wb") 
+            pickle.dump(dict_list, file)
+            file.close()
+        
     def filterArtistTitleForWebSearch(self, value):
         if value != "Various":
             value = value.replace("'", "")
@@ -1528,56 +1635,82 @@ class Mp3TagModifierTool(Window):
             return text
         return False
     
-    def grabAlbumAndYear(self): 
+    def grabAlbumAndYear(self, song_param=None):
+        MassFileEditor = True if type(song_param)==Song else False
+        if MassFileEditor == False:
+            objectSong = self.Song
+        else:
+            objectSong = song_param
         urllib3.disable_warnings()
-        text_list = []
-        if self.Song.Album == "Various":
-            artist = self.Song.Artist
-            artist = self.filterArtistTitleForWebSearch(artist)
-            title = self.Song.Title
-            title = self.filterArtistTitleForWebSearch(title)
-            if artist!= False and title!=False:
-                url = "https://www.last.fm/music/" + artist + "/_/" + title # this is possible to change with time. Let's hope it doesn't
-                http = urllib3.PoolManager()
-                try:
-                    response = http.request('GET', url)
-                except NewConnectionError as exp:  # This is the correct syntax
-                    print("Unable to establish connection to the server: last.fm")
-                    print("Error Message: " + str(exp))
-                    print("Please check your internet connection before proceed.")
-                except Exception:
-                    print("An exception has been handled. I am sorry but I'm unable to retrieve info.")
-                else:
-                    if response.status == 200:
-                        text = self.filterAlbumFromLastFM(response.data)
-                        if text != False:
+        
+        artist = objectSong.Artist
+        artist = self.filterArtistTitleForWebSearch(artist)
+        title = objectSong.Title
+        title = self.filterArtistTitleForWebSearch(title)
+        if artist!= False and title!=False:
+            url = "https://www.last.fm/music/" + artist + "/_/" + title # this is possible to change with time. Let's hope it doesn't
+            http = urllib3.PoolManager()
+            try:
+                response = http.request('GET', url)
+            except NewConnectionError as exp:  # This is the correct syntax
+                print("Unable to establish connection to the server: last.fm")
+                print("Error Message: " + str(exp))
+                print("Please check your internet connection before proceed.")
+            except Exception:
+                print("An exception has been handled. I am sorry but I'm unable to retrieve info.")
+            else:
+                if response.status == 200:
+                    text = self.filterAlbumFromLastFM(response.data)
+                    if text != False:
+                        if MassFileEditor == False:
                             self.AlbumTag.delete(0, tk.END)
                             self.AlbumTag.insert(tk.END, text)
-                            text = text.replace(" ", "+")
-                            url = "https://www.last.fm/music/" + artist + "/" + text # this is possible to change with time. Let's hope it doesn't
-                            try:
-                                response = http.request('GET', url)
-                            except NewConnectionError as exp:  # This is the correct syntax
-                                print("Unable to establish connection to the server: last.fm")
-                                print("Error Message: " + str(exp))
-                                print("Please check your internet connection before proceed.")
-                            except Exception:
-                                print("An exception has been handled. I am sorry but I'm unable to retrieve info.")
-                            else:
-                                if response.status == 200:
-                                    text = self.filterYearFromLastFM(response.data)
-                                    if text != False:
-                                        year = text.split(" ")[len(text.split(" "))-1] # because the I only want to store the year, discard the day and the month.
+                        else:
+                            mp3file = EasyID3(objectSong.filePath)
+                            mp3file["album"] = text
+                            objectSong.Album = text
+                            mp3file.save(v2_version=3)
+                            if objectSong == self.Song:
+                                self.AlbumTag.delete(0, tk.END)
+                                self.AlbumTag.insert(tk.END, text)
+                        text = text.replace(" ", "+")
+                        url = "https://www.last.fm/music/" + artist + "/" + text # this is possible to change with time. Let's hope it doesn't
+                        try:
+                            response = http.request('GET', url)
+                        except NewConnectionError as exp:  # This is the correct syntax
+                            print("Unable to establish connection to the server: last.fm")
+                            print("Error Message: " + str(exp))
+                            print("Please check your internet connection before proceed.")
+                        except Exception:
+                            print("An exception has been handled. I am sorry but I'm unable to retrieve info.")
+                        else:
+                            if response.status == 200:
+                                text = self.filterYearFromLastFM(response.data)
+                                if text != False:
+                                    year = text.split(" ")[len(text.split(" "))-1] # because the I only want to store the year, discard the day and the month.
+                                    if MassFileEditor == False:
                                         self.YearTag.delete(0, tk.END)
                                         self.YearTag.insert(tk.END, year)
                                     else:
+                                        mp3file = EasyID3(objectSong.filePath)
+                                        mp3file["date"] = year
+                                        objectSong.Year = year
+                                        mp3file.save(v2_version=3)
+                                        if objectSong == self.Song:
+                                            self.YearTag.delete(0, tk.END)
+                                            self.YearTag.insert(tk.END, year)
+                                else:
+                                    if MassFileEditor == False:
                                         messagebox.showinfo("Information", "The year could not be found on Web.")
-                        else:
-                             messagebox.showinfo("Information", "There is no webpage available to find the year.")
                     else:
+                        if MassFileEditor == False:
+                            messagebox.showinfo("Information", "There is no webpage available to find the year.")
+                else:
+                    if MassFileEditor == False:
                         messagebox.showinfo("Information", "There is no webpage available for this album.")
-                            
-        return text_list
+                    else:
+                        return objectSong.fileName #return the name of item which was not found on web
+        return None                    
 
     def removeSpecialChars(self, originalNameValue):
         originalNameValue = originalNameValue.replace(" & ", " and ")
@@ -1844,24 +1977,31 @@ class Mp3TagModifierTool(Window):
                         pygame.mixer.music.load("clear.mp3") #use this file to release the playback
                     if "-" in song.fileName:
                         value = song.fileName.split("-")
-                        song.Artist = value[0].strip(" ")
-                        value[1] = value[1].strip(" ")
+                        value[0] = [n.capitalize() for n in value[0].split(" ")] #perform Capitalization for Artist Name
+                        song.Artist = " ".join(value[0])
                         value[1] = value[1].rstrip(".mp3")
                         value[1] = value[1].rstrip(".MP3")
                         value[1] = value[1].rstrip(".mP3")
                         value[1] = value[1].rstrip(".Mp3")
-                        song.Title = value[1]
+                        value[1] = value[1].strip(" ")
+                        ##this will perform Capitalization and Semi-Capitalization for the Title
+                        if len(value[1].split(" ")) > 2:
+                            song.Title = value[1][0].capitalize() + value[1][1:].lower()
+                        else:
+                            value[1] = [n.capitalize() for n in value[1].split(" ")]
+                            song.Title = " ".join(value[1])
+                        song.Title = song.Title.strip(" ")
+                        song.Artist = song.Artist.strip(" ")
                         mp3file["artist"] = song.Artist
                         mp3file["title"] = song.Title
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = song.Title
                     else:
-                        value[0] = value[0].strip(" ")
                         value[0] = value[0].rstrip(".MP3")
                         value[0] = value[0].rstrip(".mP3")
                         value[0] = value[0].rstrip(".Mp3")
                         value[0] = value[0].rstrip(".mp3")
-                        song.Artist = value[0]
+                        song.Artist = value[0].strip(" ")
                         mp3file["artist"] = song.Artist
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = ""
@@ -2082,17 +2222,34 @@ class Mp3TagModifierTool(Window):
             if "-" in self.NameTag.get():
                 value = self.NameTag.get()
                 value = value.split("-")
+                value[0] = value[0].strip(" ")
+                value[0] = [n.capitalize() for n in value[0].split(" ")] #perform Capitalization for Artist Name
                 self.ArtistTag.delete(0,tk.END)
-                self.ArtistTag.insert(0, value[0].strip(" "))
+                value[0] = " ".join(value[0])
+                value[0] = value[0].strip(" ")
+                self.ArtistTag.insert(0, value[0])
                 self.TitleTag.delete(0, tk.END)
-                value[1] = value[1].strip(" ") #remove any whitespaces at the beginning, or end
                 value[1] = value[1].rstrip(".mp3")
                 value[1] = value[1].rstrip(".MP3")
                 value[1] = value[1].rstrip(".Mp3")
-                self.TitleTag.insert(0, value[1])
+                value[1] = value[1].rstrip(".mP3")
+                value[1] = value[1].strip(" ")
+                ##this will perform Capitalization and Semi-Capitalization for the Title
+                if len(value[1].split(" ")) > 2:
+                    val = value[1][0].capitalize() + value[1][1:].lower()
+                    self.TitleTag.insert(0, val)
+                else:
+                    value[1] = [n.capitalize() for n in value[1].split(" ")]
+                    value[1] = " ".join(value[1])
+                    self.TitleTag.insert(0, value[1].strip(" "))
             else:
                 self.ArtistTag.delete(0, tk.END)
-                self.ArtistTag.insert(0, self.NameTag.get().rstrip(".mp3"))
+                value = self.NameTag.get().rstrip(".mp3")
+                value = self.NameTag.get().rstrip(".mP3")
+                value = self.NameTag.get().rstrip(".Mp3")
+                value = self.NameTag.get().rstrip(".MP3")
+                value = value.strip(" ")
+                self.ArtistTag.insert(0, value)
         else:
             messagebox.showinfo("Information", "The name should not be empty.")
 
