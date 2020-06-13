@@ -1,4 +1,4 @@
-If the script crashes on startup, problem might be cause by the backup files.
+If the script crashes on startup, problem should be cause by the backup files.
 
 Here is the legend of backup files for you to decide which to remove in these circumstances:
 
@@ -11,7 +11,7 @@ In this file is stored the initial tag value for album name/ year of the .mp3 fi
 to undo the changes performed by the Script to all your mp3 files.
 
 PlayListBackup.pypl -> is the file which stores the details, and location of all the songs in 
-your Playlist, if you remove this the playlist is set to Defaults. 
+your Playlist, if you remove this, the playlist is set to Defaults Skin & Colors and you might lose data like SongStats.
 
 
 ALLARTISTTITLE.backup -> is the file created to keep tracking of the Artist and Title tags, when using
@@ -19,7 +19,8 @@ MASS FILE EDITOR to compose these 2 tags from FileName. If you remove this file,
 the Script has performed to all your Mp3 file Tags.
 
 SongStats.sts -> is the file which will store information about each file in your library. Information such us: No. of Plays, Song Time 
-Listened, Song Rating, Favorite Song, etc.
+Listened, Song Rating, Favorite Song, etc. The information is being taken from the Playlist which is currently loaded (which most of 
+the time coincides with PlayListBackup.pypl), and gets tranfered to SongStats.sts whenever the New Playlist button is hit. 
 
 
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
