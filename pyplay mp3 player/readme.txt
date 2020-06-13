@@ -36,5 +36,7 @@ https://mega.nz/#F!GYxHjSgD!NM0715JCrPXXhfPERyLe-w
 
 There is also a compiled version available for WINDOWS only.
 
+You can also use setup_for_py2exe.py to build and executable from this script.
+
 Official Website:
 https://pyplay-mp3player.site123.me
