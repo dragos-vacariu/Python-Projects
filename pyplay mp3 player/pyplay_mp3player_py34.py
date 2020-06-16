@@ -44,7 +44,7 @@ class Playlist:
         self.validFiles = []
         self.slideImages = []
         self.slideImagesTransitionSeconds = 0;
-        self.usePlayerTitleTransition = True
+        self.usePlayerTitleTransition = False
         self.playingFileNameTransition = "separation" # values : separation, typewriting, none
         self.usingSlideShow = False
         self.slideImageIndex = 0
@@ -159,6 +159,7 @@ class Window(ABC): #let this class be abstract
     def take_focus(self):
         self.top.wm_attributes("-topmost", 1)
         self.top.grab_set()
+        self.top.focus()
     
     def focus_out(self, event):
         window.wm_attributes("-topmost", 1)
@@ -450,23 +451,15 @@ class SearchTool(Window):
                                 bg=color)
         BackwardButton.pack()
         dialog = self
-        
-        #this will read the input just after the window is opened
-        self.top.wm_attributes("-topmost", 1)
-        self.top.grab_set()
-        self.top.focus()
-        self.searchValue.focus()
-        
-        #this is for input-speed purposes:
-        global progressViewRealTime
-        progressViewRealTime = 0.1 # the main progress function will influence the input speed. Make sure it's close to instant while this window is openened. 
+               
+        #this will read/process the input just after the window is opened
+        self.take_focus()
+        self.focus_Input("<Key>")
     
     def destroy(self):
         global dialog
-        global progressViewRealTime
         self.top.destroy()
         self.top = None
-        progressViewRealTime = 1 # set back the default value for progress.
         dialog = None
         displayElementsOnPlaylist()
         showCurrentSongInList()
@@ -542,12 +535,6 @@ class SearchTool(Window):
     
     def destroyEsc(self,event):
         self.destroy()
-
-    def take_focus(self):
-        self.top.wm_attributes("-topmost", 1)
-        self.top.grab_set()
-        self.top.focus()
-        self.searchValue.force_focus()
 
 class Slideshow(Window):
     #static variables
@@ -722,6 +709,10 @@ class SleepingTool(Window):
         self.top.bind("<Escape>", self.destroyEsc)
         self.top.bind("<Tab>", self.focus_Input)
         dialog = self
+        
+        #this will read/process the input just after the window is opened
+        self.take_focus()
+        self.focus_Input("<Key>")
 
     def eventSleeping(self, event):
         self.sleeping()
@@ -758,11 +749,6 @@ class SleepingTool(Window):
                     self.wakeUpScheduler.run()
             if self.top !=None:
                 self.destroy()
-
-    def take_focus(self):
-        self.top.wm_attributes("-topmost", 1)
-        self.top.grab_set()
-        self.timeInterval.focus_force()
     
     def sleeping(self):
         global dialog
@@ -1038,7 +1024,7 @@ class Customize(Window):
         tk.Checkbutton(self.top, text="Use mass file editor capabilities.", fg=fontColor.get(), font=allButtonsFont.get(),
                        bg=color, variable=self.MassFileEditorUsage, command=self.enableDisableMassFileEditor,
                        selectcolor="black").place(x=200, y=480)
-		
+        
         self.resetSettingsVar = tk.IntVar()
         self.resetSettingsVar.set(int(play_list.resetSettings))
         tk.Checkbutton(self.top, text="Reset Settings on New Playlist.", fg=fontColor.get(), font=allButtonsFont.get(),
@@ -1162,7 +1148,7 @@ class Customize(Window):
             play_list.useMassFileEditor = True
         else:
             play_list.useMassFileEditor = False
-		
+        
     def enableDisableCrossFade(self):
         global play_list
         global temp_SongEndPos
@@ -1292,7 +1278,11 @@ class Customize(Window):
         if play_list.usePlayerTitleTransition == True:
             play_list.usePlayerTitleTransition = False
             self.TitleTransitionButtonText.set("Title Transition OFF")
-            window.title("   PyPlay MP3 Player in Python     ")
+            if play_list.useSongNameTitle:
+                Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
+                window.title(Project_Title)
+            else:
+                window.title("   PyPlay MP3 Player in Python     ")
         else:
             play_list.usePlayerTitleTransition = True
             self.TitleTransitionButtonText.set("Title Transition ON")
@@ -1367,6 +1357,7 @@ class WindowDialog(Window):
                     self.InfoBox(parent)
                 else:
                     self.TwoButtonDialogBox(parent)
+                self.take_focus() #make window focused
     
     def TwoButtonDialogBox(self, parent):
         global allButtonsFont
@@ -1622,16 +1613,11 @@ class Mp3TagModifierTool(Window):
         self.top.bind("<Escape>", self.destroyEsc)
         dialog = self
         
-        #this is for input-speed purposes:
-        global progressViewRealTime
-        progressViewRealTime = 0.1 # the main progress function will influence the input speed. Make sure it's close to instant while this window is openened. 
     
     def destroy(self):
         global dialog
-        global progressViewRealTime
         self.top.destroy()
         self.top = None
-        progressViewRealTime = 1 # set back the default value for progress.
         dialog = None
     
     def undoAlbumYearToAllFiles(self):
@@ -2663,7 +2649,6 @@ class GrabLyricsTool(Window):
             else:
                 self.LyricsDisplay()
             dialog = self
-
     
     def downloadAllLyrics(self):
         message = ""
@@ -2673,7 +2658,7 @@ class GrabLyricsTool(Window):
             ttl = "Searched lyrics for: " + str(i) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
             self.songIndex = i
-            text_list, source = self.accessPage(downloadForAll=True)
+            text_list, source = self.accessPage()
             if len(text_list) > 0 and source != "":
                 self.saveLyrics(text_list)
             else:
@@ -2757,7 +2742,7 @@ class GrabLyricsTool(Window):
                     text = ("Could not save Lyrics for: " + filename)
                     WindowDialog(window, text, "OK" , windowTitle = "Warning")
 
-    def accessPage(self, downloadForAll = False):
+    def accessPage(self):
         urllib3.disable_warnings()
         text_list = []
         source = ""
@@ -2797,15 +2782,9 @@ class GrabLyricsTool(Window):
                 try:
                     response = http.request('GET', url)
                 except NewConnectionError as exp:    # This is the correct syntax
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[2]:
-                        text = ("Unable to establish connection to the server: lyrics.my" +
-                                "Error Message: " + str(exp)+
-                                "Please check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    window.title("Unable to establish connection to" + str(LyricsOnlineSources[2]) + " for: " + artist + " - " + title)
                 except Exception:
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[2]:
-                        text = ("An exception has been handled. \nI am sorry but I'm unable to retrieve lyrics." + "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    window.title("Unable to retrieve lyrics for: " + artist + " - " + title + " from " + str(LyricsOnlineSources[2]))
                 else:
                     if response.status == 200:
                         text_list = self.filterTextFromLyricsMy(response.data)
@@ -2817,16 +2796,9 @@ class GrabLyricsTool(Window):
                 try:
                     response = http.request('GET', url)
                 except NewConnectionError as exp:    # This is the correct syntax
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[1]:
-                        text = ("Unable to establish connection to the server: genius.com" + 
-                            "\nError Message: " + str(exp) + 
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                    window.title("Unable to establish connection to" + str(LyricsOnlineSources[1]) + " for: " + artist + " - " + title)
                 except Exception:
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[1]:
-                        text = ("An exception has been handled. \nI am sorry but I'm unable to retrieve lyrics." +
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                    window.title("Unable to retrieve lyrics for: " + artist + " - " + title + " from " + str(LyricsOnlineSources[1]))
                 else:
                     if response.status == 200:
                         text_list = self.filterTextFromGeniusCom(response.data)
@@ -2837,16 +2809,9 @@ class GrabLyricsTool(Window):
                 try:
                     response = http.request('GET', url)
                 except NewConnectionError as exp:    # This is the correct syntax
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[3]:
-                        text = ("Unable to establish connection to the server: lyricsmix.net" +
-                            "\nError Message: " + str(exp) +
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    window.title("Unable to establish connection to" + str(LyricsOnlineSources[3]) + " for: " + artist + " - " + title)
                 except Exception:
-                    if downloadForAll==False and play_list.LyricsActiveSource == LyricsActiveSource[3]:
-                        text = ("An exception has been handled. \nI am sorry but I'm unable to retrieve lyrics." +
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    window.title("Unable to retrieve lyrics for: " + artist + " - " + title + " from " + str(LyricsOnlineSources[3]))
                 else:
                     if response.status == 200:
                         text_list = self.filterTextFromLyricsMixNet(response.data)
@@ -2857,16 +2822,9 @@ class GrabLyricsTool(Window):
                 try:
                     response = http.request('GET', url)
                 except NewConnectionError as exp:    # This is the correct syntax
-                    if downloadForAll==False:
-                        text = ("Unable to establish connection to the server: omnialyrics.it" +
-                            "\nError Message: " + str(exp) + 
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                    window.title("Unable to establish connection to" + str(LyricsOnlineSources[4]) + " for: " + artist + " - " + title)
                 except Exception:
-                    if downloadForAll==False:
-                        text = ("An exception has been handled. \nI am sorry but I'm unable to retrieve lyrics." +
-                            "\nPlease check your internet connection before proceed.")
-                        WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                    window.title("Unable to retrieve lyrics for: " + artist + " - " + title + " from " + str(LyricsOnlineSources[4]))
                 else:
                     if response.status == 200:
                         text_list = self.filterTextFromOmniaLyricsIt(response.data)
@@ -3273,7 +3231,7 @@ radioButtonsDefaultColor = "lightgray"
 custom_font_list = ["Arial 10", "Consolas 10", "Courier 9", "Verdana 9", "Georgia 9", "Tahoma 9", "Rockwell 10", "Fixedsys 11", "Candara 10", "Impact 9", \
                                     "Calibri 10 italic", "Modern 10 bold", "Harrington 10 bold", "Stencil 10 italic", "Forte 10", "System 11", "Times 11", \
                                     "Unispace 9", "Stencil 9", "Haettenschweiler 12"]
-progressViewRealTime = 1 #value in seconds
+progressViewRealTime = 0.1 #value in seconds
 play_list = Playlist()
 
 listBox_Song_selected_index = None
@@ -4248,7 +4206,7 @@ def customFontChange(event):
         listbox.see(play_list.currentSongIndex)  # Makes sure the given list index is visible. You can use an integer index,
         listbox.selection_clear(0, tk.END)  # clear existing selection
         listbox.select_set(play_list.currentSongIndex)
-        listbox.activate(listBox_Song_selected_index)
+        listbox.activate(play_list.currentSongIndex)
 
 def changeSkin(event): #this function is called when clicking on Skin ComboBox
     global backgroundFile
@@ -4476,12 +4434,12 @@ def navigationSound(event): #this function is called when clicking on the progre
             pygame.mixer.music.play() #this will restart the song
             pygame.mixer.music.set_pos(play_list.currentSongPosition) #this will set the desired position on the playback
             if play_list.validFiles[play_list.currentSongIndex].fadein_duration > 0 and play_list.currentSongPosition > (play_list.validFiles[play_list.currentSongIndex].startPos + 
-            	play_list.validFiles[play_list.currentSongIndex].fadein_duration):
-            	if pygame.mixer.music.get_volume() < play_list.VolumeLevel: #in case the user shifted position from beggining when there was fadein enabled.
+                play_list.validFiles[play_list.currentSongIndex].fadein_duration):
+                if pygame.mixer.music.get_volume() < play_list.VolumeLevel: #in case the user shifted position from beggining when there was fadein enabled.
                     pygame.mixer.music.set_volume(play_list.VolumeLevel)
             if play_list.validFiles[play_list.currentSongIndex].fadeout_duration > 0 and play_list.currentSongPosition > (play_list.validFiles[play_list.currentSongIndex].endPos - 
-            	play_list.validFiles[play_list.currentSongIndex].fadeout_duration):
-            	if pygame.mixer.music.get_volume() < play_list.VolumeLevel: #in case the user shifted position from end when there was fadeout enabled.
+                play_list.validFiles[play_list.currentSongIndex].fadeout_duration):
+                if pygame.mixer.music.get_volume() < play_list.VolumeLevel: #in case the user shifted position from end when there was fadeout enabled.
                     pygame.mixer.music.set_volume(play_list.VolumeLevel)
         progress["value"] = play_list.currentSongPosition
         play_list.RESUMED = True
@@ -4521,12 +4479,12 @@ def on_closing(): #this function is called only when window is canceled/closed
         play_list.currentSongPosition = 0
         play_list.RESUMED = False
     elif pygame.mixer.get_init():
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
         if play_list.RESUMED: #it means there are songs in the playlist
             play_list.currentSongPosition += math.floor(pygame.mixer.music.get_pos() / 1000)
         else:
             play_list.currentSongPosition = math.floor(pygame.mixer.music.get_pos() / 1000)
-        if pygame.mixer.music.get_busy():
-                pygame.mixer.music.stop()
     #copy window coordinates:
     play_list.playerXPos = window.winfo_x()
     play_list.playerYPos = window.winfo_y()
@@ -4543,9 +4501,15 @@ def remove_song():
         if listBox_Song_selected_index < len(play_list.validFiles):
             if play_list.SHUFFLE:
                 del play_list.shufflingHistory[len(play_list.shufflingHistory)-1] #this entry will no longer be valid, since the song was removed.
+            play_list.playTime -= play_list.validFiles[listBox_Song_selected_index].Length
             del play_list.validFiles[listBox_Song_selected_index]
             displayElementsOnPlaylist()
             textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
+            textTotalPlayTime.set("PlayTime: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
+            listbox.selection_clear(0, tk.END)  # clear existing selection
+            listbox.see(listBox_Song_selected_index)
+            listbox.select_set(listBox_Song_selected_index)
+            listbox.activate(listBox_Song_selected_index)
             #listBox_Song_selected_index=None #initialize this if u want to remove only onebyone
 
 def list_selected_item(event):
@@ -5198,13 +5162,7 @@ def packPositionLabels(): #function called only at the start, to position the la
     labelPlaylistListenedTime.place(x=10, y=590)
 
 def pressedEnter(event):
-    if pygame.mixer.get_init():
-        if pygame.mixer.music.get_busy():
-            next_song()
-        else:
-            play_music()
-    else:
-        play_music()
+    play_music()
 
 def pressedShiftRight(event):
     if pygame.mixer.get_init():
@@ -5238,14 +5196,13 @@ def pressedKeyShortcut(event):
         if pygame.mixer.get_init():
             if pygame.mixer.music.get_volume()>0:
                 pygame.mixer.music.set_volume(0)
-                play_list.VolumeLevel = 0.0
-                VolumeScale.set(play_list.VolumeLevel)
+                VolumeScale.set(0.0)
             else:
                 pygame.mixer.music.set_volume(play_list.VolumeLevel)
                 VolumeScale.set(play_list.VolumeLevel * 100)
-    elif event.char == ",":
-        volume_up()
     elif event.char == ".":
+        volume_up()
+    elif event.char == ",":
         volume_down()
     elif event.char == "r" or event.char == "R":
         repeat()
@@ -5323,7 +5280,7 @@ def pressedKeyShortcut(event):
                 + "Q - is equivalent to Cut Selected Button\n"
                 + "T - is equivalent to Sleep\Wake Button\n"
                 + "L - is equivalent to GrabLyrics\n"
-				+ "G - is equivalent to ArtistBio\n"
+                + "G - is equivalent to ArtistBio\n"
                 + "J - is equivalent to Search Button\n"
                 + "P - is equivalent to Customize Option\n"
                 + "A - is equivalent to Slideshow\n"
@@ -5334,8 +5291,8 @@ def pressedKeyShortcut(event):
                 + "L_SHIFT - is equivalent to Move Up on the current playlist song selection.\n"
                 + "L_CTRL - is equivalent to Move Down on the current playlist song selection.\n"
                 + "Delete - is equivalent to Remove on the current playlist song selection.\n"
-                + ", or < key - is equivalent to Volume Up.\n"
-                + ". or > key - is equivalent to Volume Down.\n"
+                + ". or > key - is equivalent to Volume Up.\n"
+                + ", or < key - is equivalent to Volume Down.\n"
                 + "Page Up or Up - can be used to navigate the playlist UP.\n"
                 + "Page Down or Down - can be used to navigate the playlist DOWN.\n"
                 + "i - will show you this message again.")
@@ -5425,9 +5382,9 @@ def rightClickListboxElement(event):
 def showCurrentSongInList():
     global listBox_Song_selected_index
     if listbox.size() > 0 and play_list.currentSongIndex < listbox.size(): #make playing song visible
-        listbox.see(play_list.currentSongIndex)
         listBox_Song_selected_index = play_list.currentSongIndex
         listbox.selection_clear(0, tk.END)  # clear existing selection
+        listbox.see(listBox_Song_selected_index)
         listbox.select_set(listBox_Song_selected_index)
         listbox.activate(listBox_Song_selected_index)
 
@@ -5568,13 +5525,16 @@ def showPlaylistInfo():
         +"Song Rating:       " + "NA" if favoriteSong.Rating==0 else str(favoriteSong.Rating) + "\n")
     WindowDialog(window, text, "OK", windowTitle = "Playlist Info")
 
+def focusListbox(event):
+    listbox.focus()
+
 def packPositionListScrolOptionProgRadio(): #function called only at the start, to place the listbox, scrollbar, combobox, radiobuttons, progressbar,
     #Here are set position, events, controls, styling for listbox, progressbar, scrollbar, option, radiobuttons
     listbox.pack(side = tk.LEFT, padx=2, pady=6) #this will place listbox on the leftside of the FRAME
     listbox.bind('<Double-Button>', elementPlaylistDoubleClicked)
     listbox.bind('<ButtonPress-3>', rightClickListboxElement)
     listbox.bind('<<ListboxSelect>>', list_selected_item)
-    listbox.bind("<Return>", pressedEnter)
+    listbox.bind("<Return>", elementPlaylistDoubleClicked)
     listbox.bind("<Key>", listboxShortcuts)
     #listbox.bind("<Right>", changeListboxElementView)
     window.bind("<Return>", pressedEnter)
@@ -5587,6 +5547,8 @@ def packPositionListScrolOptionProgRadio(): #function called only at the start, 
     window.bind("<KeyRelease-[>", squareBracketsReleased)
     window.bind("<Delete>", pressedDelete)
     window.bind('<ButtonPress-3>', rightClickOnWindow)
+    window.bind('<Up>', focusListbox)
+    window.bind('<Down>', focusListbox)
   
     scroll.config(command=listbox.yview)
     scroll.pack(side = tk.RIGHT, fill=tk.Y) #this will place scrollbar on the right side of FRAME, if width is adjusted, they will be next to each other
@@ -5704,10 +5666,10 @@ def searchSongInPlaylist(): #this function will show the Search Tool.
         WindowDialog(window, text, "OK" , windowTitle = "Information")
 
 def fadein(Position): 
-    pygame.mixer.music.set_volume(Position/play_list.validFiles[play_list.currentSongIndex].fadein_duration)
+    pygame.mixer.music.set_volume((Position/play_list.validFiles[play_list.currentSongIndex].fadein_duration)*play_list.VolumeLevel) #multiplied to VolumeLevel to make sure it doesn't pass the current volume level
 
 def fadeout(Position):
-    pygame.mixer.music.set_volume(Position/play_list.validFiles[play_list.currentSongIndex].fadeout_duration)
+    pygame.mixer.music.set_volume((Position/play_list.validFiles[play_list.currentSongIndex].fadeout_duration)*play_list.VolumeLevel) #multiplied to VolumeLevel to make sure it doesn't pass the current volume level
 
 def computeTimeToSeconds(time):
         time = time.split(":")
