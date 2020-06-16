@@ -20,7 +20,7 @@ the Script has performed to all your Mp3 file Tags.
 
 SongStats.sts -> is the file which will store information about each file in your library. Information such us: No. of Plays, Song Time 
 Listened, Song Rating, Favorite Song, etc. The information is being taken from the Playlist which is currently loaded (which most of 
-the time coincides with PlayListBackup.pypl), and gets tranfered to SongStats.sts whenever the New Playlist button is hit. 
+the time coincides with PlayListBackup.pypl), and gets transfered to SongStats.sts whenever the New Playlist button is hit. 
 
 
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
@@ -37,6 +37,7 @@ https://mega.nz/#F!GYxHjSgD!NM0715JCrPXXhfPERyLe-w
 There is also a compiled version available for WINDOWS only.
 
 You can also use setup_for_py2exe.py to build and executable from this script.
+If you use setup_for_py2exe you need to make sure that you copy the resources in the same directory with the compiled files.
 
 Official Website:
 https://pyplay-mp3player.site123.me
