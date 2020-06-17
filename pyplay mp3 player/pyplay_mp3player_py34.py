@@ -158,8 +158,6 @@ class Window(ABC): #let this class be abstract
         
     def take_focus(self):
         self.top.wm_attributes("-topmost", 1)
-        self.top.grab_set()
-        self.top.focus()
     
     def focus_out(self, event):
         window.wm_attributes("-topmost", 1)
@@ -437,8 +435,9 @@ class SearchTool(Window):
         #these are used for instant search:
         self.searchValue.bind("<Key>", self.showResults) 
 
-        self.top.bind("<Key>", self.focus_Input)
+        self.top.bind("<Key>", self.take_focus)
         self.top.bind("<Tab>", self.focus_out)
+        
         self.searchValue.bind("<Escape>", self.destroyEsc)
         self.searchValue.bind("<Shift_R>", self.playPreviousSearch)
         self.searchValue.bind("<Return>", self.playNextSearch)
@@ -453,9 +452,8 @@ class SearchTool(Window):
         dialog = self
                
         #this will read/process the input just after the window is opened
-        self.take_focus()
-        self.focus_Input("<Key>")
-    
+        self.take_focus("<Key>")
+        
     def destroy(self):
         global dialog
         self.top.destroy()
@@ -463,8 +461,8 @@ class SearchTool(Window):
         dialog = None
         displayElementsOnPlaylist()
         showCurrentSongInList()
-        
-    def focus_Input(self,event):
+       
+    def take_focus(self,event):
         self.top.wm_attributes("-topmost", 1)
         self.searchValue.focus_force()
 
@@ -1094,7 +1092,7 @@ class Customize(Window):
 
     def restoreDefaults(self):
         global play_list
-        play_list.VolumeLevel=1.0
+        global window
         play_list.useMassFileEditor=False
         play_list.danthologyMode=False
         play_list.danthologyDuration=0
@@ -1102,7 +1100,12 @@ class Customize(Window):
         play_list.windowOpacity=1.0
         play_list.progressTime = "Ascending" #possible values: Ascending and Descending
         play_list.skin=0
-        play_list.usePlayerTitleTransition = True
+        play_list.usePlayerTitleTransition = False
+        if play_list.currentSongIndex != None:
+            Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
+        else:
+            Project_Title = "   PyPlay MP3 Player in Python     "
+        window.title(Project_Title)
         play_list.playingFileNameTransition = "separation" # values : separation, typewriting, none
         play_list.customFont = None
         play_list.customElementBackground = None
@@ -1115,6 +1118,7 @@ class Customize(Window):
         play_list.LyricsActiveSource = LyricsOnlineSources[0] #default, all sources
         play_list.resetSettings = False
         play_list.useCrossFade = False
+        play_list.useSongNameTitle = True
         window.attributes('-alpha', play_list.windowOpacity)
         # Restore default skin
         play_list.listboxWidth = "Auto"
@@ -1177,7 +1181,10 @@ class Customize(Window):
             window.title(Project_Title)
         else:
             play_list.useSongNameTitle = True
-            Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
+            if play_list.currentSongIndex != None:
+                Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
+            else:
+                Project_Title = "   PyPlay MP3 Player in Python     "
             window.title(Project_Title)
         self.songNameTitle.set(int(play_list.useSongNameTitle))
      
@@ -1275,6 +1282,7 @@ class Customize(Window):
                 
     def changeTitleTransition(self):
         global play_list
+        global Project_Title
         if play_list.usePlayerTitleTransition == True:
             play_list.usePlayerTitleTransition = False
             self.TitleTransitionButtonText.set("Title Transition OFF")
@@ -1282,7 +1290,8 @@ class Customize(Window):
                 Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
                 window.title(Project_Title)
             else:
-                window.title("   PyPlay MP3 Player in Python     ")
+                Project_Title = "   PyPlay MP3 Player in Python     "
+                window.title(Project_Title)
         else:
             play_list.usePlayerTitleTransition = True
             self.TitleTransitionButtonText.set("Title Transition ON")
@@ -1409,6 +1418,7 @@ class WindowDialog(Window):
     def stopIt(self):
         global play_list
         global listBox_Song_selected_index
+        global Project_Title
         if play_list.resetSettings == False:
             play_list.isSongPause = False
             play_list.isSongStopped = False
@@ -2151,10 +2161,10 @@ class Mp3TagModifierTool(Window):
                         value = song.fileName.split("-")
                         value[0] = [n.capitalize() for n in value[0].split(" ")] #perform Capitalization for Artist Name
                         song.Artist = " ".join(value[0])
-                        value[1] = value[1].rstrip(".mp3")
-                        value[1] = value[1].rstrip(".MP3")
-                        value[1] = value[1].rstrip(".mP3")
-                        value[1] = value[1].rstrip(".Mp3")
+                        value[1] = value[1].replace(".mp3", "")
+                        value[1] = value[1].replace(".MP3", "")
+                        value[1] = value[1].replace(".mP3", "")
+                        value[1] = value[1].replace(".Mp3", "")
                         value[1] = value[1].strip(" ")
                         ##this will perform Capitalization and Semi-Capitalization for the Title
                         if len(value[1].split(" ")) > 2:
@@ -2169,10 +2179,10 @@ class Mp3TagModifierTool(Window):
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = song.Title
                     else:
-                        value[0] = value[0].rstrip(".MP3")
-                        value[0] = value[0].rstrip(".mP3")
-                        value[0] = value[0].rstrip(".Mp3")
-                        value[0] = value[0].rstrip(".mp3")
+                        value[0] = value[0].replace(".MP3", "")
+                        value[0] = value[0].replace(".mP3", "")
+                        value[0] = value[0].replace(".Mp3", "")
+                        value[0] = value[0].replace(".mp3", "")
                         song.Artist = value[0].strip(" ")
                         mp3file["artist"] = song.Artist
                         dictionary["newArtist"] = song.Artist
@@ -2426,12 +2436,13 @@ class Mp3TagModifierTool(Window):
                 self.ArtistTag.delete(0,tk.END)
                 value[0] = " ".join(value[0])
                 value[0] = value[0].strip(" ")
+                value[0] = value[0].replace("And", "and")
                 self.ArtistTag.insert(0, value[0])
                 self.TitleTag.delete(0, tk.END)
-                value[1] = value[1].rstrip(".mp3")
-                value[1] = value[1].rstrip(".MP3")
-                value[1] = value[1].rstrip(".Mp3")
-                value[1] = value[1].rstrip(".mP3")
+                value[1] = value[1].replace(".mp3", "")
+                value[1] = value[1].replace(".MP3", "")
+                value[1] = value[1].replace(".Mp3", "")
+                value[1] = value[1].replace(".mP3", "")
                 value[1] = value[1].strip(" ")
                 ##this will perform Capitalization and Semi-Capitalization for the Title
                 if len(value[1].split(" ")) > 2:
@@ -2443,10 +2454,11 @@ class Mp3TagModifierTool(Window):
                     self.TitleTag.insert(0, value[1].strip(" "))
             else:
                 self.ArtistTag.delete(0, tk.END)
-                value = self.NameTag.get().rstrip(".mp3")
-                value = self.NameTag.get().rstrip(".mP3")
-                value = self.NameTag.get().rstrip(".Mp3")
-                value = self.NameTag.get().rstrip(".MP3")
+                value = self.NameTag.get().replace(".mp3", "")
+                value = value.replace(".mP3", "")
+                value = value.replace(".Mp3", "")
+                value = value.replace(".MP3", "")
+                value = value.replace("And", "and")
                 value = value.strip(" ")
                 self.ArtistTag.insert(0, value)
         else:
@@ -2829,6 +2841,7 @@ class GrabLyricsTool(Window):
                     if response.status == 200:
                         text_list = self.filterTextFromOmniaLyricsIt(response.data)
                         source = "omnialyrics.it"
+        window.title(Project_Title)
         return text_list, source
 
     def filterTextFromOmniaLyricsIt(self, data):
@@ -3275,9 +3288,7 @@ def load_file(): #this function is called when clicking on Open File Button.
             if ".mp3" in file.lower():
                 i+=1
                 window.title("Scanning: " + str(i) + " out of " + str(len(fileToPlay)) + " files")
-                try:#without this try-except block the window will freeze.
-                    window.update()  # Force an update of the GUI
-                except Exception as exp: pass
+                mainWindowUpdate()
                 fileName = re.split("/", file)
                 fileName = fileName[len(fileName) - 1]
                 fileSize = os.path.getsize(file) / (1024 * 1024)
@@ -3464,9 +3475,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
         for file in files:
             i+=1
             window.title("Scanning " + str(root) + ": " + str(i) + " out of " + str(len(files)) + " files")
-            try:#without this try-except block the window will freeze.
-                window.update()  # Force an update of the GUI
-            except Exception as exp: pass
+            mainWindowUpdate()
             if ".mp3" in file.lower():
                 fileSize = os.path.getsize(root + "/" + file) / (1024 * 1024)
                 fileSize = float("{0:.2f}".format(fileSize))
@@ -3483,6 +3492,8 @@ def play_music(): #this function is called when clicking on Play Button.
     global s_rate
     global channels
     global temp_SongEndPos
+    global Project_Title
+    global window
     if len(play_list.validFiles) > 0 and play_list.currentSongIndex!=None:
         try:
             if s_rate != play_list.validFiles[play_list.currentSongIndex].sample_rate or channels != play_list.validFiles[play_list.currentSongIndex].channels \
@@ -3571,9 +3582,7 @@ def play_music(): #this function is called when clicking on Play Button.
             updateRadioButtons()
             #Make Window Title the song being currently played:
             if play_list.useSongNameTitle:
-                global Project_Title
                 Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
-                global window
                 window.title(Project_Title)
             play_list.validFiles[play_list.currentSongIndex].NumberOfPlays+=1
             textNofPlays.set("No. of Plays: " + str(play_list.validFiles[play_list.currentSongIndex].NumberOfPlays))
@@ -4479,12 +4488,12 @@ def on_closing(): #this function is called only when window is canceled/closed
         play_list.currentSongPosition = 0
         play_list.RESUMED = False
     elif pygame.mixer.get_init():
-        if pygame.mixer.music.get_busy():
-            pygame.mixer.music.stop()
         if play_list.RESUMED: #it means there are songs in the playlist
             play_list.currentSongPosition += math.floor(pygame.mixer.music.get_pos() / 1000)
         else:
             play_list.currentSongPosition = math.floor(pygame.mixer.music.get_pos() / 1000)
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
     #copy window coordinates:
     play_list.playerXPos = window.winfo_x()
     play_list.playerYPos = window.winfo_y()
@@ -4984,8 +4993,10 @@ def move_up(): #this function is called when clicking Move Up Button
             play_list.validFiles[last_position] = Song
             listBox_Song_selected_index = last_position
         displayElementsOnPlaylist()
-        listbox.select_set(listBox_Song_selected_index)
+        listbox.selection_clear(0, tk.END)  # clear existing selection
         listbox.see(listBox_Song_selected_index)
+        listbox.select_set(listBox_Song_selected_index)
+        listbox.activate(listBox_Song_selected_index)
         # listBox_Song_selected_index=None #initialize this if u want to move only onebyone
         play_list.isListOrdered = 17 #this will mean Custom Sorting
         updateSortButton()
@@ -5004,8 +5015,10 @@ def move_down(): #this function is called when clicking Move Down Button
             play_list.validFiles[0] = Song
             listBox_Song_selected_index = 0
         displayElementsOnPlaylist()
-        listbox.select_set(listBox_Song_selected_index)
+        listbox.selection_clear(0, tk.END)  # clear existing selection
         listbox.see(listBox_Song_selected_index)
+        listbox.select_set(listBox_Song_selected_index)
+        listbox.activate(listBox_Song_selected_index)
         # listBox_Song_selected_index=None #initialize this if u want to move only onebyone
         play_list.isListOrdered = 17 #this will mean Custom Sorting
         updateSortButton()
@@ -5697,6 +5710,12 @@ def dragging(event):
         play_list.playerXPos = window.winfo_x()
         play_list.playerYPos = window.winfo_y()
 
+def mainWindowUpdate():
+    global window
+    try:#without this try-except block the window will freeze.
+        window.update()  # Force an update of the GUI
+    except Exception as exp: pass  #exception will be generated if the window was closed in the meantime.
+    
 window = tk.Tk() #tk.Tk() return a widget which is window
 
 Project_Title = "   PyPlay MP3 Player in Python     "
