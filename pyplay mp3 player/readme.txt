@@ -41,3 +41,6 @@ If you use setup_for_py2exe you need to make sure that you copy the resources in
 
 Official Website:
 https://pyplay-mp3player.site123.me
+
+
+Presentation video: https://www.youtube.com/watch?v=uuD_buexn70&list=PLCma1j5Hgqtct-faQ8YIU9zQpXMgiIETA&index=2
