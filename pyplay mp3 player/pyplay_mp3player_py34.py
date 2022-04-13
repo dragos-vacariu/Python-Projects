@@ -145,6 +145,8 @@ class Song:
         self.endPos = self.Length
         self.fadein_duration = 0
         self.fadeout_duration = 0
+    def __repr__(self):
+        return str(self.fileName) + "   " + str(datetime.timedelta(seconds=int(self.SongListenedTime))) +  "   " + str(self.NumberOfPlays)
 
 class Window(ABC): #let this class be abstract
     def destroyEsc(self,event):
@@ -184,9 +186,11 @@ class CuttingTool(Window):
             self.top.protocol("WM_DELETE_WINDOW", self.destroy)
             self.Window_Title = "Cutting Tool"
             self.top.title(self.Window_Title)
-            self.top.geometry("410x350+100+100")
+            self.top.geometry("410x350+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
             self.top.attributes('-alpha', play_list.windowOpacity)
-            allButtonsFont = skinOptions[2][play_list.skin]
+            #allButtonsFont = skinOptions[2][play_list.skin]# not needed : this will set the default skin font - ignoring the custom settings
+            if type(allButtonsFont) == StringVar:
+                allButtonsFont = allButtonsFont.get()
             columnOne = 10
             columnTwo = 220
             self.InfoLabelText = StringVar()
@@ -414,15 +418,17 @@ class SearchTool(Window):
     def __init__(self, parent):
         global allButtonsFont
         global dialog
-        self.index = play_list.currentSongIndex
+        self.index = None
         color = OpenFileButton["bg"]  # get the color which the rest of elements is using at the moment
         self.top = tk.Toplevel(parent, bg=color)
         self.Window_Title = "Search Tool"
         self.top.title(self.Window_Title)
-        self.top.geometry("300x180+100+100")
+        self.top.geometry("300x180+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         self.top.attributes('-alpha', play_list.windowOpacity)
-        allButtonsFont = skinOptions[2][play_list.skin]
+        #allButtonsFont = skinOptions[2][play_list.skin]# not needed : this will set the default skin font - ignoring the custom settings
+        if type(allButtonsFont) == StringVar:
+            allButtonsFont = allButtonsFont.get()
         InfoLabelText = StringVar()
         InfoLabelText.set("Search for song: \n")
         tk.Label(self.top, textvariable=InfoLabelText, fg=fontColor.get(), font=allButtonsFont, bg=color).pack()
@@ -433,9 +439,9 @@ class SearchTool(Window):
         #self.searchValue.bind("<Return>", self.showResults)
         
         #these are used for instant search:
-        self.searchValue.bind("<Key>", self.showResults) 
+        self.searchValue.bind("<KeyRelease>", self.showResults) 
 
-        self.top.bind("<Key>", self.take_focus)
+        self.top.bind("<KeyRelease>", self.take_focus)
         self.top.bind("<Tab>", self.focus_out)
         
         self.searchValue.bind("<Escape>", self.destroyEsc)
@@ -452,7 +458,7 @@ class SearchTool(Window):
         dialog = self
                
         #this will read/process the input just after the window is opened
-        self.take_focus("<Key>")
+        self.take_focus("<KeyRelease>")
         
     def destroy(self):
         global dialog
@@ -471,19 +477,18 @@ class SearchTool(Window):
             self.showResults(event)
 
     def showResults(self, event):
-        global listBox_Song_selected_index
-        if len(self.searchValue.get()) > 0:
-            self.index=None
-            listbox.delete(0, tk.END)
-            value = self.searchValue.get().lower()
-            result = [item for item in play_list.validFiles if value in item.fileName.lower()]
-            if len(result) > 0:
-                for item in result:
-                    listbox.insert(tk.END, str(play_list.validFiles.index(item)) + ". " + item.fileName)
-
-        else:
-            displayElementsOnPlaylist()
-            self.index=play_list.currentSongIndex
+        if event.keysym_num > 0 and event.keysym_num < 60000: #if the key pressed is a printable character that could be in the name of the searched item
+            global listBox_Song_selected_index
+            if len(self.searchValue.get()) > 0:
+                listbox.delete(0, tk.END)
+                value = self.searchValue.get().lower()
+                result = [item for item in play_list.validFiles if value in item.fileName.lower()]
+                if len(result) > 0:
+                    for item in result:
+                        listbox.insert(tk.END, str(play_list.validFiles.index(item)) + ". " + item.fileName)
+            else:
+                displayElementsOnPlaylist()
+                self.index=play_list.currentSongIndex
 
     def playPreviousSearch(self, event):
         global play_list
@@ -552,7 +557,7 @@ class Slideshow(Window):
             allButtonsFont = allButtonsFont.get()
         Slideshow.Window_Title = "Slideshow"
         Slideshow.top.title(Slideshow.Window_Title)
-        Slideshow.top.geometry("300x300+10+10")
+        Slideshow.top.geometry("300x300+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         Slideshow.top.attributes('-alpha', play_list.windowOpacity)
         Slideshow.seconds = StringVar()
         if play_list.slideImagesTransitionSeconds != "0":
@@ -679,7 +684,7 @@ class SleepingTool(Window):
         self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         Window_Title = "Sleeping Tool"
         self.top.title(Window_Title)
-        self.top.geometry("300x230+100+100")
+        self.top.geometry("300x230+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.attributes('-alpha', play_list.windowOpacity)
         if type(allButtonsFont) == StringVar:
             allButtonsFont = allButtonsFont.get()
@@ -816,7 +821,7 @@ class Customize(Window):
         self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         Window_Title = "Customize"
         self.top.title(Window_Title)
-        self.top.geometry("680x610+100+100")
+        self.top.geometry("680x610+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.attributes('-alpha', play_list.windowOpacity)
         columnOne = 10
         columnTwo = 250
@@ -1376,7 +1381,7 @@ class WindowDialog(Window):
         self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         Window_Title = "Playlist Dialog"
         self.top.title(Window_Title)
-        self.top.geometry("480x200+100+100")
+        self.top.geometry("480x200+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.attributes('-alpha', play_list.windowOpacity)
         if type(allButtonsFont) == StringVar:
             allButtonsFont = allButtonsFont.get()
@@ -1403,7 +1408,7 @@ class WindowDialog(Window):
         self.labelInfo.pack(pady=15, padx=15)
         Button1 = tk.Button(self.top, text=WindowDialog.buttonText, command=self.destroy , fg=fontColor.get(), font=allButtonsFont, bg=color)
         Button1.pack(pady=15, padx = 15)
-        WindowDialog.windowSize = (str(self.labelInfo.winfo_reqwidth() + 50) + "x" + str(self.labelInfo.winfo_reqheight()+100) + "+100+100")
+        WindowDialog.windowSize = (str(self.labelInfo.winfo_reqwidth() + 50) + "x" + str(self.labelInfo.winfo_reqheight()+100) + "+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.geometry(WindowDialog.windowSize)
         self.top.bind("<Escape>", self.destroyEsc)
     
@@ -1618,7 +1623,7 @@ class Mp3TagModifierTool(Window):
         windowWidth = buttonColumnTwo + self.MassArtistTitleComposeButton.winfo_reqwidth() + 20 #  #20 will be the margin between button and end of window.
         if FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50 > windowWidth: #make sure this element is also visible in the given window.
             windowWidth = FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50
-        self.top.geometry(str(windowWidth)+"x360+100+100")
+        self.top.geometry(str(windowWidth)+"x360+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
         self.top.bind("<Tab>", self.focus_out)
         self.top.bind("<Escape>", self.destroyEsc)
         dialog = self
@@ -2114,8 +2119,7 @@ class Mp3TagModifierTool(Window):
     def composeArtistTitleAll(self):
         dictionary={}
         dict_list=[]
-        dict_loaded=False
-        if os.path.exists(self.undoArtistTitleBackupFile):
+        if os.path.exists(self.undoArtistTitleBackupFile): #enter here if backup file can be found
             try:
                 file = open(self.undoArtistTitleBackupFile, "rb")
                 dict_list = pickle.load(file)
@@ -2125,7 +2129,6 @@ class Mp3TagModifierTool(Window):
                         "\nSince the content has been corrupted, your file will be replaced.")
                 WindowDialog(window, text, "OK", windowTitle = "Warning")
             else:
-                dict_loaded = True
                 file.close()
             finally:
                 file = open(self.undoArtistTitleBackupFile, "wb")
@@ -2137,59 +2140,69 @@ class Mp3TagModifierTool(Window):
             if self.top == None: #if window gets closed, terminate
                 return
             if song.fileName != "":
-                alreadyContained = False
-                if dict_loaded:
-                    for element in dict_list:
-                        if element["newArtist"] == song.Artist and element["newTitle"] == song.Title and element["fileName"] == song.fileName:
-                            alreadyContained = True
-                            break
-                if alreadyContained == False and os.path.exists(song.filePath):
+                if os.path.exists(song.filePath):
                     mp3file = EasyID3(song.filePath)
-                    dictionary['fileName'] = song.fileName
-                    if song.Artist!= "Various":
-                        dictionary['oldArtist'] = song.Artist
-                    else:
-                        dictionary['oldArtist'] = ""
-                    if song.Title != "Various":
-                        dictionary['oldTitle'] = song.Title
-                    else:
-                        dictionary['oldTitle'] = ""
+                    ExistingEntry = [Entry for Entry in dict_list if song.fileName in Entry.values()]
+                    if len(ExistingEntry) == 0:
+                        dictionary['fileName'] = song.fileName
+                        if song.Artist!= "Various":
+                            dictionary['oldArtist'] = song.Artist
+                        else:
+                            dictionary['oldArtist'] = ""
+                        if song.Title != "Various":
+                            dictionary['oldTitle'] = song.Title
+                        else:
+                            dictionary['oldTitle'] = ""
                     if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
                         pygame.mixer.music.stop()
                         pygame.mixer.music.load("clear.mp3") #use this file to release the playback
                     if "-" in song.fileName:
                         value = song.fileName.split("-")
-                        value[0] = [n.capitalize() for n in value[0].split(" ")] #perform Capitalization for Artist Name
-                        song.Artist = " ".join(value[0])
-                        value[1] = value[1].replace(".mp3", "")
-                        value[1] = value[1].replace(".MP3", "")
-                        value[1] = value[1].replace(".mP3", "")
-                        value[1] = value[1].replace(".Mp3", "")
+                        #Perform string ethics and formatting for the Artist Name
+                        value[0] = value[0].strip(" ")
+                        value[0] = [n.capitalize() for n in value[0].split(" ")]
+                        value[0] = " ".join(value[0])
+                        value[0] = value[0].replace(" And ", " and ")
+                        value[0] = value[0].replace(" & ", " and ")
+                        value[0] = value[0].replace(" Feat. ", " and ")
+                        value[0] = value[0].replace(" Featuring ", " and ")
+                        value[0] = value[0].replace(" Feat ", " and ")
+                        song.Artist = value[0]
+                        #Perform string ethics and formatting for the Song Title
+                        
                         value[1] = value[1].strip(" ")
-                        ##this will perform Capitalization and Semi-Capitalization for the Title
-                        if len(value[1].split(" ")) > 2:
-                            song.Title = value[1][0].capitalize() + value[1][1:].lower()
+                        
+                        #this will perform Capitalization and Semi-Capitalization for the Title
+                        value[1] = value[1].split(" ")
+                        if len(value[1]) > 2:
+                            value[1] = [n.capitalize() for n in value[1][:1]] + [n for n in value[1][1:]]
                         else:
-                            value[1] = [n.capitalize() for n in value[1].split(" ")]
-                            song.Title = " ".join(value[1])
-                        song.Title = song.Title.strip(" ")
-                        song.Artist = song.Artist.strip(" ")
+                            value[1] = [n.capitalize() for n in value[1]]
+                        value[1] = " ".join(value[1])    
+                        value[1] = value[1].replace(".mp3", "")
+                        song.Title = value[1]
+                        
+                        #Set the tags for the mp3 file.
                         mp3file["artist"] = song.Artist
                         mp3file["title"] = song.Title
                         dictionary["newArtist"] = song.Artist
                         dictionary["newTitle"] = song.Title
                     else:
-                        value[0] = value[0].replace(".MP3", "")
-                        value[0] = value[0].replace(".mP3", "")
-                        value[0] = value[0].replace(".Mp3", "")
-                        value[0] = value[0].replace(".mp3", "")
-                        song.Artist = value[0].strip(" ")
+                        value = song.fileName.lower()
+                        value = value.strip(" ")
+                        value = value.replace(".mp3")
+                        song.Artist = value
                         mp3file["artist"] = song.Artist
                         dictionary["newArtist"] = song.Artist
+                        #Unable to determine the title
                         dictionary["newTitle"] = ""
-                    dict_list.append(dictionary)
-                    dictionary = {}
+                    if len(ExistingEntry) == 0:
+                        dict_list.append(dictionary)
+                    else:
+                        dictionary['oldArtist'] = ExistingEntry[0]['oldArtist']
+                        dictionary['oldTitle'] = ExistingEntry[0]['oldArtist']
                     mp3file.save(v2_version=3)
+                    dictionary={}
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
         self.TitleTag.delete(0, tk.END)
@@ -2601,16 +2614,18 @@ class GrabLyricsTool(Window):
             self.top = tk.Toplevel(window, bg=color)
             self.Window_Title = "Grab Lyrics Tool"
             self.top.title(self.Window_Title)
-            self.top.geometry("580x550+100+100")
+            self.top.geometry("580x550+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
             self.top.protocol("WM_DELETE_WINDOW", self.destroy)
             self.top.attributes('-alpha', play_list.windowOpacity)
-            allButtonsFont = skinOptions[2][play_list.skin]
+            #allButtonsFont = skinOptions[2][play_list.skin] # not needed : this will set the default skin font - ignoring the custom settings
+            if type(allButtonsFont) == StringVar:
+                allButtonsFont = allButtonsFont.get()
             self.welcomeMessage = StringVar()
             self.welcomeMessage.set("Welcome to Grab Lyrics Tool!\n\nThe lyrics are grabbed from various online sources,\n" \
                                 +"the results are provided according to your internet connection speed.\n" \
                                 +"The Search is based on Artist - Title tags, if these tags are not set\n" \
                                 +"accordingly, the lyrics will never be found.")
-            tk.Label(self.top, textvariable=self.welcomeMessage, fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=5, y=5)
+            tk.Label(self.top, textvariable=self.welcomeMessage, fg=fontColor.get(), font=allButtonsFont, bg=color,anchor="e", justify=tk.LEFT).place(x=30, y=5)
             self.Lyrics = StringVar()
             self.Lyrics.set("Lyrics")
             tk.Label(self.top, textvariable=self.Lyrics, fg=fontColor.get(), font=allButtonsFont, bg=color).place(x=5, y=115)
@@ -3077,10 +3092,12 @@ class GrabArtistBio(Window):
             self.top = tk.Toplevel(window, bg=color)
             Window_Title = "Artist Bio"
             self.top.title(Window_Title)
-            self.top.geometry("490x350+100+100")
+            self.top.geometry("490x350+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
             self.top.protocol("WM_DELETE_WINDOW", self.destroy)
             self.top.attributes('-alpha', play_list.windowOpacity)
-            allButtonsFont = skinOptions[2][play_list.skin]
+            #allButtonsFont = skinOptions[2][play_list.skin]# not needed : this will set the default skin font - ignoring the custom settings
+            if type(allButtonsFont) == StringVar:
+                allButtonsFont = allButtonsFont.get()
             self.Message = StringVar()
             self.Message.set("According to LastFM:\n\n")
             tk.Label(self.top, textvariable=self.Message, fg=fontColor.get(), font=allButtonsFont,
@@ -3244,6 +3261,7 @@ radioButtonsDefaultColor = "lightgray"
 custom_font_list = ["Arial 10", "Consolas 10", "Courier 9", "Verdana 9", "Georgia 9", "Tahoma 9", "Rockwell 10", "Fixedsys 11", "Candara 10", "Impact 9", \
                                     "Calibri 10 italic", "Modern 10 bold", "Harrington 10 bold", "Stencil 10 italic", "Forte 10", "System 11", "Times 11", \
                                     "Unispace 9", "Stencil 9", "Haettenschweiler 12"]
+
 progressViewRealTime = 0.1 #value in seconds
 play_list = Playlist()
 
@@ -3875,22 +3893,18 @@ def shuffle(): #this function is called when clicking on SHUFFLE Button.
 def shuffling_playlist():
     global play_list
     if len(play_list.validFiles) > 1:
-        if play_list.REPEAT == 3:
-            temp_list = []
-            if len(play_list.shufflingHistory) < len(play_list.validFiles):
-                for index in range(0, len(play_list.validFiles)):
-                    for item in play_list.shufflingHistory:
-                        if item == index:
-                            break
-                    else: # will enter here only if break was avoided.
-                        temp_list.append(index)
-                rand = random.randint(0, len(temp_list)-1) #endpoints included
-                play_list.currentSongIndex = temp_list[rand]
+        if play_list.REPEAT == 3: #Repeat None - means play each song only once
+            validFiles_indexes = list (range(len(play_list.validFiles))) # create a list of indexes for the valid files
+            unique_elements = list(set(validFiles_indexes).difference(set(play_list.shufflingHistory))) #make a list of elements that were never played.
+            if len(unique_elements) > 0: # if elements that never played
+                rand = random.randint(0, len(unique_elements)-1) #get a random element - endpoints included
+                choice = unique_elements[rand]
+                play_list.currentSongIndex = choice
             else:
-                #here we need to stop it, because we reached end of playlist.
+                #here we need to stop it, because we reached end of playlist. Every song in the playlist was played.
                 return False
-        else:
-            rand = random.randint(0, len(play_list.validFiles)-1) #endpoints included
+        else: # you can play same song multiple times
+            rand = random.randint(0, len(play_list.validFiles)-1) #get a random element - endpoints included
             play_list.currentSongIndex = rand
         return True
 
@@ -5281,8 +5295,7 @@ def pressedKeyShortcut(event):
     elif event.char == "p" or event.char == "P":
         Customize(window)
     elif event.char == "i" or event.char == "I":
-        text = ("Congratulations for discovering navigational keys! \n\n"
-                + "As you might not know all the keys, here is a full guide:\n\n"
+        text = ("List of all the shortcut keys: \n\n"
                 + "S - is equivalent to Shuffle Button.\n"
                 + "D - is equivalent to Stop Button.\n"
                 + "R - is equivalent to Repeat Button.\n"
@@ -5308,7 +5321,7 @@ def pressedKeyShortcut(event):
                 + ", or < key - is equivalent to Volume Down.\n"
                 + "Page Up or Up - can be used to navigate the playlist UP.\n"
                 + "Page Down or Down - can be used to navigate the playlist DOWN.\n"
-                + "i - will show you this message again.")
+                + "I - will show you this message again.")
         WindowDialog(window, text, "OK" , windowTitle = "Keyboard Shortcuts")
     elif event.char == "q" or event.char == "Q":
         showCuttingTool()
@@ -5396,10 +5409,14 @@ def showCurrentSongInList():
     global listBox_Song_selected_index
     if listbox.size() > 0 and play_list.currentSongIndex < listbox.size(): #make playing song visible
         listBox_Song_selected_index = play_list.currentSongIndex
+        firstVisibleElementInList = listbox.nearest(0)
+        lastVisibleElementInList = listbox.nearest(0) + listbox["height"]-1
         listbox.selection_clear(0, tk.END)  # clear existing selection
-        listbox.see(listBox_Song_selected_index)
         listbox.select_set(listBox_Song_selected_index)
         listbox.activate(listBox_Song_selected_index)
+        #If the element playing is not visible in the listbox:
+        if listBox_Song_selected_index < firstVisibleElementInList or listBox_Song_selected_index > lastVisibleElementInList:
+            listbox.see(listBox_Song_selected_index)
 
 def showMp3TagModifierWindow(index):
     if dialog == None:
@@ -5412,15 +5429,14 @@ def showAboutWindow():
     text = ("Hello!\n"+
             "\nWelcome To PyPlay Mp3 Player,\n\n"+
             "This Application was developed by Dragos Vacariu from 14 \n"+
-            "June 2019 to 21 July 2019, with the main purpose of testing \n"+
-            "programming capabilities, especially python skills.\n"+
-            "\nWork efforts were around 140 hours, so there might still\n"+
-            "be bugs left behind for me to find out later.\n"+
-            "\nMy Contact Details are the following:\n" +
+            "June 2019 to 21 July 2019, having the purpose of testing \n"+
+            "programming capabilities & Python skills.\n"+
+            "\nThe work efforts were around 140 hours, + debugging\n"+
+            "and later improvements or updates.\n"+
+            "\nContact Details:\n" +
             "Email: dragos.vacariu@mail.com\n" +
             "LinkedIn: www.linkedin.com/in/dragos-vacariu-em\n"+
-            "\nOther projects I test my skills on, are available at:\n"+
-            "GitHub Repository: github.com/dragos-vacariu/ \n"
+            "GitHub Repository: www.github.com/dragos-vacariu/ \n"
             "\nThank you for trying out PyPlay!\n")
     WindowDialog(window, text, "OK", windowTitle = "About")
 
@@ -5505,37 +5521,66 @@ def findFavoriteTrack():
         return favoriteSong
     else:
         return "NA"
+
+def findFavoriteArtist():
+    if len(play_list.validFiles) > 0:
+        artists = [song.Artist for song in play_list.validFiles]
+        uniqueArtists = set(artists)
+        favoriteArtistListenedTime = 0
+        favoriteArtist = artists[0]
+        favoriteArtistNoOfPlays = 0       
+        for artist in uniqueArtists:
+            calculatedArtistListenedTime = calculateFavoriteArtistListenedTime(artist)
+            if favoriteArtistListenedTime < calculatedArtistListenedTime:
+                favoriteArtistListenedTime = calculatedArtistListenedTime
+                favoriteArtist = artist
+                favoriteArtistNoOfPlays = calculateFavoriteNoOfPlays(favoriteArtist)
+        return [favoriteArtist, favoriteArtistListenedTime, favoriteArtistNoOfPlays]
+    else:
+        return "NA"
+
+def calculateFavoriteArtistListenedTime(Artist: str):
+    favoriteArtistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+    listenedTime = 0
+    for song in favoriteArtistSongs:
+        listenedTime += song.SongListenedTime
+    return listenedTime
+
+def calculateFavoriteNoOfPlays(Artist: str):
+    favoriteArtistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+    noOfPlays = 0
+    for song in favoriteArtistSongs:
+        noOfPlays += song.NumberOfPlays
+    return noOfPlays
+        
     
 def showPlaylistInfo():
     favoriteSong = findFavoriteTrack()
-    if favoriteSong=="NA":
-        text = ("OVERALL:" +"\n" \
-        +"Number of Files:   " + str(len(play_list.validFiles)) +"\n" \
-        +"Number of Plays:   " + str(calculatePlaylistNumberOfPlays())+ "\n" \
-        +"Total Length:      " + str(datetime.timedelta(seconds=int(play_list.playTime))) + "\n" \
-        +"Cutted Length:     " + str(datetime.timedelta(seconds=int(calculatePlaylistCutLength()))) + "\n" \
-        +"Playable Length:   " + str(datetime.timedelta(seconds=int(play_list.playTime - calculatePlaylistCutLength()))) + "\n" \
-        +"Total Size:        " + str(round(calculatePlaylistFilesSize())) + "MB\n" \
-        +"Time Listened:     " +str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime))) + "\n" \
-        +"Created On:        " +str(play_list.BornDate)[:19] + "\n")
-    else:
-        text = ("OVERALL:" +"\n" \
-        +"Number of Files:   " + str(len(play_list.validFiles)) +"\n" \
-        +"Number of Plays:   " + str(calculatePlaylistNumberOfPlays())+ "\n" \
-        +"Total Length:      " + str(datetime.timedelta(seconds=int(play_list.playTime))) + "\n" \
-        +"Cutted Length:     " + str(datetime.timedelta(seconds=int(calculatePlaylistCutLength()))) + "\n" \
-        +"Playable Length:   " + str(datetime.timedelta(seconds=int(play_list.playTime - calculatePlaylistCutLength()))) + "\n" \
-        +"Total Size:        " + str(round(calculatePlaylistFilesSize())) + "MB\n" \
-        +"Time Listened:     " +str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime))) + "\n" \
-        +"Created On:        " +str(play_list.BornDate)[:19] + "\n" #[:19] will cut so that miliseconds won't be displayed in date \
-        +"\nFAVORITE GENRE:\n" \
-        +"Favorite Genre:    " + findFavoriteGenre()[0] + "\n" \
-        +findFavoriteGenre()[0] + " listened:   " + str(datetime.timedelta(seconds=findFavoriteGenre()[1])) + "\n" \
-        +"\nMOST LISTENED:\n" \
+    favoriteArtist = findFavoriteArtist()
+    text = ("OVERALL:" +"\n" \
+    +"Number of Files:   " + str(len(play_list.validFiles)) +"\n" \
+    +"Number of Plays:   " + str(calculatePlaylistNumberOfPlays())+ "\n" \
+    +"Total Length:      " + str(datetime.timedelta(seconds=int(play_list.playTime))) + "\n" \
+    +"Cutted Length:     " + str(datetime.timedelta(seconds=int(calculatePlaylistCutLength()))) + "\n" \
+    +"Playable Length:   " + str(datetime.timedelta(seconds=int(play_list.playTime - calculatePlaylistCutLength()))) + "\n" \
+    +"Total Size:        " + str(round(calculatePlaylistFilesSize())) + "MB\n" \
+    +"Time Listened:     " +str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime))) + "\n" \
+    +"Created On:        " +str(play_list.BornDate)[:19] + "\n" \
+    +"\nFAVORITE GENRE:\n" \
+    +"Favorite Genre:    " + findFavoriteGenre()[0] + "\n" \
+    +findFavoriteGenre()[0] + " listened:   " + str(datetime.timedelta(seconds=findFavoriteGenre()[1])) + "\n")
+    if favoriteSong!="NA":
+        text+="\nMOST LISTENED TRACK:\n" \
         +favoriteSong.fileName + "\n" \
         +"Listen Time:       " + str(datetime.timedelta(seconds=int(favoriteSong.SongListenedTime))) + "\n" \
         +"Number of Plays:   " + str(favoriteSong.NumberOfPlays) + "\n" \
-        +"Song Rating:       " + "NA" if favoriteSong.Rating==0 else str(favoriteSong.Rating) + "\n")
+        +"Song Rating:       " + "NA" if favoriteSong.Rating==0 else str(favoriteSong.Rating)
+
+    if favoriteArtist!="NA":
+        text += "\n\nMOST LISTENED ARTIST:\n" \
+        +favoriteArtist[0] + "\n" \
+        +"Listen Time:       " + str(datetime.timedelta(seconds=int(favoriteArtist[1]))) + "\n" \
+        +"Number of Plays:   " + str(favoriteArtist[2]) + "\n"
     WindowDialog(window, text, "OK", windowTitle = "Playlist Info")
 
 def focusListbox(event):
