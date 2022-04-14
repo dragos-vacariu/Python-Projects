@@ -267,10 +267,10 @@ class CuttingTool(Window):
         if message!= "":
             text = "Operation Done.\n\nFading was added to all Songs in the Playlist.\n\n" \
                     + "Some songs are too short for such long fading: " + message
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Operation Done.\n\nFading was added to all Songs in the Playlist."
-            WindowDialog(window, text, "OK" , windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None) , windowTitle = "Information")
 
     def restoreCurrentSong(self):
         global play_list
@@ -281,7 +281,7 @@ class CuttingTool(Window):
         self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
         self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
         text = "Operation Done.\n\nCutting\Fading was removed from current Song."
-        WindowDialog(window, text, "OK" , windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None) , windowTitle = "Information")
         textFadeIn.set("FadeIn: " + str(play_list.validFiles[self.index].fadein_duration)+"s")
         textFadeOut.set("FadeOut: " + str(play_list.validFiles[self.index].fadeout_duration)+"s")
         textEndTime.set("End Time: {:0>8}".format(str(datetime.timedelta(seconds=int(play_list.validFiles[self.index].endPos)))))
@@ -308,7 +308,7 @@ class CuttingTool(Window):
         self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
         self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
         text = "Operation Done.\n\nCutting\Fading was removed for all Songs in the Playlist."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         textFadeIn.set("FadeIn: " + str(play_list.validFiles[self.index].fadein_duration)+"s")
         textFadeOut.set("FadeOut: " + str(play_list.validFiles[self.index].fadeout_duration)+"s")
         textEndTime.set("End Time: {:0>8}".format(str(datetime.timedelta(seconds=int(play_list.validFiles[self.index].endPos)))))
@@ -334,7 +334,7 @@ class CuttingTool(Window):
         if self.index !=None:
             if int(self.FadeIn.get()) + int(self.FadeOut.get()) > (play_list.validFiles[self.index].endPos-play_list.validFiles[self.index].startPos):
                 text = "Song PlayTime is too short for these values."
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
             else:
                 play_list.validFiles[self.index].fadein_duration = int(self.FadeIn.get())
             textFadeIn.set("FadeIn: " + str(play_list.validFiles[self.index].fadein_duration)+"s")
@@ -345,7 +345,7 @@ class CuttingTool(Window):
         if self.index!= None:
             if int(self.FadeIn.get()) + int(self.FadeOut.get()) > (play_list.validFiles[self.index].endPos-play_list.validFiles[self.index].startPos):
                 text = "Song PlayTime is too short for these values."
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
             else:
                 play_list.validFiles[self.index].fadeout_duration = int(self.FadeOut.get())
             textFadeOut.set("FadeOut: " + str(play_list.validFiles[self.index].fadeout_duration)+"s")
@@ -363,7 +363,7 @@ class CuttingTool(Window):
                     st_value = float(self.startValue.get())
                 except: 
                     text = "You have entered an invalid START value.\nCutting was aborted."
-                    WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                 else:
                     if self.endValue.get() != "":
                         try:
@@ -382,7 +382,7 @@ class CuttingTool(Window):
                 textStartTime.set("Start Time: {:0>8}".format(str(datetime.timedelta(seconds=startPos))))
             else:
                 text = "Start Value is out of range.\nThe START was kept the same."
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         if self.endValue.get() != "" and self.index!=None:
             ed_value = computeTimeToSeconds(self.endValue.get()) #let assume user entered a value in time format.
             if ed_value < 0:
@@ -390,7 +390,7 @@ class CuttingTool(Window):
                     ed_value = float(self.endValue.get())
                 except: 
                     text = "You have entered and invalid END value.\nCutting was aborted."
-                    WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                 else:
                     if self.startValue.get() !="":
                         try:
@@ -409,10 +409,10 @@ class CuttingTool(Window):
                 textEndTime.set("End Time: {:0>8}".format(str(datetime.timedelta(seconds=endPos))))
             else:
                 text = "End Value is out of range.\nThe END was kept the same."
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         if (self.startValue.get()=="" and self.endValue.get() == ""):
             text = "You didn't entered any value, so the song was left untouched."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 class SearchTool(Window):
     def __init__(self, parent):
@@ -669,10 +669,10 @@ class Slideshow(Window):
                 Slideshow.slideshow.place(x=0, y=0, relwidth=1, relheight=1)
             except Exception as exp:
                 text = "Exception caught in Slideshow - Start function.\nMessage: " + str(exp)
-                WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None) , windowTitle = "Warning")
         else:
             text = "Slideshow is empty. No valid files were found. \nPlease load only .jpg, .jpeg or .gif files."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 class SleepingTool(Window):
 
@@ -741,7 +741,7 @@ class SleepingTool(Window):
                     self.wakeUpTime = int(self.timeInterval.get())
                 except Exception as exp:
                     text = "An invalid value was entered."
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                 else:
                     self.sleepTime=0 #if it was supposed to sleep, overwrite that.
                     self.sleepingScheduler=None #if it was supposed to sleep, overwrite that.
@@ -771,7 +771,7 @@ class SleepingTool(Window):
                     self.sleepTime = int(self.timeInterval.get())
                 except Exception as exp:
                     text = "An invalid value was entered."
-                    WindowDialog(window, text, "OK" , windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None) , windowTitle = "Information")
                 else:
                     self.wakeUpTime = 0 #if it was supposed to wake up, overwrite that
                     self.wakeUpScheduler=None #if it was supposed to wake up, overwrite that
@@ -1346,10 +1346,20 @@ class Customize(Window):
             background_label.image = img
         else:
             text = "The background picture has to be one of following formats: .gif, .jpg, .jpeg, .png."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+
+class ButtonFunctionality: #object class used to define Generic Buttons Behaviour 
+    def __init__(self, text, functionality = None):
+        self.Text = text
+        self.Functionality = functionality #this field is supposed to be a function
 
 class WindowDialog(Window):
-    def __init__(self, parent, textLabel = None, buttonText = None, windowTitle = "Info Box"):
+    def __init__(self, parent, textLabel = None, Button1_Functionality:ButtonFunctionality = None, Button2_Functionality:ButtonFunctionality = None, windowTitle = "Info Box"):
+        global allButtonsFont
+        global dialog
+        self.color = OpenFileButton["bg"]
+        self.top = tk.Toplevel(parent, bg=self.color)
+        self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         if textLabel != None and textLabel.count("\n") > 30:
             file = codecs.open("log.txt", "w", "utf-8")
             textLabel = textLabel.split('\n')
@@ -1364,21 +1374,32 @@ class WindowDialog(Window):
             if hasattr(WindowDialog, "top") and WindowDialog.top != None : # if another window of this type is openend, do nothing - important info is being displayed
                 pass
             else:
-                if textLabel != None and buttonText != None: 
-                    WindowDialog.textLabel = textLabel
-                    WindowDialog.buttonText = buttonText
-                    WindowDialog.windowTitle = windowTitle
-                    self.InfoBox(parent)
+                if textLabel != None and Button1_Functionality != None:                       
+                    self.top.title(windowTitle)
+                    self.top.attributes('-alpha', play_list.windowOpacity)
+                    if type(allButtonsFont) == StringVar:
+                        allButtonsFont = allButtonsFont.get()
+                    self.labelInfo = tk.Label(self.top, text=textLabel, \
+                                              fg=fontColor.get(), font=allButtonsFont, bg=self.color, anchor = "w", justify = "left")
+                    self.labelInfo.pack(pady=15, padx=15)
+                    Button1_Command = self.destroy if Button1_Functionality.Functionality==None else Button1_Functionality.Functionality
+                    Button1 = tk.Button(self.top, text=Button1_Functionality.Text, command=Button1_Command , fg=fontColor.get(), font=allButtonsFont, bg=self.color)
+                    if Button2_Functionality!=None:
+                        Button2_Command = self.destroy if Button2_Functionality.Functionality==None else Button2_Functionality.Functionality
+                        Button2 = tk.Button(self.top, text=Button2_Functionality.Text, command=Button2_Command, fg=fontColor.get(), font=allButtonsFont, bg=self.color)
+                        Button2.pack(pady=0, padx = 5)
+                        Button1.pack(pady=10, padx = 5)
+                    else:
+                        Button1.pack(pady=15, padx = 15)
+                    windowSize = (str(self.labelInfo.winfo_reqwidth() + 50) + "x" + str(self.labelInfo.winfo_reqheight()+120) + "+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
+                    self.top.geometry(windowSize)
+                    self.top.bind("<Escape>", self.destroyEsc)
                 else:
-                    self.TwoButtonDialogBox(parent)
+                    self.PredefinedTwoButtonDialogBox(parent)
                 self.take_focus() #make window focused
     
-    def TwoButtonDialogBox(self, parent):
+    def PredefinedTwoButtonDialogBox(self, parent):
         global allButtonsFont
-        global dialog
-        color = OpenFileButton["bg"]
-        WindowDialog.top = tk.Toplevel(parent, bg=color)
-        self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         Window_Title = "Playlist Dialog"
         self.top.title(Window_Title)
         self.top.geometry("480x200+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
@@ -1386,39 +1407,20 @@ class WindowDialog(Window):
         if type(allButtonsFont) == StringVar:
             allButtonsFont = allButtonsFont.get()
         self.labelInfo = tk.Label(self.top, text="One song is currently playing.\n\nDo you wish to stop, or keep it in the playlist?", \
-                                  fg=fontColor.get(), font=allButtonsFont, bg=color).pack()
-        StopItButton = tk.Button(self.top, text="Stop It", command=self.stopIt , fg=fontColor.get(), font=allButtonsFont, bg=color)
-        KeepItButton = tk.Button(self.top, text="Keep It", command=self.keepCurrentSong, fg=fontColor.get(), font=allButtonsFont, bg=color)
+                                  fg=fontColor.get(), font=allButtonsFont, bg=self.color).pack()
+        StopItButton = tk.Button(self.top, text="Stop It", command=self.stopIt , fg=fontColor.get(), font=allButtonsFont, bg=self.color)
+        KeepItButton = tk.Button(self.top, text="Keep It", command=self.keepCurrentSong, fg=fontColor.get(), font=allButtonsFont, bg=self.color)
         StopItButton.pack(pady=10)
         KeepItButton.pack(pady=10)
         self.top.bind("<Escape>", self.destroyEsc)
-   
-    def InfoBox(self, parent):
-        global allButtonsFont
-        global dialog
-        color = OpenFileButton["bg"]
-        WindowDialog.top = tk.Toplevel(parent, bg=color)
-        self.top.protocol("WM_DELETE_WINDOW", self.destroy)
-        self.top.title(WindowDialog.windowTitle)
-        self.top.attributes('-alpha', play_list.windowOpacity)
-        if type(allButtonsFont) == StringVar:
-            allButtonsFont = allButtonsFont.get()
-        self.labelInfo = tk.Label(self.top, text=WindowDialog.textLabel, \
-                                  fg=fontColor.get(), font=allButtonsFont, bg=color, anchor = "w", justify = "left")
-        self.labelInfo.pack(pady=15, padx=15)
-        Button1 = tk.Button(self.top, text=WindowDialog.buttonText, command=self.destroy , fg=fontColor.get(), font=allButtonsFont, bg=color)
-        Button1.pack(pady=15, padx = 15)
-        WindowDialog.windowSize = (str(self.labelInfo.winfo_reqwidth() + 50) + "x" + str(self.labelInfo.winfo_reqheight()+100) + "+" + str(window.winfo_x()+100) + "+" + str(window.winfo_y()+100))
-        self.top.geometry(WindowDialog.windowSize)
-        self.top.bind("<Escape>", self.destroyEsc)
-    
+      
     def destroy(self):
-        WindowDialog.top.destroy()
-        WindowDialog.top = None
-        WindowDialog.textLabel = None
-        WindowDialog.buttonText = None
-        WindowDialog.windowSize = None
-        WindowDialog.windowTitle = None
+        self.top.destroy()
+        self.top = None
+        self.textLabel = None
+        self.buttonText = None
+        self.windowSize = None
+        self.windowTitle = None
     
     def stopIt(self):
         global play_list
@@ -1479,7 +1481,7 @@ class WindowDialog(Window):
         del songToKeep
         self.destroy()
         displayElementsOnPlaylist()
-
+  
 class Mp3TagModifierTool(Window):
     def __init__(self, fileIndex=0):
         global allButtonsFont
@@ -1644,7 +1646,7 @@ class Mp3TagModifierTool(Window):
             except Exception:
                 text = ("Exception when loading File: " + str(self.undoArtistTitleBackupFile) + 
                         "\nThe content of backup file has been corrupted.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 for song in play_list.validFiles:
                     ttl = "Album-Year undoed for: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
@@ -1674,10 +1676,10 @@ class Mp3TagModifierTool(Window):
                     for element in dict_list:
                         message += element['fileName'] + "\n"
                     text = "Some files not found within playlist:\n" + message
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                 else:
                     text = "Operation Done\n\nPrevious Album/Year tags have been restored." + message
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                 self.AlbumTag.delete(0, tk.END)
                 self.AlbumTag.insert(0, self.Song.Album)
                 self.YearTag.delete(0, tk.END)
@@ -1701,7 +1703,7 @@ class Mp3TagModifierTool(Window):
                 dict_list = [] #make sure it's empty
                 text = ("Exception when loading File: " + str(self.undoAlbumYearBackupFile) + 
                         "\nSince the content has been corrupted, your file will be replaced.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 dict_loaded = True
                 file.close()
@@ -1728,10 +1730,10 @@ class Mp3TagModifierTool(Window):
             dictionary = {}
         if len(not_found) > 0:
             text = ("Operation Done\n\nThe data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Operation Done\n\nThe data was collected from the Internet."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
             
         if len(dict_list) > 0: # we have files changes
             file = open(self.undoAlbumYearBackupFile, "wb") 
@@ -1818,11 +1820,11 @@ class Mp3TagModifierTool(Window):
                 if MassFileEditor==False: #when using MassFileEditor skip this dialogs, because they will be displayed at the end in that function
                     textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp) 
                     + "\nPlease check your internet connection before proceed.")
-                    WindowDialog(window, textDialog, "OK", windowTitle = "Warning")
+                    WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             except Exception:
                 if MassFileEditor==False:
                     textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
-                    WindowDialog(window, textDialog, "OK", windowTitle = "Warning")
+                    WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 if response.status == 200:
                     text = self.filterAlbumFromLastFM(response.data)
@@ -1848,11 +1850,11 @@ class Mp3TagModifierTool(Window):
                             if MassFileEditor==False:
                                 textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp) 
                                 + "\nPlease check your internet connection before proceed.")
-                                WindowDialog(window, textDialog, "OK", windowTitle = "Warning")
+                                WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                         except Exception:
                             if MassFileEditor==False:
                                 textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
-                                WindowDialog(window, textDialog, "OK", windowTitle = "Warning")
+                                WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                         else:
                             if response.status == 200:
                                 text = self.filterYearFromLastFM(response.data)
@@ -1872,19 +1874,19 @@ class Mp3TagModifierTool(Window):
                                 else:
                                     if MassFileEditor == False:
                                         textDialog = "The year could not be found on Web."
-                                        WindowDialog(window, textDialog, "OK", windowTitle = "Information")
+                                        WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                                         
                     else:
                         if MassFileEditor == False:
                             textDialog = "There is no webpage available to find the year."
-                            WindowDialog(window, textDialog, "OK", windowTitle = "Information")
+                            WindowDialog(window, textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                         else:
                             self.thisWindowTitleUpdate(self.Window_Title)
                             return objectSong.fileName #return the name of item which was not found on web
                 else:
                     if MassFileEditor == False:
                         text = "There is no webpage available for this album."
-                        WindowDialog(window, text, "OK", windowTitle = "Information")
+                        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                     else:
                         self.thisWindowTitleUpdate(self.Window_Title)
                         return objectSong.fileName #return the name of item which was not found on web
@@ -2127,7 +2129,7 @@ class Mp3TagModifierTool(Window):
                 dict_list = [] #make sure it's empty
                 text = ("Exception when loading File: " + str(self.undoArtistTitleBackupFile) + 
                         "\nSince the content has been corrupted, your file will be replaced.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 file.close()
             finally:
@@ -2209,7 +2211,7 @@ class Mp3TagModifierTool(Window):
         self.TitleTag.insert(0, self.Song.Title)
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Operation Done\n\nArtist/Title tags were changed for all files."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         pickle.dump(dict_list, file)
         file.close()
         if os.path.isfile(self.undoArtistTitleBackupFile) and play_list.useMassFileEditor:
@@ -2227,7 +2229,7 @@ class Mp3TagModifierTool(Window):
             dict_list = [] #make sure it's empty
             text = ("Backup File Exception:  " + str(exp) + 
                     "\nFile: " + str(self.undoArtistTitleBackupFile)+ " might be corrupted.")
-            WindowDialog(window, text, "OK", windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         for song in play_list.validFiles:
             ttl = "Undo composed Artist-Title: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
@@ -2255,10 +2257,10 @@ class Mp3TagModifierTool(Window):
             for element in dict_list:
                 message += element['fileName'] + "\n"
             text = "Some files not found within playlist:\n" + message
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Operation Done\n\nPrevious Artist/Title tags have been restored."
-            WindowDialog(window, text, "OK" , windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None) , windowTitle = "Information")
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
         self.TitleTag.delete(0, tk.END)
@@ -2280,7 +2282,7 @@ class Mp3TagModifierTool(Window):
                 dict_list = [] #make sure the list is empty now
                 text = ("Exception when reading the content of File: " + str(self.undoRenameBackupFile) + 
                     "\nSince the content has been corrupted, your file will be replaced.")
-                WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 dict_loaded = True
                 file.close()
@@ -2328,7 +2330,7 @@ class Mp3TagModifierTool(Window):
                             song.filePath = pathToFile + newFileName
                     except Exception as Exp:
                         text = ("Exception during Mass Rename: " + str(Exp))
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         displayElementsOnPlaylist()
         showCurrentSongInList()
         self.NameTag.delete(0, tk.END)
@@ -2337,7 +2339,7 @@ class Mp3TagModifierTool(Window):
         file.close()
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Operation Done\n\nAll files were renamed."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         if os.path.isfile(self.undoRenameBackupFile) and play_list.useMassFileEditor:
             self.undoMassRenameButton.config(state=tk.NORMAL)
         else:
@@ -2355,7 +2357,7 @@ class Mp3TagModifierTool(Window):
             dict_list = [] #make sure it's empty
             text = ("Backup File Exception: " + exp 
                     +"\nFile: " + str(self.undoRenameBackupFile)+ " might be corrupted.")
-            WindowDialog(window, text, "OK", windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         for song in play_list.validFiles:
             ttl = "Restored previous names: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
@@ -2384,7 +2386,7 @@ class Mp3TagModifierTool(Window):
                             song.filePath = element['oldName']
                     except Exception as Exp:
                         text = ("Exception during Undo Mass Rename: " + str(Exp))
-                        WindowDialog(window, text, "OK", windowTitle = "Warning")
+                        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                     del dict_list[dict_list.index(element)]
                     break
                 if dict_list.index(element) == len(dict_list)-1 and element['newName'] != song.filePath:
@@ -2399,10 +2401,10 @@ class Mp3TagModifierTool(Window):
         self.thisWindowTitleUpdate(self.Window_Title)
         if message!="":
             text = "Some file were not renamed: \n" + message
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Operation Done\n\nPrevious names have been restored to all files."
-            WindowDialog(window, text, "OK" , windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         
     def NameCapitalizer(self):
         if "-" in self.NameTag.get():
@@ -2476,7 +2478,7 @@ class Mp3TagModifierTool(Window):
                 self.ArtistTag.insert(0, value)
         else:
             text = "The name should not be empty."
-            WindowDialog(window, text, "OK" , windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
     def composeFileName(self):
         if self.ArtistTag.get() != "Various" and self.TitleTag.get() != "Various":
@@ -2484,7 +2486,7 @@ class Mp3TagModifierTool(Window):
             self.NameTag.insert(0, self.ArtistTag.get() + " - " + self.TitleTag.get())
         else:
             text = "The Artist Name nor the Title should be 'Various'."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
     def NameSemiCapitalizer(self):
         if "-" in self.NameTag.get():
@@ -2570,7 +2572,7 @@ class Mp3TagModifierTool(Window):
                 showCurrentSongInList()
         except Exception as Exp:
             text = ("Exception during File Tag Update: " + str(Exp))
-            WindowDialog(window, text, "OK", windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
     def saveMp3Tags(self):
         mp3file = EasyID3(self.Song.filePath)
@@ -2671,7 +2673,7 @@ class GrabLyricsTool(Window):
                 except Exception:
                     text = ("Could not load the file: " + self.LyricsDownloads + 
                             "\nI will search for lyrics online.")
-                    WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                     self.LyricsDisplay()
             else:
                 self.LyricsDisplay()
@@ -2693,7 +2695,7 @@ class GrabLyricsTool(Window):
         self.thisWindowTitleUpdate(self.Window_Title)
         if message!="":
             text = ("Lyrics not found for: " + str(message.count("\n")) + " songs \n\n" + message)
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
     def removeLyrics(self):
         filename = play_list.validFiles[self.songIndex].fileName
@@ -2706,13 +2708,13 @@ class GrabLyricsTool(Window):
                 file.close()
             except Exception:
                 text = ("Could not load the file: " + self.LyricsDownloads)
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         if len(lyricsList) > 0:
             for element in lyricsList:
                 if element["fileName"] == filename:
                     del lyricsList[lyricsList.index(element)]
                     text = "The lyrics for this song were removed."
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                     break
             try:
                 file = open(self.LyricsDownloads, "wb")
@@ -2722,7 +2724,7 @@ class GrabLyricsTool(Window):
                 self.SaveLyrics.config(state=tk.NORMAL)
             except Exception:
                 text = ("Could not remove Lyrics for: " + filename)
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
     def saveLyrics(self, list_text=None):
         filename = play_list.validFiles[self.songIndex].fileName
@@ -2736,7 +2738,7 @@ class GrabLyricsTool(Window):
             except Exception:
                 if list_text==None: #skip the messages, we have work to do, the lyrics are being downloaded for the entire playlist.
                     text = ("Could not load the file: " + self.LyricsDownloads)
-                    WindowDialog(window, text, "OK", windowTitle = "Warning")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         alreadyContained = False
         if len(lyricsList) > 0:
             for element in lyricsList:
@@ -2744,7 +2746,7 @@ class GrabLyricsTool(Window):
                     alreadyContained = True
                     if list_text==None: #skip the messages, we have work to do, the lyrics are being downloaded for the entire playlist.
                         text = "This lyrics are already stored in your local computer."
-                        WindowDialog(window, text, "OK", windowTitle = "Information")
+                        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                     break
         if alreadyContained == False:
             lyrics_dictionary["fileName"] = filename
@@ -2763,11 +2765,11 @@ class GrabLyricsTool(Window):
                 self.SaveLyrics.config(state=tk.DISABLED)
                 if list_text==None: #skip the messages, we have work to do, the lyrics are being downloaded for the entire playlist.
                     text = "The lyrics for this song were saved."
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
             except Exception:
                 if list_text==None: 
                     text = ("Could not save Lyrics for: " + filename)
-                    WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
     def accessPage(self):
         urllib3.disable_warnings()
@@ -3148,10 +3150,10 @@ class GrabArtistBio(Window):
                 text = ("Unable to establish connection to the server: last.fm" +
                         "\nError Message: " + str(exp) + 
                         "\nPlease check your internet connection before proceed.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             except Exception:
                 text = ("An exception has been handled. \nI am sorry but I'm unable to retrieve info.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             else:
                 if response.status == 200:
                     text_list = self.filterTextFromLastFM(response.data)
@@ -3300,7 +3302,7 @@ def load_file(): #this function is called when clicking on Open File Button.
                 file.close()
             except:
                 text = ("Could not load the songs stats. File might be corrupted.")
-                WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         i=0
         for file in fileToPlay:
             if ".mp3" in file.lower():
@@ -3342,7 +3344,7 @@ def loadPlaylistFile(fileURL): #this function is called at startup if there is a
     except Exception as exp:
         text = ("Load Playlist File Exception: " + str(exp) + 
                 "\nFile: " + str(fileURL)+ " might be corrupted.")
-        WindowDialog(window, text, "OK" , windowTitle = "Warning")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
     else:
         if isinstance(content, Playlist):
             play_list = content
@@ -3457,7 +3459,7 @@ def loadPlaylistFile(fileURL): #this function is called at startup if there is a
             return True
         else:
             text = ("Playlist file has been corrupted.")
-            WindowDialog(window, text, "OK" , windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
             return False  
             
 def load_directory(): #this function is called when clicking on Open Directory Button.
@@ -3487,7 +3489,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
             file.close()
         except:
             text = ("Could not load the songs stats. File might be corrupted.")
-            WindowDialog(window, text, "OK" , windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
     for root, dirs, files in os.walk(dir):
         i=0
         for file in files:
@@ -3568,7 +3570,7 @@ def play_music(): #this function is called when clicking on Play Button.
                 play_list.danthologyTimer = time.time()
         except Exception as e:
             text = ("Play Music Function: \n" + str(e))
-            WindowDialog(window, text, "OK", windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         else:
             SongName.set("Playing: " + play_list.validFiles[play_list.currentSongIndex].fileName)
             SongSize.set("Size: " + str(play_list.validFiles[play_list.currentSongIndex].fileSize) + " MB")
@@ -3609,7 +3611,7 @@ def play_music(): #this function is called when clicking on Play Button.
                 scheduler.run()
             except Exception as exp:
                 text = ("Play Music Function - starting scheduler: \n" + str(exp))
-                WindowDialog(window, text, windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
 def pause_music(): #this function is called when clicking on Pause Button.
     global play_list
@@ -3635,7 +3637,7 @@ def pause_music(): #this function is called when clicking on Pause Button.
                 scheduler.run()
         except Exception as e:
             text = ("Pause Music Function: \n" + str(e))
-            WindowDialog(window, text, "OK" , windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
 def stop_music(): #this function is called when clicking on Stop Button.
     global play_list
@@ -3671,7 +3673,7 @@ def stop_music(): #this function is called when clicking on Stop Button.
                 play_list.isSongPause = False
         except Exception as e:
             text = ("Stop Music Function: \n" + str(e))
-            WindowDialog(window, text, "OK" , windowTitle = "Warning")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
 def handleDanthology(): #this function is called when changing a song, with DanthologyMode enabled.
     global play_list
@@ -3702,7 +3704,7 @@ def next_song(): #this function is called when clicking on Next Button.
                     pass
             except Exception as exp:
                 text = ("Next Song Function: \n" + str(exp))
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         else:
             play_list.shufflingHistory.append(play_list.currentSongIndex)
             if shuffling_playlist() == False:
@@ -3731,7 +3733,7 @@ def previous_song(): #this function is called when clicking on Previous Button.
                     pass
             except Exception as exp:
                 text = ("Previous Song Function: \n" + str(exp))
-                WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         else:
             if len(play_list.shufflingHistory) > 0 : 
                 play_list.currentSongIndex = play_list.shufflingHistory[len(play_list.shufflingHistory)-1] # load the last item added to history.
@@ -3841,7 +3843,7 @@ def viewProgress(): #this function is called in every second, when a song is bei
             except Exception as exp: 
                 #Enter here when the program is destroyed
                 text = ("Application destroyed in View Progress Function")
-                WindowDialog(window, text, "OK" , windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
                 #Make a backup of everything:
                 file = open(automaticallyBackupFile, "wb")
                 pickle.dump(play_list, file)
@@ -3963,7 +3965,7 @@ def savingSongStats(): #this function is called when canceling the window
             file.close()
     except:
         text = ("Could not load the songs stats. File might be corrupted.\nI will create a new one.")
-        WindowDialog(window, text, "OK", windowTitle = "Warning")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         dict_list = [] #make sure this is empty
         dictionary = {} #make sure this is empty
         for song in play_list.validFiles:
@@ -4024,7 +4026,7 @@ def new_playlist(): #this function is called when clicking on New Playlist Butto
     savingSongStats() #saving song stats.
     if pygame.mixer.get_init():
         if pygame.mixer.music.get_busy():
-            WindowDialog(window)
+            WindowDialog(window) #predefined window dialog
         else:
             if play_list.resetSettings == False:
                 play_list.isSongPause = False
@@ -4261,7 +4263,7 @@ def changeSkin(event): #this function is called when clicking on Skin ComboBox
                 play_list.skin = index
             else:
                 text = ("File: " + str(backgroundFile) + " could not be found." + "\nI improvised: only Skin Color was changed.")
-                WindowDialog(window, text, "OK", windowTitle = "Warning")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         allButtonsFont = skinOptions[2][play_list.skin]
         changeFonts() #change the font that comes with the new skin
         labelBackground.set("lightgray") #default value
@@ -5322,7 +5324,7 @@ def pressedKeyShortcut(event):
                 + "Page Up or Up - can be used to navigate the playlist UP.\n"
                 + "Page Down or Down - can be used to navigate the playlist DOWN.\n"
                 + "I - will show you this message again.")
-        WindowDialog(window, text, "OK" , windowTitle = "Keyboard Shortcuts")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Keyboard Shortcuts")
     elif event.char == "q" or event.char == "Q":
         showCuttingTool()
     elif event.char =="j" or event.char =="J":
@@ -5351,7 +5353,7 @@ def listboxShortcuts(event):
                 dialog.destroy()
         else:
             text = "Please close the other component window to do this."
-            WindowDialog(window, text, "OK" , windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def songInfo():
     element = play_list.validFiles[listBox_Song_selected_index]
@@ -5373,7 +5375,7 @@ def songInfo():
     + "Start Time: {:0>8}" .format(str(datetime.timedelta(seconds = int(element.startPos))) ) + "\n" \
     + "End Time: {:0>8}" .format(str(datetime.timedelta(seconds = int(element.endPos))) ) + "\n" \
     + "Number Of Plays: " + str(element.NumberOfPlays) + "\n"
-    WindowDialog(window, textLabel, "OK", windowTitle = "Song Info")
+    WindowDialog(window, textLabel, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Song Info")
 
 def openFileInExplorer():
     file = play_list.validFiles[listBox_Song_selected_index].filePath
@@ -5423,7 +5425,7 @@ def showMp3TagModifierWindow(index):
         Mp3TagModifierTool(index)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK" , windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         
 def showAboutWindow():
     text = ("Hello!\n"+
@@ -5438,35 +5440,35 @@ def showAboutWindow():
             "LinkedIn: www.linkedin.com/in/dragos-vacariu-em\n"+
             "GitHub Repository: www.github.com/dragos-vacariu/ \n"
             "\nThank you for trying out PyPlay!\n")
-    WindowDialog(window, text, "OK", windowTitle = "About")
+    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "About")
 
 def showCustomizeWindow():
     if dialog == None:
         Customize(window)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK" , windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def showGrabLyricsWindow(index="empty"):
     if dialog == None:
         GrabLyricsTool(index)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def showArtistBioWindow(index="empty"):
     if dialog == None:
         GrabArtistBio(index)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK" , windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def showSlideshowWindow():
     if Slideshow.top == None:
         Slideshow()
     else:
         text = "Slideshow is already opened."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def rightClickOnWindow(event):
     if window.winfo_containing(event.x_root, event.y_root) != listbox: # don't execute this if the cursor is inside the listbox
@@ -5530,29 +5532,129 @@ def findFavoriteArtist():
         favoriteArtist = artists[0]
         favoriteArtistNoOfPlays = 0       
         for artist in uniqueArtists:
-            calculatedArtistListenedTime = calculateFavoriteArtistListenedTime(artist)
+            calculatedArtistListenedTime = calculateArtistListenedTime(artist)
             if favoriteArtistListenedTime < calculatedArtistListenedTime:
                 favoriteArtistListenedTime = calculatedArtistListenedTime
                 favoriteArtist = artist
-                favoriteArtistNoOfPlays = calculateFavoriteNoOfPlays(favoriteArtist)
+                favoriteArtistNoOfPlays = calculateArtistNoOfPlays(favoriteArtist)
         return [favoriteArtist, favoriteArtistListenedTime, favoriteArtistNoOfPlays]
     else:
         return "NA"
 
-def calculateFavoriteArtistListenedTime(Artist: str):
-    favoriteArtistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+def findFavoriteSongOfArtist(Artist: str):
+    artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+    if len(artistSongs) > 0:
+        mostListenedSong = artistSongs[0]
+        for song in artistSongs:
+            if mostListenedSong.SongListenedTime < song.SongListenedTime:
+                mostListenedSong = song
+        return song.Title
+    else:
+        return None
+
+def calculateArtistListenedTime(Artist: str):
+    artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     listenedTime = 0
-    for song in favoriteArtistSongs:
+    for song in artistSongs:
         listenedTime += song.SongListenedTime
     return listenedTime
 
-def calculateFavoriteNoOfPlays(Artist: str):
-    favoriteArtistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+def calculateArtistNoOfPlays(Artist: str):
+    artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     noOfPlays = 0
-    for song in favoriteArtistSongs:
+    for song in artistSongs:
         noOfPlays += song.NumberOfPlays
     return noOfPlays
+
+def getArtistMusicalGenre(Artist: str):
+    artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+    musicalGenre = []
+    for song in artistSongs:
+        musicalGenre.append(song.Genre)
+    musicalGenre = list(set(musicalGenre))
+    musicalGenre = " | ".join(musicalGenre)
+    return musicalGenre
+
+def getArtistNumberOfSongs(Artist: str):
+    artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
+    return len(artistSongs)
+
+def exportPlaylistInfoToXls():
+    global window
+    # import xlsxwriter module
+    import xlsxwriter
+    # Workbook() takes one, non-optional, argument
+    # which is the filename that we want to create.
+    playlistReportFilename = 'PlaylistReport.xlsx'
+    try:
+        workbook = xlsxwriter.Workbook(playlistReportFilename)
+         
+        # The workbook object is then used to add new
+        # worksheet via the add_worksheet() method.
+        worksheet = workbook.add_worksheet("Artist Report")
+         
+        # Use the worksheet object to write
+        # data via the write() method.
+        topRowFormat = workbook.add_format({'bold': True, 'font_color': 'orange', 'font_size': 12, 'align': 'center', 'bg_color':'EEEEEE', 'border':5, 'font_name': 'Consolas', 
+        'shrink': False, 'border_color': 'orange', 'text_wrap': True})
+        regularRowFormat = workbook.add_format({'bold': False, 'font_color': 'black', 'font_size': 10, 'align': 'left', 'bg_color':'FFFFFF', 'border':1, 'font_name': 'Consolas', 
+        'shrink': False, 'text_wrap': True})
         
+        #Artist Report Worksheet
+        worksheet.write('A1', 'Artist', topRowFormat)
+        worksheet.write('B1', 'Musical Genre', topRowFormat)
+        worksheet.write('C1', 'Listened Time', topRowFormat)
+        worksheet.write('D1', 'Number of Plays', topRowFormat)
+        worksheet.write('E1', 'Favorite Song', topRowFormat)
+        worksheet.write('F1', 'Number of Songs', topRowFormat)
+        rowCounter = 2 #top row is already set above
+        if len(play_list.validFiles) > 0:
+            artists = [song.Artist for song in play_list.validFiles]
+            uniqueArtists = set(artists)      
+            for artist in uniqueArtists:
+                worksheet.write('A'+str(rowCounter), str(artist), regularRowFormat)
+                worksheet.write('B'+str(rowCounter), str(getArtistMusicalGenre(artist)), regularRowFormat)
+                worksheet.write('C'+str(rowCounter), str(datetime.timedelta(seconds=calculateArtistListenedTime(artist))).split('.')[0], regularRowFormat)
+                worksheet.write('D'+str(rowCounter), str(calculateArtistNoOfPlays(artist)), regularRowFormat)
+                worksheet.write('E'+str(rowCounter), str(findFavoriteSongOfArtist(artist)), regularRowFormat)
+                worksheet.write('F'+str(rowCounter), str(getArtistNumberOfSongs(artist)), regularRowFormat)
+                rowCounter+=1
+                window.title("Exporting report for: " + artist)    
+        worksheet.set_column('A:B', 40)
+        worksheet.set_column('C:D', 20)
+        worksheet.set_column('E:E', 40)
+        worksheet.set_column('F:F', 20)
+        
+        #Song Report Worksheet
+        worksheet = workbook.add_worksheet("Song Report")
+        worksheet.write('A1', 'Artist', topRowFormat)
+        worksheet.write('B1', 'Title', topRowFormat)
+        worksheet.write('C1', 'Genre', topRowFormat)
+        worksheet.write('D1', 'Listened Time', topRowFormat)
+        worksheet.write('E1', 'Number of Plays', topRowFormat)
+        rowCounter=2#top row is already set above
+        for song in play_list.validFiles:
+            worksheet.write('A'+str(rowCounter), song.Artist, regularRowFormat)
+            worksheet.write('B'+str(rowCounter), song.Title, regularRowFormat)
+            worksheet.write('C'+str(rowCounter), song.Genre, regularRowFormat)
+            worksheet.write('D'+str(rowCounter), str(datetime.timedelta(seconds=song.SongListenedTime)).split('.')[0], regularRowFormat)
+            worksheet.write('E'+str(rowCounter), str(song.NumberOfPlays), regularRowFormat)
+            rowCounter+=1
+            window.title("Exporting report for: " + song.Artist + " - " + song.Title)   
+        worksheet.set_column('A:A', 40)
+        worksheet.set_column('B:B', 60)
+        worksheet.set_column('C:C', 15)
+        worksheet.set_column('D:D', 20)
+        worksheet.set_column('E:E', 15)
+        workbook.close()
+    except Exception as exp:
+        text = "Unable to create Report due to: " + str(exp)
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+    # Finally, close the Excel file
+    # via the close() method.
+    else:
+        os.startfile(playlistReportFilename)
+    window.title(Project_Title)
     
 def showPlaylistInfo():
     favoriteSong = findFavoriteTrack()
@@ -5581,7 +5683,8 @@ def showPlaylistInfo():
         +favoriteArtist[0] + "\n" \
         +"Listen Time:       " + str(datetime.timedelta(seconds=int(favoriteArtist[1]))) + "\n" \
         +"Number of Plays:   " + str(favoriteArtist[2]) + "\n"
-    WindowDialog(window, text, "OK", windowTitle = "Playlist Info")
+    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), Button2_Functionality=ButtonFunctionality("Generate Full Playlist Report", exportPlaylistInfoToXls), 
+    windowTitle = "Playlist Info")
 
 def focusListbox(event):
     listbox.focus()
@@ -5665,20 +5768,20 @@ def showCuttingTool(index=None):
             else:
                 text = ("Sorry!\n\nYou cannot use this feature while cross-fading is enabled.\n\n"+
                 "Cross-fading adjust the length of your tracks so that you won't hear gaps between them.")
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Please close the other component window before proceed."
-            WindowDialog(window, text, "OK", windowTitle = "Information")
+            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
     else:
         text = "Use the playlist to select a song."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def showSleepingTool():
     if dialog == None:
         SleepingTool(window)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK", windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def fontTitleTransition(Message):
     Message = list(Message)
@@ -5721,7 +5824,7 @@ def searchSongInPlaylist(): #this function will show the Search Tool.
         SearchTool(window)
     else:
         text = "Please close the other component window before proceed."
-        WindowDialog(window, text, "OK" , windowTitle = "Information")
+        WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def fadein(Position): 
     pygame.mixer.music.set_volume((Position/play_list.validFiles[play_list.currentSongIndex].fadein_duration)*play_list.VolumeLevel) #multiplied to VolumeLevel to make sure it doesn't pass the current volume level
@@ -5739,13 +5842,13 @@ def computeTimeToSeconds(time):
                     entity=int(entity)
                 except Exception:
                     text = "An invalid value was entered."
-                    WindowDialog(window, text, "OK", windowTitle = "Information")
+                    WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                     return -1
                 else:
                     returnVal += entity* (60**(len(time)-1-index))
             else:
                 text = "Miss-use of ':' symbol, the entered value is invalid."
-                WindowDialog(window, text, "OK", windowTitle = "Information")
+                WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                 return -1
         return returnVal    
     

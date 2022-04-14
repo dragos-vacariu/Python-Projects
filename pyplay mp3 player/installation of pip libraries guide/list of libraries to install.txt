@@ -20,6 +20,7 @@ Cmd Command: python -m pip install pygame
 Cmd Command: python -m pip install mutagen
 
 3. Name: PIL
+Cmd Command: python -m pip install Pillow
 Cmd Command: python -m pip install pillow
 
 4. Name: urllib3
@@ -28,6 +29,8 @@ Cmd Command: python -m pip install urllib3
 5. Name: BeautifulSoup
 Cmd Command: python -m pip install beautifulsoup
 
+6. Name: Xlsxwriter
+Cmd Command: python -m pip install xlsxwriter
 
 You can also download each library, and install it by using .tar, .egg or .whl file
 You can download the preinstalled version also.

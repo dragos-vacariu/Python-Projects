@@ -22,6 +22,7 @@ SongStats.sts -> is the file which will store information about each file in you
 Listened, Song Rating, Favorite Song, etc. The information is being taken from the Playlist which is currently loaded (which most of 
 the time coincides with PlayListBackup.pypl), and gets transfered to SongStats.sts whenever the New Playlist button is hit. 
 
+PlaylistReport.xlsx -> is the generated internal Report for the Playlist.
 
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
 
