@@ -2159,7 +2159,20 @@ class Mp3TagModifierTool(Window):
                         pygame.mixer.music.stop()
                         pygame.mixer.music.load("clear.mp3") #use this file to release the playback
                     if "-" in song.fileName:
-                        value = song.fileName.split("-")
+                        value = song.fileName
+                        value = value.replace(" & ", " and ")
+                        value = value.replace("_", " ")
+                        value = value.replace("%", " ")
+                        value = value.replace("*", " ")
+                        value = value.replace("@", " ")
+                        value = value.replace("#", " ")
+                        value = value.replace("+", " ")
+                        value = value.replace("/", " ")
+                        value = value.replace("\\", " ")
+                        value = value.replace("`", "'")
+                        value = value.replace(";", " ")
+                        value = value.replace(":", " ")
+                        value = value.split("-")
                         #Perform string ethics and formatting for the Artist Name
                         value[0] = value[0].strip(" ")
                         value[0] = [n.capitalize() for n in value[0].split(" ")]
@@ -2169,6 +2182,7 @@ class Mp3TagModifierTool(Window):
                         value[0] = value[0].replace(" Feat. ", " and ")
                         value[0] = value[0].replace(" Featuring ", " and ")
                         value[0] = value[0].replace(" Feat ", " and ")
+                        value[0] = value[0].strip(" ")
                         song.Artist = value[0]
                         #Perform string ethics and formatting for the Song Title
                         
@@ -2177,13 +2191,13 @@ class Mp3TagModifierTool(Window):
                         #this will perform Capitalization and Semi-Capitalization for the Title
                         value[1] = value[1].split(" ")
                         if len(value[1]) > 2:
-                            value[1] = [n.capitalize() for n in value[1][:1]] + [n for n in value[1][1:]]
+                            value[1] = [n.capitalize() for n in value[1][:1]] + [n.lower() for n in value[1][1:]]
                         else:
                             value[1] = [n.capitalize() for n in value[1]]
                         value[1] = " ".join(value[1])    
                         value[1] = value[1].replace(".mp3", "")
-                        song.Title = value[1]
-                        
+                        value[1] = value[1].strip(" ")
+                        song.Title = value[1].strip(" ")
                         #Set the tags for the mp3 file.
                         mp3file["artist"] = song.Artist
                         mp3file["title"] = song.Title
