@@ -1,4 +1,5 @@
 import datetime
+import time
 import pickle
 import random
 import tkinter as tk
@@ -83,6 +84,8 @@ class Song:
         self.fileName = filename
         self.filePath = filepath
         self.fileSize = filesize
+        self.creation_time = os.path.getctime(self.filePath)
+        self.modified_time = os.path.getmtime(self.filePath)
         self.Rating = 0
         self.NumberOfPlays = 0
         audio = MP3(self.filePath)
@@ -1652,12 +1655,18 @@ class Mp3TagModifierTool(Window):
                     ttl = "Album-Year undoed for: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
                     self.thisWindowTitleUpdate(ttl)
                     for element in dict_list:
+                        isSongPlayed = False
                         if self.top == None: #if window gets closed, terminate
                             return
                         if element['fileName'] == song.fileName:
                             if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                if play_list.RESUMED:
+                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                                else:
+                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
                                 pygame.mixer.music.stop()
                                 pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                                isSongPlayed = True
                             mp3file = EasyID3(song.filePath)
                             song.Album = element['oldAlbum']
                             song.Year = element['oldYear']
@@ -1669,6 +1678,11 @@ class Mp3TagModifierTool(Window):
                                 song.Year = "Various"
                             mp3file.save(v2_version=3)
                             del dict_list[dict_list.index(element)]
+                            if isSongPlayed:
+                                pygame.mixer.music.load(song.filePath)
+                                pygame.mixer.music.play()
+                                pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                                play_list.RESUMED = True
                             break
                             
                 if len(dict_list) > 0 :
@@ -1833,10 +1847,24 @@ class Mp3TagModifierTool(Window):
                             self.AlbumTag.delete(0, tk.END)
                             self.AlbumTag.insert(tk.END, text)
                         else:
+                            isSongPlayed = False
+                            if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                if play_list.RESUMED:
+                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                                else:
+                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                                pygame.mixer.music.stop()
+                                pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                                isSongPlayed = True
                             mp3file = EasyID3(objectSong.filePath)
                             mp3file["album"] = text
                             objectSong.Album = text
                             mp3file.save(v2_version=3)
+                            if isSongPlayed:
+                                pygame.mixer.music.load(objectSong.filePath)
+                                pygame.mixer.music.play()
+                                pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                                play_list.RESUMED = True
                             if objectSong == self.Song:
                                 self.AlbumTag.delete(0, tk.END)
                                 self.AlbumTag.insert(tk.END, text)
@@ -1864,10 +1892,24 @@ class Mp3TagModifierTool(Window):
                                         self.YearTag.delete(0, tk.END)
                                         self.YearTag.insert(tk.END, year)
                                     else:
+                                        isSongPlayed = False
+                                        if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                            if play_list.RESUMED:
+                                                play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                                            else:
+                                                play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                                            pygame.mixer.music.stop()
+                                            pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                                            isSongPlayed = True
                                         mp3file = EasyID3(objectSong.filePath)
                                         mp3file["date"] = year
                                         objectSong.Year = year
                                         mp3file.save(v2_version=3)
+                                        if isSongPlayed:
+                                            pygame.mixer.music.load(objectSong.filePath)
+                                            pygame.mixer.music.play()
+                                            pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                                            play_list.RESUMED = True
                                         if objectSong == self.Song:
                                             self.YearTag.delete(0, tk.END)
                                             self.YearTag.insert(tk.END, year)
@@ -2143,6 +2185,7 @@ class Mp3TagModifierTool(Window):
                 return
             if song.fileName != "":
                 if os.path.exists(song.filePath):
+                    isSongPlayed = False
                     mp3file = EasyID3(song.filePath)
                     ExistingEntry = [Entry for Entry in dict_list if song.fileName in Entry.values()]
                     if len(ExistingEntry) == 0:
@@ -2156,8 +2199,13 @@ class Mp3TagModifierTool(Window):
                         else:
                             dictionary['oldTitle'] = ""
                     if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                        if play_list.RESUMED:
+                            play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                        else:
+                            play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
                         pygame.mixer.music.stop()
                         pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                        isSongPlayed = True
                     if "-" in song.fileName:
                         value = song.fileName
                         value = value.replace(" & ", " and ")
@@ -2218,6 +2266,11 @@ class Mp3TagModifierTool(Window):
                         dictionary['oldArtist'] = ExistingEntry[0]['oldArtist']
                         dictionary['oldTitle'] = ExistingEntry[0]['oldArtist']
                     mp3file.save(v2_version=3)
+                    if isSongPlayed:
+                        pygame.mixer.music.load(song.filePath)
+                        pygame.mixer.music.play()
+                        pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                        play_list.RESUMED = True
                     dictionary={}
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
@@ -2251,9 +2304,16 @@ class Mp3TagModifierTool(Window):
                 if self.top == None: #if window gets closed, terminate
                     return
                 if element['fileName'] == song.fileName:
-                    if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                    isSongPlayed = False
+                    if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex \
+                            and pygame.mixer.music.get_busy():
+                        if play_list.RESUMED:
+                            play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                        else:
+                            play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
                         pygame.mixer.music.stop()
                         pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                        isSongPlayed = True
                     mp3file = EasyID3(song.filePath)
                     song.Artist = element['oldArtist']
                     song.Title = element['oldTitle']
@@ -2265,6 +2325,11 @@ class Mp3TagModifierTool(Window):
                         song.Title = "Various"
                     mp3file.save(v2_version=3)
                     del dict_list[dict_list.index(element)]
+                    if isSongPlayed:
+                        pygame.mixer.music.load(song.filePath)
+                        pygame.mixer.music.play()
+                        pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                        play_list.RESUMED = True
                     break
         if len(dict_list) > 0 :
             message = ""
@@ -2315,8 +2380,8 @@ class Mp3TagModifierTool(Window):
                 pathToFile = pathToFile[0]
                 alreadyContained = False
                 if dict_loaded:
-                    for element in dict_list:
-                        if element['newName'] == pathToFile + newFileName:
+                    for element in dict_list:                           
+                        if element['newName'] == pathToFile + newFileName and song.fileName == newFileName:
                             alreadyContained = True
                             break
                 if alreadyContained == False and os.path.exists(song.filePath):
@@ -2325,23 +2390,25 @@ class Mp3TagModifierTool(Window):
                     dict_list.append(dictionary)
                     dictionary = {}
                     try:
+                        isSongPlayed = False
                         if pygame.mixer.get_init():
-                            if play_list.validFiles.index(
-                                    song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():  # enter here if the file to be renamed is currently playing
-                                play_list.isSongPause = True
+                            if play_list.validFiles.index(song) == play_list.currentSongIndex and \
+                            pygame.mixer.music.get_busy():  # enter here if the file to be renamed is currently playing
+                                if play_list.RESUMED:
+                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                                else:
+                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
                                 pygame.mixer.music.stop()
-                                shutil.copy(song.filePath,
-                                            pathToFile + newFileName)  # make a copy of this file to the project locaiton
-                                fileToRemove = song.filePath
-                                song.fileName = newFileName  # this will update the play_list with the new song info
-                                song.filePath = pathToFile + newFileName
-                                pygame.mixer.music.load(
-                                    song.filePath)  # load the new file in the player, so that the old one gets released
-                                os.remove(fileToRemove)  # remove the old one
-                        else:
-                            os.rename(song.filePath, pathToFile + newFileName)  # this will rename the file
-                            song.fileName = newFileName  # this will update the play_list with the new song info
-                            song.filePath = pathToFile + newFileName
+                                pygame.mixer.music.load("clear.mp3") #use this file to release the playback
+                                isSongPlayed = True
+                        os.rename(song.filePath, pathToFile + newFileName)  # this will rename the file
+                        song.fileName = newFileName  # this will update the play_list with the new song info
+                        song.filePath = pathToFile + newFileName
+                        if isSongPlayed:  
+                            pygame.mixer.music.load(song.filePath)
+                            pygame.mixer.music.play()
+                            pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                            play_list.RESUMED = True
                     except Exception as Exp:
                         text = ("Exception during Mass Rename: " + str(Exp))
                         WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
@@ -2384,20 +2451,25 @@ class Mp3TagModifierTool(Window):
                     FileName = element['oldName'].split(filePath)
                     FileName = FileName[1]
                     try:
-                        if pygame.mixer.get_init():
-                            if play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():  # enter here if the file to be renamed is currently playing
-                                play_list.isSongPause = True
-                                pygame.mixer.music.stop()
-                                shutil.copy(song.filePath, element['oldName'])  # make a copy of this file to the project location
-                                fileToRemove = song.filePath
-                                song.fileName = FileName  # this will update the play_list with the new song info
-                                song.filePath = element['oldName']
-                                pygame.mixer.music.load(song.filePath)  # load the new file in the player, so that the old one gets released
-                                os.remove(fileToRemove)  # remove the old one
-                        else:
-                            os.rename(song.filePath, element['oldName'])  # this will rename the file
-                            song.fileName = FileName  # this will update the play_list with the new song info
-                            song.filePath = element['oldName']
+                        isSongPlayed = False
+                        if pygame.mixer.get_init() and play_list.validFiles.index(song) == \
+                                        play_list.currentSongIndex and pygame.mixer.music.get_busy():  # enter here if the file to be renamed is currently playing
+                            play_list.isSongPause = True
+                            if play_list.RESUMED:
+                                play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                            else:
+                                play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                            pygame.mixer.music.stop()
+                            pygame.mixer.music.load("clear.mp3")  # clear the playback
+                            isSongPlayed = True
+                        os.rename(song.filePath, element['oldName'])  # this will rename the file
+                        song.fileName = FileName  # this will update the play_list with the new song info
+                        song.filePath = element['oldName']
+                        if isSongPlayed:
+                            pygame.mixer.music.load(song.filePath)
+                            pygame.mixer.music.play()
+                            pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                            play_list.RESUMED = True
                     except Exception as Exp:
                         text = ("Exception during Undo Mass Rename: " + str(Exp))
                         WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
@@ -4155,6 +4227,10 @@ def updateSortButton():
         SortButtonText.set("Least Listened")
     elif play_list.isListOrdered == 19:
         SortButtonText.set("Most Listened")
+    elif play_list.isListOrdered == 20:
+        SortButtonText.set("Most Recent")
+    elif play_list.isListOrdered == 21:
+        SortButtonText.set("Modified Date")
         
 def displayElementsOnPlaylist():
     global listbox
@@ -4594,6 +4670,7 @@ def sortRandomized():
     global play_list
     Song = play_list.validFiles[play_list.currentSongIndex]
     randomize() #let them be randomized
+    #play_list.isListOrdered = 3 # this value is set in function randomize()
     play_list.currentSongIndex = play_list.validFiles.index(Song)
     showCurrentSongInList()
 
@@ -4764,6 +4841,26 @@ def sortByListenedTimeReversed():
     displayElementsOnPlaylist()
     updateSortButton()
     showCurrentSongInList()
+
+def sortByFileMostRecent():
+    global play_list
+    Song = play_list.validFiles[play_list.currentSongIndex]
+    play_list.isListOrdered = 20
+    play_list.validFiles.sort(key=lambda Song: Song.creation_time, reverse=True)  # sort the list according to date the file been modified
+    play_list.currentSongIndex = play_list.validFiles.index(Song)
+    displayElementsOnPlaylist()
+    updateSortButton()
+    showCurrentSongInList()
+
+def sortByFileModifiedDate():
+    global play_list
+    Song = play_list.validFiles[play_list.currentSongIndex]
+    play_list.isListOrdered = 21
+    play_list.validFiles.sort(key=lambda Song: Song.modified_time)  # sort the list according to date the file been modified
+    play_list.currentSongIndex = play_list.validFiles.index(Song)
+    displayElementsOnPlaylist()
+    updateSortButton()
+    showCurrentSongInList()
     
 def sort_list(): #this function is called when clicking Sort Button.
     # 0-onrating, 1-sorted, 2-reversed, 3-random...
@@ -4788,6 +4885,8 @@ def sort_list(): #this function is called when clicking Sort Button.
     aMenu.add_command(label='Sort By Title Reversed', command=sortByTitleReversed)
     aMenu.add_command(label='Sort By Least Listened', command=sortByListenedTime)
     aMenu.add_command(label='Sort By Most Listened', command=sortByListenedTimeReversed)
+    aMenu.add_command(label='Sort By Most Recent', command=sortByFileMostRecent)
+    aMenu.add_command(label='Sort By Modified Date', command=sortByFileModifiedDate)
     #these coordinates are set to be above Sort Button
     x = SortListButton.winfo_rootx() 
     y = SortListButton.winfo_rooty()-10
@@ -5375,6 +5474,8 @@ def songInfo():
     + "Filename: " + str(element.fileName) + "\n" \
     + "Path: " + str(element.filePath) + "\n" \
     + "Size: " + str(element.fileSize) + " MB\n" \
+    + "Creation Date: " + str(time.ctime(element.creation_time)) + "\n" \
+    + "Modified Date: " + str(time.ctime(element.modified_time)) + "\n" \
     +"\nFile Tags:\n\n" \
     + "Album: " + str(element.Album) + "\n" \
     + "Year: " + str(element.Year) + "\n" \
@@ -5496,7 +5597,12 @@ def rightClickOnWindow(event):
         aMenu.add_command(label='Grab Lyrics', command=showGrabLyricsWindow)
         aMenu.add_command(label='Artist Bio', command=showArtistBioWindow)
         aMenu.add_command(label='Playlist Info', command=showPlaylistInfo)
+        aMenu.add_command(label='Open PyPlay Directory', command=openPyPlayDirectory)
         aMenu.post(event.x_root, event.y_root)
+
+def openPyPlayDirectory():
+    FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
+    subprocess.Popen([FILEBROWSER_PATH, '/select,', os.path.normpath(__file__)])
 
 def calculatePlaylistNumberOfPlays():
     totalPlays = 0
