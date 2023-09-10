@@ -2254,7 +2254,7 @@ class Mp3TagModifierTool(Window):
                     else:
                         value = song.fileName.lower()
                         value = value.strip(" ")
-                        value = value.replace(".mp3")
+                        value = value.replace(".mp3", "")
                         song.Artist = value
                         mp3file["artist"] = song.Artist
                         dictionary["newArtist"] = song.Artist
@@ -5601,8 +5601,9 @@ def rightClickOnWindow(event):
         aMenu.post(event.x_root, event.y_root)
 
 def openPyPlayDirectory():
+    ROOT_DIR = os.path.abspath("." )
     FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
-    subprocess.Popen([FILEBROWSER_PATH, '/select,', os.path.normpath(__file__)])
+    subprocess.Popen([FILEBROWSER_PATH, '/open,', ROOT_DIR])
 
 def calculatePlaylistNumberOfPlays():
     totalPlays = 0
