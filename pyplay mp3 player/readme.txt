@@ -36,12 +36,7 @@ clear.mp3 is a file used to clear the playback when making some changes for the 
 Presentation video: https://www.youtube.com/watch?v=uuD_buexn70&list=PLCma1j5Hgqtct-faQ8YIU9zQpXMgiIETA&index=2
 
 Portable Downloads:
-
-Runnable Script:
-https://github.com/dragos-vacariu/Portable-Downloads/blob/main/Python%20MP3%20Player%20-%20Runnable%20Script.rar
-
-Windows Executable:
-https://github.com/dragos-vacariu/Portable-Downloads/blob/main/Python%20MP3%20Player%20-%20Windows%20Executable.7z
+https://github.com/dragos-vacariu/Portable-Downloads/tree/main/PyPlay%20MP3%20Player
 
 setup_for_py2exe.py can be used to build and executable from this script.
 The output of setup_for_py2exe and the resources need to be placed in the same directory.
