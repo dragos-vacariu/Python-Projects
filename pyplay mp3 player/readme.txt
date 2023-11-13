@@ -45,3 +45,7 @@ https://github.com/dragos-vacariu/Portable-Downloads/blob/main/Python%20MP3%20Pl
 
 setup_for_py2exe.py can be used to build and executable from this script.
 The output of setup_for_py2exe and the resources need to be placed in the same directory.
+
+
+Web Page Presentation: 
+https://htmlpreview.github.io/?https://github.com/dragos-vacariu/Html-Projects/blob/master/Web%20Templates/project40%20python%20mp3%20player%20webpage/index.html
