@@ -1,0 +1,66 @@
+#pagination_table{
+	margin:5px;
+}
+body{
+	background-image: url(index_background.jpg);
+	background-size:20%;
+    background-repeat: repeat;
+}
+#pagination_div{
+    width:50%; 
+	opacity: 0.9;
+	background-color:gray;
+	font-family: Trebucket MS;
+	font-size: 1.3vw;
+	border-style: ridge;
+	border-width: 1.2vw;
+	border-color: white;
+    margin:1%; 
+	padding:1%;
+}
+#pagination_div h2{
+	font-family: Consolas;
+	color: white;
+    font-size: 2.0vw;
+	font-variant: small-caps;
+}
+#pagination_div h2 b{
+	color: pink;
+}
+
+#pagination_div h4{
+	font-family: Verdana;
+	color: gold;
+	opacity: 0.7;
+	border-style: solid;
+	border-width: 1%;
+	border-color: white;
+	padding: 2%;
+	letter-spacing: 1px;
+    font-size: 1.5vw;
+    background-color: rgba(0,0,0,0.4);
+}
+#pagination_div a{
+	color: lightgreen;
+	font-family: Courier New;
+	letter-spacing: 1px;
+	margin:5px;
+	padding:5px;
+	font-weight: bold;
+	line-height: 1.6;
+	font-variant: small-caps;
+	font-size: 2vw;
+	text-decoration: none;
+}
+#pagination_div a:hover{
+	color: pink;
+	font-family: Courier New;
+	letter-spacing: 1px;
+	margin:5px;
+	padding:5px;
+	font-weight: bold;
+	line-height: 1.6;
+	font-variant: small-caps;
+	font-size: 2vw;
+	text-decoration: none;
+}
