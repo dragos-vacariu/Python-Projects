@@ -43,4 +43,4 @@ The output of setup_for_py2exe and the resources need to be placed in the same d
 
 
 Web Page Presentation: 
-https://htmlpreview.github.io/?https://github.com/dragos-vacariu/Html-Projects/blob/master/Web%20Templates/project40%20python%20mp3%20player%20webpage/index.html
+https://dragos-vacariu.github.io/Html-Projects/Web%20Templates/project40%20python%20mp3%20player%20webpage/index.html
