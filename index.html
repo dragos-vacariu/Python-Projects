@@ -1,15 +1,78 @@
 <!DOCTYPE html>
+<html  ng-app="myApplication" ng-controller="Controller">
 	<head>
-		<title>Python Projects</title>
-		<link rel="stylesheet" href="./index_page_resources/index.css"> <!-- This is an external CSS -->
+		<title>{{pageObject.page_title}} Python Projects</title>
+		<meta charset = "UTF-8">
+		<!--Global resources-->
+		<link rel="stylesheet" href="../portfolio/website_resources/global/css/global.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+		<script src="../portfolio/website_resources/global/scripts/global_script.js"></script>
 	</head>
 	<body>
-		<div id ="pagination_div">
-			<h2>Python Projects</h2>
-			<h4>Presentation Video Catalogue:</h4>
-			<table id = "pagination_table">
-				<tr><a href = "pyplay mp3 player/PyPlay Mp3 Player.html">Python Mp3 Player Presentation Video</a href><br></tr>
+		<nav>
+			<a class = "outer_href" href=../portfolio/{{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
+			<div class="dropdown_menu">
+				<button id = "selected_dropdown_button"  class="dropdown_button">{{pageObject.page_navigation[1].name}}</button>
+				<div class="dropdown_content">
+					<a ng-repeat="page in pageObject.page_navigation_dropdown" href=../{{page.value}}>{{page.name}}</a>
+				</div>
+			</div>
+			<a class = "outer_href"  href=../portfolio/{{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
+		</nav>
+		<header>
+			<div id="header_title">
+				<h2>{{pageObject.page_title}}</h2>
+			</div>				
+		</header>
+		<div id="page_block">
+			<h2>Catalogue:</h2>
+			<table id = "content_table">
+				<tr>
+					<td>
+						<div id ="catalogue_div_left">
+							<ul class = "content_list">
+								<li ng-repeat="item in python_projects_catalogue"><a href = {{item.value}}>{{item.name}}</a></li>
+							</ul>
+						</div>
+					</td>
+					<td>
+						<div id="catalogue_div_right">
+							<img src="../portfolio/website_resources/global/images/mario.gif" alt="mario gif">
+						</div>
+					</td>
+				</tr>
 			</table>
 		</div>
+		<footer>
+			<h4>{{pageObject.footer_copyright}}</h4>
+			<h5>{{pageObject.footer_paragraph}}</h5>
+			<table>
+				<tr>
+					<th>{{pageObject.footer_table_headers[0]}}</th>
+					<th>{{pageObject.footer_table_headers[1]}}</th>
+					<th>{{pageObject.footer_table_headers[2]}}</th>
+				</tr>
+				<tr>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.template_info">{{x}}</li>
+						</ul>
+					</td>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.connections_list">
+								<a href="https://www.{{x}}">{{x}}
+								</a>
+							</li>
+						</ul>
+					</td>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.tools_used">{{x}}</li>
+						</ul>
+					</td>
+				</tr>
+			</table>
+		</footer>
 	</body>
 </html>

@@ -1,13 +1,77 @@
 <!DOCTYPE html>
+<html  ng-app="myApplication" ng-controller="Controller">
 	<head>
-		<title>PyPlay Mp3 Player</title>
-		<link rel="stylesheet" href="../index_page_resources/index.css"> <!-- This is an external CSS -->
+		<title>{{pageObject.page_title}} Python MP3 Player Video</title>
+		<meta charset = "UTF-8">
+		<!--Global resources-->
+		<link rel="stylesheet" href="../../portfolio/website_resources/global/css/global.css">
+		<link rel="stylesheet" href="../../portfolio/website_resources/global/css/video_page.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+		<script src="../../portfolio/website_resources/global/scripts/global_script.js"></script>
+		
+		<!--Local resources-->
 	</head>
 	<body>
-		<video controls autoplay muted style="width: 80%; height:80%;">
-		  <source src="PyPlay Mp3 Player.mp4" type="video/mp4">
-		  <source src="PyPlay Mp3 Player.ogg" type="video/ogg">
-		Your browser does not support the video tag.
-		</video>
+		<nav>
+			<a class = "outer_href" href=../../portfolio/{{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
+			<div class="dropdown_menu">
+				<button id = "selected_dropdown_button"  class="dropdown_button">{{pageObject.page_navigation[1].name}}</button>
+				<div class="dropdown_content">
+					<a ng-repeat="page in pageObject.page_navigation_dropdown" href=../../{{page.value}}>{{page.name}}</a>
+				</div>
+			</div>
+			<a class = "outer_href"  href=../../portfolio/{{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
+		</nav>
+		<header>
+			<div id="header_title">
+				<h2>{{pageObject.page_title}}</h2>
+			</div>				
+		</header>
+		<div id="page_block">
+			<h2>Catalogue -> <a href=../../{{pageObject.page_navigation_dropdown[2].value}}>{{pageObject.page_navigation_dropdown[2].name}}:</a></h2>
+			<h3>Python MP3 Player</h3>
+
+			<video controls autoplay muted style="width: 80%; height:80%;">
+			  <source src="PyPlay Mp3 Player.mp4" type="video/mp4">
+			  <source src="PyPlay Mp3 Player.ogg" type="video/ogg">
+			Your browser does not support the video tag.
+			</video>
+
+			<h4>Description:</h4>
+			<h4>No description
+			</h4>
+
+		</div>
+		<footer>
+			<h4>{{pageObject.footer_copyright}}</h4>
+			<h5>{{pageObject.footer_paragraph}}</h5>
+			<table>
+				<tr>
+					<th>{{pageObject.footer_table_headers[0]}}</th>
+					<th>{{pageObject.footer_table_headers[1]}}</th>
+					<th>{{pageObject.footer_table_headers[2]}}</th>
+				</tr>
+				<tr>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.template_info">{{x}}</li>
+						</ul>
+					</td>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.connections_list">
+								<a class = "outer_href" href="https://www.{{x}}">{{x}}
+								</a>
+							</li>
+						</ul>
+					</td>
+					<td>
+						<ul class="footer_list">
+							<li ng-repeat="x in pageObject.tools_used">{{x}}</li>
+						</ul>
+					</td>
+				</tr>
+			</table>
+		</footer>
 	</body>
 </html>
