@@ -12,34 +12,89 @@
 		<!--Local resources-->
 	</head>
 	<body>
-		<nav>
-			<a class = "outer_href" href=../../portfolio/{{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
-			<div class="dropdown_menu">
-				<button id = "selected_dropdown_button"  class="dropdown_button">{{pageObject.page_navigation[1].name}}</button>
-				<div class="dropdown_content">
-					<a ng-repeat="page in pageObject.page_navigation_dropdown" href=../../{{page.value}}>{{page.name}}</a>
-				</div>
-			</div>
-			<a class = "outer_href"  href=../../portfolio/{{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
-		</nav>
 		<header>
 			<div id="header_title">
 				<h2>{{pageObject.page_title}}</h2>
 			</div>				
 		</header>
+		<nav>
+			<table>
+				<tr>
+					<td>
+						<div>
+							<a class = "outer_href" href=../../portfolio{{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
+						</div>
+					</td>
+					<td id = "selected_webpage" >
+						<div class="dropdown_menu">
+							<a class="outer_href">{{pageObject.page_navigation[1].name}}</a>
+							<div class="dropdown_content">
+								<a ng-repeat="page in pageObject.page_navigation_dropdown" href=../../{{page.value}}>{{page.name}}</a>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div>
+							<a class = "outer_href"  href=../../portfolio{{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</nav>
 		<div id="page_block">
 			<h2>Catalogue -> <a href=../../{{pageObject.page_navigation_dropdown[2].value}}>{{pageObject.page_navigation_dropdown[2].name}}:</a></h2>
 			<h3>Python MP3 Player</h3>
 
-			<video controls autoplay muted style="width: 80%; height:80%;">
+			<video controls autoplay muted>
 			  <source src="PyPlay Mp3 Player.mp4" type="video/mp4">
 			  <source src="PyPlay Mp3 Player.ogg" type="video/ogg">
 			Your browser does not support the video tag.
 			</video>
 
 			<h4>Description:</h4>
-			<h4>No description
+			<h4>
+				VERY INTERACTIVE CUSTOMIZABLE MP3 PLAYER DEVELOPED USING PYTHON, TKINTER AND PYGAME.
+				<p>PyPlay MP3 Player is an application which was developed as challenge in order to improve knowledge, coding skills and understanding of
+				Python: high-level programming & scripting language
+				</br></br>
+				<b>For Windows:</b> a compiled version is available containing the executable file with all the resources required to run. 
+				The compilation was done using Python Library: <code><b>Py2Exe</code></b>.
+				
+				</br></br>
+				<b>Portability:</b> a python pre-installed version is available. This version contains the Python Script File (source code) and 
+				<code><b>Python 3.4</code></b> with all the development libraries required to run the software.</br>
+				</p>
+				<p>
+					What can the script do:
+				</p>
+				<p>
+					- playing .mp3 files,
+					<br>- create and manage .mp3 file playlists.
+					<br>- customizable player's appearance.
+					<br>- rename and edit .mp3 file tags in Real-Time (without stopping the playback).
+					<br>- adjust the playback length for the files within the playlist.
+					<br>- add track independently fading in and fading out effects.
+					<br>- rating system for the tracks within a playlist.
+					<br>- Sleep and Wake Up timers.
+					<br>- real-time web-crawling for Track Lyrics.
+					<br>- real-time web-crawling for Artist Biographies.
+				</p>
+				<p>
+						- attach Slideshows.
+					<br>- adds Cross-Fading for Track Transitions.
+					<br>- Shuffling without repeats.
+					<br>- sets automatic track switching time-intervals (Danthology Mode).
+					<br>- tracking of the number of times each track was played.
+					<br>- auto-filling of the missing MP3 Tag Information such us: Artist, Name, Album, Year directly from the Web.
+					<br>- auto-text editing / renaming files taking as reference MP3 Tags.
+					<br>- various sorting methods available.
+					<br>- real-time search capability within playlists.
+					<br>- playlists Stats tracking.
+					<br>- able to generate Excel reports for Playlist & Track Statistics;
+					<br>- string filtering and processing of file names. Able to remove unwanted characters in real-time for every file in the playlist;
+				</p>
 			</h4>
+
 
 		</div>
 		<footer>
