@@ -19,20 +19,20 @@
 				<tr>
 					<td>
 						<div>
-							<a class = "outer_href" href=../portfolio{{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
+							<a class = "outer_href" href={{pageObject.page_navigation[0].value}}>{{pageObject.page_navigation[0].name}}</a>
 						</div>
 					</td>
 					<td id = "selected_webpage" >
 						<div class="dropdown_menu">
 							<a class="outer_href">{{pageObject.page_navigation[1].name}}</a>
 							<div class="dropdown_content">
-								<a ng-repeat="page in pageObject.page_navigation_dropdown" href=../{{page.value}}>{{page.name}}</a>
+								<a ng-repeat="page in pageObject.page_navigation_dropdown" href={{page.value}}>{{page.name}}</a>
 							</div>
 						</div>
 					</td>
 					<td>
 						<div>
-							<a class = "outer_href"  href=../portfolio{{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
+							<a class = "outer_href"  href={{pageObject.page_navigation[2].value}}>{{pageObject.page_navigation[2].name}}</a>
 						</div>
 					</td>
 				</tr>
