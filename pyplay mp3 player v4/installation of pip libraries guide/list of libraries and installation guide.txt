@@ -1,0 +1,60 @@
+List of libraries to install after installing Python:
+
+Here is how to do it:
+Open command prompt and enter the command:
+
+For Windows 7:
+cd "filepath to Python executable" -> EX: cd C:/Python34/python.exe
+
+For Windows 10:
+cd /d "filepath to Python executable" -> EX: cd /d C:/Python34/python.exe
+
+IF the .zip file containing pyplay has preinstalled Python:
+PATH_TO_EXTRACTED_DOWNLOAD/pyplay mp3 player v3 preinstalled\Python310\
+
+In order to install the libraries from WHL Files you should extract LIBRARIES_TO_INSTALL_MANUALLY.7z and copy the directory to your Python.
+
+The libraries to install are the following:
+
+1. Name: Pygame
+Cmd Command to install from web: python -m pip install pygame
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/pygame-1.9.6rc1-cp34-cp34m-win32.whl
+
+2. Name: Mutagen
+Cmd Command to install from web: python -m pip install mutagen
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/mutagen-1.42.0.tar.gz
+
+3. Name: PIL
+Cmd Command to install from web: python -m pip install pillow
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/Pillow-3.4.0-cp34-cp34m-win32.whl
+
+4. Name: urllib3
+Cmd Command to install from web: python -m pip install urllib3
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/urllib3-1.24.3.tar.gz
+
+5. Name: BeautifulSoup
+Cmd Command to install from web: python -m pip install beautifulsoup4
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/beautifulsoup4-4.7.1-py3-none-any.whl
+
+6. Name: XlsxWriter
+Cmd Command to install from web: python -m pip install xlsxwriter
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/XlsxWriter-3.0.3-py3-none-any.whl
+
+7. Name: NLTK
+Cmd Command to install from web: python -m pip install nltk
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/nltk-3.2.3.tar.gz
+
+8.Name: Py2Exe (required only to build .exe)
+Cmd Command to install from web: python -m pip install py2exe
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/py2exe-0.9.2.2-py33.py34-none-any.whl
+
+9.Name: tkinterdnd2 -> not used
+Cmd Command to install from web: python -m pip install tkinterdnd2
+Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/tkinterdnd2-0.4.2-py3-none-any.whl
+
+
+The local libraries available under: 
+Python34\LIBRARIES_TO_INSTALL_MANUALLY 
+
+are exactly the ones I used for building, compiling and testing the Software. If you install the libraries from the web, the version might differ
+and some errors because of the incompatibility might occur - so take that into account.
