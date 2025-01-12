@@ -3457,8 +3457,8 @@ def loadPlaylistFile(fileURL): #this function is called at startup if there is a
                 textAlbum.set("Album: " + str(play_list.validFiles[play_list.currentSongIndex].Album))
                 textTitle.set("Title: " + str(play_list.validFiles[play_list.currentSongIndex].Title))
                 textYear.set("Year: " + str(play_list.validFiles[play_list.currentSongIndex].Year))
-                textSongListenedTime.set("Song Listened Time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
-                textPlaylistListenedTime.set("Playlist Listened Time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime)))))
+                textSongListenedTime.set("Played time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
+                textPlaylistListenedTime.set("Total listening time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime)))))
                 startPos = int(play_list.validFiles[play_list.currentSongIndex].startPos)
                 textStartTime.set("Start Time: {:0>8}".format(str(datetime.timedelta(seconds=startPos))))
                 endPos = int(play_list.validFiles[play_list.currentSongIndex].endPos)
@@ -3469,7 +3469,7 @@ def loadPlaylistFile(fileURL): #this function is called at startup if there is a
                 textMonoStereoMode.set("Mode: " + mode)
                 textNofPlays.set("No. of Plays: " + str(play_list.validFiles[play_list.currentSongIndex].NumberOfPlays))
                 textSampleRate.set("Sample Rate: " + str(play_list.validFiles[play_list.currentSongIndex].sample_rate))
-                textTotalPlayTime.set("PlayTime: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
+                textTotalPlayTime.set("Total Length: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
                 danMode = "ON" if play_list.danthologyMode == True else "OFF"
                 textDanthologyMode.set("Danthology Mode: " + danMode)
                 VolumeScale.set(play_list.VolumeLevel*100) #put the volume level on the scale.
@@ -3622,7 +3622,7 @@ def play_music(): #this function is called when clicking on Play Button.
             textAlbum.set("Album: " + str(play_list.validFiles[play_list.currentSongIndex].Album))
             textTitle.set("Title: " + str(play_list.validFiles[play_list.currentSongIndex].Title))
             textYear.set("Year: " + str(play_list.validFiles[play_list.currentSongIndex].Year))
-            textSongListenedTime.set("Song Listened Time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
+            textSongListenedTime.set("Played time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
             startPos = int(play_list.validFiles[play_list.currentSongIndex].startPos)
             textStartTime.set("Start Time: {:0>8}" .format(str(datetime.timedelta(seconds=startPos))))
             endPos = int(play_list.validFiles[play_list.currentSongIndex].endPos)
@@ -3908,8 +3908,8 @@ def viewProgress(): #this function is called in every second, when a song is bei
             if play_list.VolumeLevel > 0.0: #only if Volume not Muted means listening to it.
                 play_list.validFiles[play_list.currentSongIndex].SongListenedTime+=progressViewRealTime #if entered here, means song is playing with volume!=0
                 play_list.PlaylistListenedTime += progressViewRealTime #if entered here, means song is playing with volume!=0
-                textSongListenedTime.set("Song Listened Time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
-                textPlaylistListenedTime.set("Playlist Listened Time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime)))))
+                textSongListenedTime.set("Played time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))))
+                textPlaylistListenedTime.set("Total listening time: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.PlaylistListenedTime)))))
             try:
                 window.update()  # Force an update of the GUI
                 #without this the window will freeze.
@@ -4013,8 +4013,8 @@ def clearLabels(): #this function is called on New Playlist Button, and on Stop 
     textAlbum.set("Album: ")
     textTitle.set("Title: ")
     textYear.set("Year: ")
-    textSongListenedTime.set("Song Listened Time: ")
-    textPlaylistListenedTime.set("Playlist Listened Time: ")
+    textSongListenedTime.set("Played time: ")
+    textPlaylistListenedTime.set("Total listening time: ")
     textFadeIn.set("FadeIn: ")
     textFadeOut.set("FadeOut: ")
     SongSize.set("Size: ")
@@ -4195,7 +4195,7 @@ def displayElementsOnPlaylist():
         if len(str(play_list.validFiles.index(element))+". "+element.fileName) > listbox["width"] and play_list.listboxWidth=="Auto": # this will resize the playlist in case there is not enough room to see the string
             listbox["width"] = len(str(play_list.validFiles.index(element))+". "+element.fileName) + 5 # let there be 5 empty spaces before the end of playlist
             searchValue["width"] = listbox["width"] - 16
-    textTotalPlayTime.set("PlayTime: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
+    textTotalPlayTime.set("Total Length: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
     if play_list.viewModel == "PLAYLIST":
         changePlaylistView() # this will readjust the window.
             
@@ -4555,7 +4555,7 @@ def remove_song():
             del play_list.validFiles[listBox_Song_selected_index]
             displayElementsOnPlaylist()
             textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
-            textTotalPlayTime.set("PlayTime: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
+            textTotalPlayTime.set("Total Length: {:0>8}" .format(str(datetime.timedelta(seconds=int(play_list.playTime)))))
             listbox.selection_clear(0, tk.END)  # clear existing selection
             listbox.see(listBox_Song_selected_index)
             listbox.select_set(listBox_Song_selected_index)
@@ -5175,10 +5175,10 @@ def packPositionLabels(): #function called only at the start, to position the la
     #column 1
     labelDuration.place(x=10, y=170)
     labelLength.place(x=10, y=190)
-    labelStartTime.place(x=10, y=210)
-    labelEndTime.place(x=10, y=230)
-    labelSampleRate.place(x=10, y=250)
-    labelTotalPlayTime.place(x=10, y=270)
+    labelSongListenedTime.place(x=10, y=210)
+    labelStartTime.place(x=10, y=230)
+    labelEndTime.place(x=10, y=250)
+    labelSampleRate.place(x=10, y=270)
     labelDanthologyMode.place(x=10, y=290)
     labelFallAsleep.place(x=10, y=310)
 
@@ -5192,8 +5192,7 @@ def packPositionLabels(): #function called only at the start, to position the la
     labelNofPlays.place(x=180, y=290)
     labelWakeUp.place(x=180, y=310)
 
-
-    labelSongListenedTime.place(x=10, y=340)
+    labelTotalPlayTime.place(x=10, y=340)
     labelPlaylistListenedTime.place(x=10, y=360)
 
     #Bottom labels
@@ -6325,7 +6324,7 @@ labelEndTime = tk.Label(window, textvariable=textEndTime, compound=tk.CENTER, pa
                         , fg=SkinColor.get(), font=allButtonsFont, background = labelBackground.get())  # creating a label on the window
 
 textTotalPlayTime = StringVar()
-textTotalPlayTime.set("PlayTime: ")
+textTotalPlayTime.set("Total Length: ")
 labelTotalPlayTime = tk.Label(window, textvariable=textTotalPlayTime, compound=tk.CENTER, padx=labelPadX \
                         , fg=SkinColor.get(), font=allButtonsFont, background = labelBackground.get())  # creating a label on the window
 
@@ -6390,12 +6389,12 @@ labelYear = tk.Label(window, textvariable=textYear, compound=tk.CENTER, padx=lab
                         , fg=SkinColor.get(), font=allButtonsFont, background = labelBackground.get())                           
 
 textSongListenedTime = StringVar()
-textSongListenedTime.set("Song Listened Time: ")
+textSongListenedTime.set("Played time: ")
 labelSongListenedTime = tk.Label(window, textvariable=textSongListenedTime, compound=tk.CENTER, padx=labelPadX \
                         , fg=SkinColor.get(), font=allButtonsFont, background = labelBackground.get())                         
 
 textPlaylistListenedTime = StringVar()
-textPlaylistListenedTime.set("Playlist Listened Time: ")
+textPlaylistListenedTime.set("Total listening time: ")
 labelPlaylistListenedTime = tk.Label(window, textvariable=textPlaylistListenedTime, compound=tk.CENTER, padx=labelPadX \
                         , fg=SkinColor.get(), font=allButtonsFont, background = labelBackground.get())                         
 packPositionLabels()
