@@ -31,13 +31,13 @@ to install libraries, in order to use this script.
 
 clear.mp3 is a file used to clear the playback when making some changes for the file currently loaded.
 
-DOWNLOAD LINKS:
+The cross-platform preinstalled version is also available on WEB at:
 https://mega.nz/#F!GYxHjSgD!NM0715JCrPXXhfPERyLe-w
-https://dragos-vacariu.github.io/catalogue/Portable-Downloads.html
-https://github.com/dragos-vacariu/Portable-Downloads/tree/main/PyPlay%20MP3%20Player
+
+There is also a compiled version available for WINDOWS only.
 
 You can also use setup_for_py2exe.py to build and executable from this script.
 If you use setup_for_py2exe you need to make sure that you copy the resources in the same directory with the compiled files.
 
-Official Web Page:
-https://dragos-vacariu.github.io/catalogue/Python-Projects/PyPlay%20Mp3%20Player.html
+Official Website:
+https://pyplay-mp3player.site123.me

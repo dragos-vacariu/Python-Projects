@@ -34,27 +34,42 @@ Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_I
 
 5. Name: BeautifulSoup
 Cmd Command to install from web: python -m pip install beautifulsoup4
-Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/beautifulsoup4-4.7.1-py3-none-any.whl
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/beautifulsoup4-4.7.1-py3-none-any.whl
 
 6. Name: XlsxWriter
 Cmd Command to install from web: python -m pip install xlsxwriter
-Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/XlsxWriter-3.0.3-py3-none-any.whl
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/XlsxWriter-3.0.3-py3-none-any.whl
 
 7. Name: NLTK
 Cmd Command to install from web: python -m pip install nltk
-Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/nltk-3.2.3.tar.gz
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/nltk-3.2.3.tar.gz
 
 8.Name: Py2Exe (required only to build .exe)
 Cmd Command to install from web: python -m pip install py2exe
-Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/py2exe-0.9.2.2-py33.py34-none-any.whl
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/py2exe-0.9.2.2-py33.py34-none-any.whl
 
-9.Name: tkinterdnd2 -> not used
+9.Name: tkinterdnd2
 Cmd Command to install from web: python -m pip install tkinterdnd2
-Cmd Command to install from local WHL File: python -m pip install LIBRARIES_TO_INSTALL_MANUALLY/tkinterdnd2-0.4.2-py3-none-any.whl
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/tkinterdnd2-0.4.2-py3-none-any.whl
 
+10.Name: pyinstaller
+Cmd Command to install from web: python -m pip install pyinstaller
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/pyinstaller-6.11.1-py3-none-win_amd64.whl
+
+11.Name: pynput
+Cmd Command to install from web: python -m pip install pynput
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/pynput-1.7.7-py2.py3-none-any.whl
+
+12.Name: psutil
+Cmd Command to install from web: python -m pip install psutil
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/psutil-6.1.1-cp37-abi3-win_amd64.whl
+
+13.Name: shared_memory_dict
+Cmd Command to install from web: python -m pip install shared_memory_dict
+Cmd Command to install from local WHL File: python -m pip install PYTHON310_LIBRARIES_TO_INSTALL_MANUALY/shared_memory_dict-0.7.2-py3-none-any.whl
 
 The local libraries available under: 
-Python34\LIBRARIES_TO_INSTALL_MANUALLY 
+Python310\PYTHON310_LIBRARIES_TO_INSTALL_MANUALY 
 
 are exactly the ones I used for building, compiling and testing the Software. If you install the libraries from the web, the version might differ
 and some errors because of the incompatibility might occur - so take that into account.
