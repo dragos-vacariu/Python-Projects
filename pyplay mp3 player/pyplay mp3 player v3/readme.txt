@@ -1,4 +1,4 @@
-If the script crashes on startup, problem should be cause by the backup files.
+If the script crashes on startup, problem should be caused by the backup files.
 
 Here is the legend of backup files for you to decide which to remove in these circumstances:
 
@@ -13,7 +13,6 @@ to undo the changes performed by the Script to all your mp3 files.
 PlayListBackup.pypl -> is the file which stores the details, and location of all the songs in 
 your Playlist, if you remove this, the playlist is set to Defaults Skin & Colors and you might lose data like SongStats.
 
-
 ALLARTISTTITLE.backup -> is the file created to keep tracking of the Artist and Title tags, when using
 MASS FILE EDITOR to compose these 2 tags from FileName. If you remove this file, you will not be able to undo the changes
 the Script has performed to all your Mp3 file Tags.
@@ -27,8 +26,8 @@ PlaylistReport.xlsx -> is the generated internal Report for the Playlist.
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
 
 
-The .PNG files from "installation of pip libraries guide" have no functional impact, they are just a guide of how 
-to install libraries, in order to use this script.
+The .PNG files from "installation of pip libraries guide" are just a guide of how to install libraries in order to use 
+this script.
 
 clear.mp3 is a file used to clear the playback when making some changes for the file currently loaded.
 
