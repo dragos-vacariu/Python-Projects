@@ -60,7 +60,7 @@ class Playlist:
         self.isSongStopped = False
         self.VolumeLevel=1.0
         self.useMassFileEditor=False
-        self.dirFilePath = None
+        self.dirFilePath = []
         self.skin_theme = skinOptions[0]
         self.danthologyMode=False
         self.danthologyDuration=0
@@ -278,6 +278,15 @@ class Song:
                 mode = "Stereo" if play_list.validFiles[play_list.currentSongIndex].channels == 2 else "Mono"
                 textMonoStereoMode.set("Mode: " + mode)
                 textSampleRate.set("Sample Rate: " + str(self.sample_rate))
+        else:
+            #file is no longer available at the given filepath
+            self.Exception = "File is no longer available."
+
+    def __eq__(self, other):
+        if self.filePath == other.filePath:
+            return True
+        else:
+            return False
 
     def __repr__(self):
         return str(self.fileName) + "   " + str(formatTimeString(self.SongListenedTime)) +  "   " + str(self.NumberOfPlays)
@@ -325,73 +334,121 @@ class CuttingTool(Window):
             self.top.protocol("WM_DELETE_WINDOW", self.destroy)
             self.Window_Title = "Cutting Tool"
             self.top.title(self.Window_Title)
-            self.top.geometry("410x350+" + str(windowCascade.root.winfo_x()+100) + "+" + str(windowCascade.root.winfo_y()+100))
+
+            self.top_width = 410
+            self.top_height = 350
+            self.top.geometry(str(self.top_width) + "x" + str(self.top_height)+ "+"
+                        + str(windowCascade.root.winfo_x()+100) + "+"
+                        + str(windowCascade.root.winfo_y()+100))
+
             self.top.attributes('-alpha', play_list.windowOpacity)
 
             columnOne = 10
             columnTwo = 220
+            vertical_space = 10
+
+            labelInfoPosX = columnOne + 60
+
             self.InfoLabelText = StringVar()
             self.InfoLabelText.set("Welcome to MP3 Cutting capability:\n\n"
                                +"Please enter Start and End value and Hit OK.\n"
-                                +"This will NOT change the original file.\n\n\n")
-            tk.Label(self.top, textvariable=self.InfoLabelText, fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne+60, y=10)
-            tk.Label(self.top, text="Selected File: " + play_list.validFiles[self.index].fileName,
-                                            fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne+60, y=100)
-            tk.Label(self.top, text="Start Value:",
-                                            fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne, y=140)
+                                +"This will NOT change the original file.")
+            self.infoLabel = tk.Label(self.top, textvariable=self.InfoLabelText, fg=fontColor.get(), font=allButtonsFont.get(), bg=color)
+            self.infoLabel.place(x=labelInfoPosX, y=10)
+
+            self.selectedFileLabel = tk.Label(self.top, text="Selected File: " + play_list.validFiles[self.index].fileName,
+                                            fg=fontColor.get(), font=allButtonsFont.get(), bg=color)\
+
+            positionTkWidgetsVertically(labelInfoPosX, self.infoLabel, self.selectedFileLabel, vertical_space)
+            #self.selectedFileLabel.place(x=labelInfoPosX, y=100)
+
+            self.selectedFileLabel["wraplength"] = self.infoLabel.winfo_reqwidth()
+
+
+            self.startValueLabel = tk.Label(self.top, text="Start Value:",
+                            fg=fontColor.get(), font=allButtonsFont.get(), bg=color)
+
+            positionTkWidgetsVertically(columnOne, self.selectedFileLabel, self.startValueLabel, vertical_space)
 
             self.startValue = tk.Entry(self.top)
-            self.startValue.place(x=columnOne, y=160)
+            positionTkWidgetsVertically(columnOne,self.startValueLabel, self.startValue, vertical_space)
+
             self.startValue.insert(tk.END, str(formatTimeString(play_list.validFiles[self.index].startPos)))
             self.startValue.bind("<Return>", self.cutItem)
 
-            tk.Label(self.top, text="End Value:", fg=fontColor.get(),
-                                          font=allButtonsFont.get(), bg=color).place(x=columnOne, y=182)
+            self.endValueLabel = tk.Label(self.top, text="End Value:", fg=fontColor.get(),
+                          font=allButtonsFont.get(), bg=color)
+            positionTkWidgetsVertically(columnOne, self.startValue, self.endValueLabel, vertical_space)
+
             self.endValue = tk.Entry(self.top)
-            self.endValue.place(x=columnOne, y=202)
+            positionTkWidgetsVertically(columnOne, self.endValueLabel, self.endValue, vertical_space)
             self.endValue.insert(tk.END, str(formatTimeString(play_list.validFiles[self.index].endPos)))
             self.endValue.bind("<Return>", self.cutItem)
 
             self.buttonOK = tk.Button(self.top, text="Save Length", command=self.okButtonPressed, bg=color, fg=fontColor.get(), font=allButtonsFont.get())
-            self.buttonOK.place(x=columnOne, y=230)
+            positionTkWidgetsVertically(columnOne, self.endValue, self.buttonOK, vertical_space)
 
-            tk.Label(self.top, text="Add FadeIn: ", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnTwo, y=140)
+            self.fadeInLabel = tk.Label(self.top, text="Add FadeIn: ", fg=fontColor.get(), font=allButtonsFont.get(), bg=color)
+            positionTkWidgetsVertically(columnTwo, self.selectedFileLabel, self.fadeInLabel, vertical_space)
+
             self.FadeIn = StringVar()
             self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
             fadeOptions = ["5","10","15", "20"]
             self.fadeInBox = Combobox(self.top, textvariable=self.FadeIn, values=fadeOptions, state="readonly", font=allButtonsFont.get())
-            self.fadeInBox.place(x=columnTwo, y=160)
             self.fadeInBox.bind("<<ComboboxSelected>>", self.addFadeIn)
 
-            tk.Label(self.top, text="Add FadeOut: ", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnTwo, y=182)
+            positionTkWidgetsVertically(columnTwo, self.fadeInLabel, self.fadeInBox, vertical_space)
+
+            self.fadeOutLabel = tk.Label(self.top, text="Add FadeOut: ", fg=fontColor.get(), font=allButtonsFont.get(), bg=color)
+            positionTkWidgetsVertically(columnTwo, self.fadeInBox, self.fadeOutLabel, vertical_space)
+
             self.FadeOut = StringVar()
             self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
             self.fadeOutBox = Combobox(self.top, textvariable=self.FadeOut, values=fadeOptions, state="readonly", font=allButtonsFont.get())
-            self.fadeOutBox.place(x=columnTwo, y=202)
+
+            positionTkWidgetsVertically(columnTwo, self.fadeOutLabel, self.fadeOutBox, vertical_space)
+
             self.fadeOutBox.bind("<<ComboboxSelected>>", self.addFadeOut)
             self.top.bind("<Escape>", self.destroyEsc)
             self.top.bind("<Tab>", self.focus_Input)
             self.addFadeInOutAll = tk.Button(self.top, text="Add Fading to All", command=self.addFadingOnPlaylist,
-                                             bg=color,
-                                             fg=fontColor.get(), font=allButtonsFont.get())
-            self.addFadeInOutAll.place(x=columnTwo, y=230)
+                                 bg=color, fg=fontColor.get(), font=allButtonsFont.get())
+
+            positionTkWidgetsVertically(columnTwo, self.fadeOutBox, self.addFadeInOutAll, vertical_space)
 
             self.restoreButton = tk.Button(self.top, text="Restore Defaults for This Song", command=self.restoreCurrentSong, bg=color, fg=fontColor.get(), font=allButtonsFont.get())
-            self.restoreButton.place(x=80, y=280)
+
+            positionTkWidgetsVertically(80, self.addFadeInOutAll, self.restoreButton, vertical_space)
 
             self.restoreForAllButton = tk.Button(self.top, text="Restore Defaults for All Songs",
                                            command=self.restoreAllSongs, bg=color, fg=fontColor.get(),
                                            font=allButtonsFont.get())
-            self.restoreForAllButton.place(x=80, y=310)
+            positionTkWidgetsVertically(80, self.restoreButton, self.restoreForAllButton, vertical_space)
             windowCascade.CuttingTool = self #each instance of CuttingTool will be assigned to this variable:
+
+
+            elementsToCheckResize = list()
+            elementsToCheckResize.append(self.infoLabel)
+            elementsToCheckResize.append(self.selectedFileLabel)
+            elementsToCheckResize.append(self.fadeOutBox)
+            elementsToCheckResize.append(self.restoreForAllButton)
+
+            calculateResizeWindow(self.top, elementsToCheckResize, 10)
 
     def addFadingOnPlaylist(self):
         global play_list
         message = ""
         i=0
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             i+=1
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             self.top.title("Add Fading for: " + str(i) + " out of " + str(len(play_list.validFiles)) + " files")
+            viewProgress() # this will make the main window responsive
             try:#without this try-except block the window will freeze.
                 self.top.update()  # Force an update of the GUI
             except Exception as exp: pass
@@ -400,6 +457,9 @@ class CuttingTool(Window):
             else:
                 song.fadein_duration = int(self.FadeIn.get())
                 song.fadeout_duration = int(self.FadeOut.get())
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
         self.top.title(self.Window_Title)
         if message!= "":
             text = "Operation Done.\n\nFading was added to all Songs in the Playlist.\n\n" \
@@ -431,9 +491,16 @@ class CuttingTool(Window):
     def restoreAllSongs(self):
         global play_list
         i=0
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             i+=1
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             self.top.title("Undo Cutting\Fading for: " + str(i) + " out of " + str(len(play_list.validFiles)) + " files")
+            viewProgress() # this will make the main window responsive
             try:#without this try-except block the window will freeze.
                 self.top.update()  # Force an update of the GUI
             except Exception as exp: pass
@@ -441,6 +508,9 @@ class CuttingTool(Window):
             song.fadeout_duration = 0
             song.startPos = 0
             song.endPos = song.Length
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
         self.top.title(self.Window_Title)
         self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
         self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
@@ -619,7 +689,7 @@ class Slideshow(Window):
     def loadImages(self):
         global play_list
         slidePictures = filedialog.askopenfilenames(initialdir="/", title="Please select one or more files", filetypes=(
-        ("jpg files", "*.jpg"), ("png files", "*.png"),("gif files", "*.gif"), ("jpeg files", "*.jpeg"),("all files", "*.*")))
+        ("jpg files", "*.jpg"), ("png files", "*.png"),("gif files", "*.gif"), ("jpeg files", "*.jpeg")))
         play_list.slideImages += list(slidePictures)
         self.numberOfImages.set("Number of Images: " + str(len(play_list.slideImages)))
 
@@ -1115,9 +1185,11 @@ class Customize(Window):
         self.songNameTitle.set(int(play_list.useSongNameTitle))
 
         yPositionForElement += verticalSpaceBetweenElements
-        tk.Checkbutton(self.top, text="Use Song name as Title.", fg=fontColor.get(), font=allButtonsFont.get(),
+        self.useSongNameCheckbox = tk.Checkbutton(self.top, text="Use Song name as Title.", fg=fontColor.get(), font=allButtonsFont.get(),
                        bg=color, variable=self.songNameTitle, command=self.useProjectSongTitle,
-                       selectcolor="black").place(x=columnThree, y=yPositionForElement)
+                       selectcolor="black")
+
+        self.useSongNameCheckbox.place(x=columnThree, y=yPositionForElement)
 
         self.MaintainSongsStats = tk.IntVar()
         self.MaintainSongsStats.set(int(play_list.keepSongsStats))
@@ -1141,12 +1213,15 @@ class Customize(Window):
 
         self.resetSettingsVar = tk.IntVar()
         self.resetSettingsVar.set(int(play_list.resetSettings))
-        tk.Checkbutton(self.top, text="Reset Settings on New Playlist.", fg=fontColor.get(), font=allButtonsFont.get(),
+        self.resetSettingsCheckbox = tk.Checkbutton(self.top, text="Reset Settings on New Playlist.", fg=fontColor.get(), font=allButtonsFont.get(),
                        bg=color, variable=self.resetSettingsVar, command=self.resetSettingsOnNewPlaylist,
-                       selectcolor="black").place(x=200, y=yPositionForElement)
-
+                       selectcolor="black")
+        self.resetSettingsCheckbox.place(x=200, y=yPositionForElement)
         self.top.bind("<Escape>", self.destroyEsc)
         self.top.bind("<Tab>", self.focus_Input)
+
+        calculateResizeWindow(self.top, [self.DanthologySetBox, self.scaleGreen,
+                 self.ColorPickerResult, self.useSongNameCheckbox, self.resetSettingsCheckbox], 10)
 
     def customFontChange(self, event):
         global play_list
@@ -1168,6 +1243,7 @@ class Customize(Window):
         global play_list
         play_list.skin_theme.label_bg_color = labelBackground.get()
         changingLabelBackgroundColor(event)
+        updateRadioButtons()
         updateSkinMenuLabels()
         windowCascade.reinitializeOpenedWindows()
 
@@ -1209,13 +1285,13 @@ class Customize(Window):
         if self.textPlaylistWidth.get()!="Auto":
             play_list.listboxWidth = int(self.textPlaylistWidth.get())
             listbox["width"] = play_list.listboxWidth
-            searchValue["width"] = listbox["width"] - 16
         else:
             play_list.listboxWidth = "Auto"
             displayElementsOnPlaylist()
         if play_list.viewModel != "COMPACT":
             if listbox["width"] < 75:
                 value = (75 - int(self.textPlaylistWidth.get())) // 5  # value shoud be between 0 and 2
+        readjustSearchFormWidth()
         changePlaylistView()  # this will rearrange elements and resize the window.
         showCurrentSongInList()  # select/highlight the current song in the listbox
 
@@ -1469,13 +1545,9 @@ class Customize(Window):
     def browse_background_picture(self):
         global play_list
         background = filedialog.askopenfilename(initialdir="/", title="Select file", filetypes=(
-        ("jpg files", "*.jpg"), ("png files", "*.png"),("gif files", "*.gif"), ("jpeg files", "*.jpeg"),("all files", "*.*")))
-        if ".gif" in background:
-            play_list.skin_theme.background_image = background
-            background_image = tk.PhotoImage(file=background)
-            background_label.configure(image=background_image)
-            background_label.image = background_image
-        elif ".jpg" in background or ".jpeg" in background or ".png" in background:
+        ("jpg files", "*.jpg"), ("png files", "*.png"),("gif files", "*.gif"), ("jpeg files", "*.jpeg")))
+        if background.endswith(".jpg") or background.endswith(".jpeg") or \
+                background.endswith(".png") or background.endswith(".gif"):
             play_list.skin_theme.background_image = background
             img = ImageTk.PhotoImage(Image.open(background))
             background_label.configure(image=img)
@@ -1513,6 +1585,7 @@ class WindowDialog(Window):
                                 isInfoAlreadyDisplayed = True
                         else:
                             isInfoAlreadyDisplayed = True
+
                 else:
                     isInfoAlreadyDisplayed = True
 
@@ -1520,6 +1593,9 @@ class WindowDialog(Window):
         # if user closes it and the problem reappears we will create the window
 
         if isInfoAlreadyDisplayed == False:
+            #if user has too many dialog window opened, close the oldest
+            if len(windowCascade.WindowDialog) > 4:
+                windowCascade.WindowDialog[0].destroy()
             windowCascade.WindowDialog.append(self)
             self.color = SkinColor.get()
             self.top = tk.Toplevel(windowCascade.root, bg=self.color)
@@ -1529,7 +1605,7 @@ class WindowDialog(Window):
                 self.top.attributes('-alpha', play_list.windowOpacity)
 
                 # Add scrollbar
-                self.verticalScrollBar = tk.Scrollbar(self.top, orient='vertical')
+                self.verticalScrollBar = ttk.Scrollbar(self.top, orient='vertical')
                 self.verticalScrollBar.pack(side=tk.RIGHT, fill='y')
 
                 self.textElement = tk.Text(self.top, fg=labelTextColor, font=allButtonsFont.get(), height=10,
@@ -1555,6 +1631,14 @@ class WindowDialog(Window):
                     Button1.pack(pady=10, padx=5)
                 else:
                     Button1.pack(pady=15, padx=15)
+                    print("else")
+                    if self.Button1_Func.Functionality != None: #None is the default command
+                        # if only one button passed ensuring after the command is executed we destroy the dialog window
+                        print("Here")
+                        def wrapper_func():
+                            self.destroy()
+                            self.Button1_Func.Functionality()
+                        Button1.configure(command=wrapper_func)
                 windowSize = (str(self.textElement.winfo_reqwidth() + 50) + "x" + str(
                     self.textElement.winfo_reqheight() + 100) + "+" + str(
                     windowCascade.root.winfo_x() + 100) + "+" + str(windowCascade.root.winfo_y() + 100))
@@ -1605,7 +1689,7 @@ class WindowDialog(Window):
         if play_list.resetSettings == False:
             play_list.isSongPause = False
             play_list.isSongStopped = False
-            play_list.dirFilePath = None
+            play_list.dirFilePath = []
             play_list.validFiles = []
             play_list.currentSongIndex = None
             play_list.currentSongPosition = 0
@@ -1633,7 +1717,7 @@ class WindowDialog(Window):
         global listBox_Song_selected_index
         songToKeep = play_list.validFiles[play_list.currentSongIndex]
         if play_list.resetSettings == False:
-            play_list.dirFilePath = None
+            play_list.dirFilePath = []
             play_list.validFiles = []
             play_list.currentSongIndex = 0
             play_list.RESUMED = False
@@ -1746,28 +1830,28 @@ class Mp3TagModifierTool(Window):
                                         bg=color)
         ComposeArtistTitleButton.place(x=columnOne, y=205)
 
-        self.MassRenameButton = tk.Button(self.top, text="Rename All Files to 'Artist - Title.mp3'", command=self.renameAllFiles, fg=fontColor.get(), font=allButtonsFont.get(),
+        self.MassRenameButton = tk.Button(self.top, text="Rename All Files to 'Artist - Title.mp3'", command=self.projection_renameAllFiles, fg=fontColor.get(), font=allButtonsFont.get(),
                                       bg=color)
         if play_list.useMassFileEditor:
             self.MassRenameButton.config(state = tk.NORMAL)
         else:
             self.MassRenameButton.config(state = tk.DISABLED)
 
-        self.undoMassRenameButton = tk.Button(self.top, text="Restore Previous FileNames to All Files.", command=self.restorePreviousNames, fg=fontColor.get(), font=allButtonsFont.get(),
+        self.undoMassRenameButton = tk.Button(self.top, text="Restore Previous FileNames to All Files.", command=self.projection_restorePreviousNames, fg=fontColor.get(), font=allButtonsFont.get(),
                                       bg=color)
         if os.path.isfile(self.undoRenameBackupFile) and play_list.useMassFileEditor:
             self.undoMassRenameButton.config(state = tk.NORMAL)
         else:
             self.undoMassRenameButton.config(state = tk.DISABLED)
 
-        self.MassArtistTitleComposeButton = tk.Button(self.top, text="Set Artist/Title Tags from FileName to All Files", command=self.composeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
+        self.MassArtistTitleComposeButton = tk.Button(self.top, text="Set Artist/Title Tags from FileName to All Files", command=self.projection_composeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
                                       bg=color)
         if play_list.useMassFileEditor:
             self.MassArtistTitleComposeButton.config(state = tk.NORMAL)
         else:
             self.MassArtistTitleComposeButton.config(state = tk.DISABLED)
 
-        self.undoMassArtistTitleComposeButton = tk.Button(self.top, text="Restore Previous Artist/Title Tags to All Files", command=self.undoComposeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
+        self.undoMassArtistTitleComposeButton = tk.Button(self.top, text="Restore Previous Artist/Title Tags to All Files", command=self.projection_undoComposeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
                                       bg=color)
         if play_list.useMassFileEditor and os.path.isfile(self.undoArtistTitleBackupFile):
             self.undoMassArtistTitleComposeButton.config(state = tk.NORMAL)
@@ -1781,7 +1865,7 @@ class Mp3TagModifierTool(Window):
         else:
             GrabAlbumYearToAll.config(state = tk.DISABLED)
 
-        undoAlbumYearToAll = tk.Button(self.top, text="Restore Previous Album/Year Tags to All Files", command=self.undoAlbumYearToAllFiles, fg=fontColor.get(), font=allButtonsFont.get(),
+        undoAlbumYearToAll = tk.Button(self.top, text="Restore Previous Album/Year Tags to All Files", command=self.projecting_undoEffectsForAlbumYearAllFiles, fg=fontColor.get(), font=allButtonsFont.get(),
                               bg=color)
         if play_list.useMassFileEditor and os.path.exists(self.undoArtistTitleBackupFile):
             undoAlbumYearToAll.config(state = tk.NORMAL)
@@ -1803,73 +1887,126 @@ class Mp3TagModifierTool(Window):
         self.top.bind("<Tab>", self.focus_out)
         self.top.bind("<Escape>", self.destroyEsc)
 
-    def undoAlbumYearToAllFiles(self):
-        if os.path.exists(self.undoAlbumYearBackupFile):
-            try:
-                file = open(self.undoAlbumYearBackupFile, "rb")
-                dict_list = pickle.load(file)
-                file.close()
-            except Exception:
-                text = ("Exception when loading File: " + str(self.undoArtistTitleBackupFile) +
-                        "\nThe content of backup file has been corrupted.")
-                WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-            else:
-                for song in play_list.validFiles:
-                    ttl = "Album-Year undoed for: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
-                    self.thisWindowTitleUpdate(ttl)
-                    for element in dict_list:
-                        isSongPlayed = False
-                        if self.top == None: #if window gets closed, terminate
-                            return
-                        if element['fileName'] == song.fileName:
-                            if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
-                                if play_list.RESUMED:
-                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
-                                else:
-                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
-                                pygame.mixer.music.stop()
-                                pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
-                                isSongPlayed = True
-                            mp3file = EasyID3(song.filePath)
-                            song.Album = element['oldAlbum']
-                            song.Year = element['oldYear']
-                            mp3file["album"] = song.Album
-                            mp3file["date"] = song.Year
-                            if song.Album == "":
-                                song.Album = "Various"
-                            if song.Year == "":
-                                song.Year = "Various"
-                            mp3file.save(v2_version=3)
-                            del dict_list[dict_list.index(element)]
-                            if isSongPlayed:
-                                pygame.mixer.music.load(song.filePath)
-                                pygame.mixer.music.play()
-                                pygame.mixer.music.set_pos(play_list.currentSongPosition)
-                                play_list.RESUMED = True
-                            break
+    def projecting_undoEffectsForAlbumYearAllFiles(self):
+        try:
+            file = open(self.undoAlbumYearBackupFile, "rb")
+            dict_list = pickle.load(file)
+            file.close()
+        except Exception:
+            text = ("Exception when loading File: " + str(self.undoArtistTitleBackupFile) +
+                    "\nThe content of backup file has been corrupted.")
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+        else:
+            messageForUser = ""
+            other_available_records = ""
 
-                if len(dict_list) > 0 :
-                    message = ""
-                    for element in dict_list:
-                        message += element['fileName'] + "\n"
-                    text = "Some files not found within playlist:\n" + message
-                    WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
-                else:
-                    text = "Operation Done\n\nPrevious Album/Year tags have been restored." + message
-                    WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
-                self.AlbumTag.delete(0, tk.END)
-                self.AlbumTag.insert(0, self.Song.Album)
-                self.YearTag.delete(0, tk.END)
-                self.YearTag.insert(0, self.Song.Year)
-                self.thisWindowTitleUpdate(self.Window_Title)
-                file = open(self.undoAlbumYearBackupFile, "wb")
-                pickle.dump(dict_list, file)
-                file.close()
+            scheduler.canceled = True  # we will keep window refreshed in the loop
+            for song in play_list.validFiles:
+                if scheduler.userIntervention == True:
+                    # user changed something in the play_list that might affect the outcome of this loop
+                    scheduler.userIntervention = False
+                    break
+                ttl = "Scanning: " + str(play_list.validFiles.index(song)) + " of " + str(
+                    len(play_list.validFiles))
+                self.thisWindowTitleUpdate(ttl)
+                viewProgress() # this will make the main window responsive
+                for element in dict_list:
+                    isSongPlayed = False
+                    if self.top == None:  # if window gets closed, terminate
+                        return
+                    if element['fileName'] == song.fileName:
+
+                        messageForUser += "File: " + song.filePath + "\n\n" + \
+                            "Album: '" + song.Album + "' will be changed to: '" + element['oldAlbum'] +"'" +\
+                            "\n" +"Year: '" + song.Year + "' will be changed to: '" + element['oldYear'] + "'" + "\n\n"
+            scheduler.canceled = False  # we will keep window refreshed using scheduler
+            scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+            if len(dict_list) > 0:
+                for element in dict_list:
+                    other_available_records += element['fileName'] + "\n"
+                other_available_records = "Records available for the following files that are not present " \
+                                          "within playlist:\n\n" + other_available_records
+
+            if messageForUser != "":
+                text = "Changes to be performed: \n\n" + messageForUser
+                text += other_available_records
+                WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", lambda: self.undoAlbumYearToAllFiles(dict_list)),
+                             windowTitle="Restore Previous Album/Year Tags Change Log")
+            else:
+                text = "No changes can be performed. The backup files hold no previous records for the existing files.\n\n"
+                text += other_available_records
+                WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Information")
+
+            self.thisWindowTitleUpdate(self.Window_Title)
+
+    def undoAlbumYearToAllFiles(self, dict_list):
+        scheduler.canceled = True  # we will keep window refreshed in the loop
+        for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            ttl = "Album-Year undoed for: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
+            self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
+            messageForUser = ""
+            for element in dict_list:
+                isSongPlayed = False
+                if self.top == None: #if window gets closed, terminate
+                    return
+                if element['fileName'] == song.fileName:
+                    if pygame.mixer.get_init() and play_list.validFiles.index(song) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                        if play_list.RESUMED:
+                            play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                        else:
+                            play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                        pygame.mixer.music.stop()
+                        pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
+                        isSongPlayed = True
+
+                    if(os.path.isfile(song.filePath)):
+                        mp3file = EasyID3(song.filePath)
+                        song.Album = element['oldAlbum']
+                        song.Year = element['oldYear']
+                        mp3file["album"] = song.Album
+                        mp3file["date"] = song.Year
+                        if song.Album == "":
+                            song.Album = "Various"
+                        if song.Year == "":
+                            song.Year = "Various"
+                        mp3file.save(v2_version=3)
+                        del dict_list[dict_list.index(element)]
+                        if isSongPlayed:
+                            pygame.mixer.music.load(song.filePath)
+                            pygame.mixer.music.play()
+                            pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                            play_list.RESUMED = True
+                        break
+                    else:
+                        messageForUser += "File: \n\n" + song.filePath + " does not exist.\n\n"
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        text = "Operation Done.\n\nThe projected changes were performed successfully."
+        if messageForUser != "":
+            text = "Operation Done.\n\nSome changes could not be performed:\n\n" + messageForUser
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+        self.AlbumTag.delete(0, tk.END)
+        self.AlbumTag.insert(0, self.Song.Album)
+        self.YearTag.delete(0, tk.END)
+        self.YearTag.insert(0, self.Song.Year)
+        self.thisWindowTitleUpdate(self.Window_Title)
+        file = open(self.undoAlbumYearBackupFile, "wb")
+        pickle.dump(dict_list, file)
+        file.close()
 
     def grabAlbumYearToAllFiles(self):
         dictionary={}
         dict_list=[]
         not_found = []
+        messageForUser = ""
         dict_loaded=False
         alreadyContained = False
         if os.path.exists(self.undoAlbumYearBackupFile):
@@ -1885,18 +2022,30 @@ class Mp3TagModifierTool(Window):
                 dict_loaded = True
                 file.close()
 
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            viewProgress() #this will make the main window responsive
             if self.top == None: #if window gets closed, terminate
                 return
             dictionary['fileName'] = song.fileName
             dictionary['oldAlbum'] = song.Album if song.Album != "Various" else ""
             dictionary['oldYear'] = song.Year if song.Year != "Various" else ""
+
             ret_val = self.grabAlbumAndYear(song)
             if ret_val != None:
                 not_found.append(ret_val)
             else:
                 dictionary['newAlbum'] = song.Album
                 dictionary['newYear'] = song.Year
+
+                messageForUser += "File: " + song.filePath + "\n" + \
+                    "Album: '" + dictionary['oldAlbum'] + "' changed to: " + dictionary['newAlbum'] + "\n" + \
+                    "Year: '" + dictionary['oldYear'] + "' changed to: " + dictionary['newYear'] + "\n\n"
+
                 if dict_loaded:
                     for element in dict_list:
                         if element["fileName"] == song.fileName:
@@ -1905,11 +2054,16 @@ class Mp3TagModifierTool(Window):
                             break
                 dict_list.append(dictionary)
             dictionary = {}
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
         if len(not_found) > 0:
-            text = ("Operation Done\n\nThe data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
-            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+            text = ("Operation Done\n\n" + messageForUser + \
+                    "The data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None),
+                         windowTitle = "Grab Album/Year Tags From Web Change Log")
         else:
-            text = "Operation Done\n\nThe data was collected from the Internet."
+            text = "Operation Done\n\nThe data was collected from the Internet. \n\n" +  messageForUser
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
         if len(dict_list) > 0: # we have files changes
@@ -1981,7 +2135,6 @@ class Mp3TagModifierTool(Window):
         else:
             objectSong = song_param
         urllib3.disable_warnings()
-
         artist = objectSong.Artist
         artist = self.filterArtistTitleForWebSearch(artist)
         title = objectSong.Title
@@ -1989,115 +2142,126 @@ class Mp3TagModifierTool(Window):
         if artist!= False and title!=False:
             url = "https://www.last.fm/music/" + artist + "/_/" + title # this is possible to change with time. Let's hope it doesn't
             http = urllib3.PoolManager(timeout=urllib3.Timeout(connect=2.0, read=2.0), retries=2)
-            try:
-                message = "..." if song_param==None else (": " + str(play_list.validFiles.index(song_param)) + " of " + str(len(play_list.validFiles)))
-                self.thisWindowTitleUpdate("Connecting to Last Fm" + message)
-                response = http.request('GET', url)
-            except NewConnectionError as exp:  # This is the correct syntax
-                if MassFileEditor==False: #when using MassFileEditor skip this dialogs, because they will be displayed at the end in that function
-                    textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp)
-                    + "\nPlease check your internet connection before proceed.")
-                    WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-            except Exception:
-                if MassFileEditor==False:
-                    textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
-                    WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-            else:
-                if response.status == 200:
-                    text = self.filterAlbumFromLastFM(response.data)
-                    if text != False:
-                        if MassFileEditor == False:
-                            self.AlbumTag.delete(0, tk.END)
-                            self.AlbumTag.insert(tk.END, text)
-                        else:
-                            isSongPlayed = False
-                            if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
-                                if play_list.RESUMED:
-                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
-                                else:
-                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
-                                pygame.mixer.music.stop()
-                                pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
-                                isSongPlayed = True
-                            mp3file = EasyID3(objectSong.filePath)
-                            mp3file["album"] = text
-                            objectSong.Album = text
-                            mp3file.save(v2_version=3)
-                            if isSongPlayed:
-                                pygame.mixer.music.load(objectSong.filePath)
-                                pygame.mixer.music.play()
-                                pygame.mixer.music.set_pos(play_list.currentSongPosition)
-                                play_list.RESUMED = True
-                            if objectSong == self.Song:
+            if isinstance(song_param, Song) and os.path.isfile(song_param.filePath):
+                try:
+                    message = "..." if isinstance(song_param, Song) == False else (": " + str(play_list.validFiles.index(song_param)) + " of " + str(len(play_list.validFiles)))
+                    self.thisWindowTitleUpdate("Connecting to Last Fm" + message)
+                    response = http.request('GET', url)
+                except NewConnectionError as exp:  # This is the correct syntax
+                    if MassFileEditor==False: #when using MassFileEditor skip this dialogs, because they will be displayed at the end in that function
+                        textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp)
+                        + "\nPlease check your internet connection before proceed.")
+                        WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                    return objectSong.fileName + "\nReason: " + str(exp) + "\n"  # return the name of item which was not found on web
+                except Exception as exp:
+                    if MassFileEditor==False:
+                        textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
+                        WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                    return objectSong.fileName + "\nReason: " + str(exp) + "\n" # return the name of item which was not found on web
+                else:
+                    if response.status == 200:
+                        text = self.filterAlbumFromLastFM(response.data)
+                        if text != False:
+                            if MassFileEditor == False:
                                 self.AlbumTag.delete(0, tk.END)
                                 self.AlbumTag.insert(tk.END, text)
-                        text = text.replace(" ", "+")
-                        url = "https://www.last.fm/music/" + artist + "/" + text # this is possible to change with time. Let's hope it doesn't
-                        try:
-                            response = http.request('GET', url)
-                            self.thisWindowTitleUpdate("Looking for Album year release...")
-                        except NewConnectionError as exp:  # This is the correct syntax
-                            #self.top.title("Error Message: " + str(exp))
-                            if MassFileEditor==False:
-                                textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp)
-                                + "\nPlease check your internet connection before proceed.")
-                                WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-                        except Exception:
-                            if MassFileEditor==False:
-                                textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
-                                WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-                        else:
-                            if response.status == 200:
-                                text = self.filterYearFromLastFM(response.data)
-                                if text != False:
-                                    year = text.split(" ")[len(text.split(" "))-1] # because the I only want to store the year, discard the day and the month.
-                                    if MassFileEditor == False:
-                                        self.YearTag.delete(0, tk.END)
-                                        self.YearTag.insert(tk.END, year)
+                            else:
+                                isSongPlayed = False
+                                if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                    if play_list.RESUMED:
+                                        play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
                                     else:
-                                        isSongPlayed = False
-                                        if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
-                                            if play_list.RESUMED:
-                                                play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
-                                            else:
-                                                play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
-                                            pygame.mixer.music.stop()
-                                            pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
-                                            isSongPlayed = True
-                                        mp3file = EasyID3(objectSong.filePath)
-                                        mp3file["date"] = year
-                                        objectSong.Year = year
-                                        mp3file.save(v2_version=3)
-                                        if isSongPlayed:
-                                            pygame.mixer.music.load(objectSong.filePath)
-                                            pygame.mixer.music.play()
-                                            pygame.mixer.music.set_pos(play_list.currentSongPosition)
-                                            play_list.RESUMED = True
-                                        if objectSong == self.Song:
+                                        play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                                    pygame.mixer.music.stop()
+                                    pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
+                                    isSongPlayed = True
+                                mp3file = EasyID3(objectSong.filePath)
+                                mp3file["album"] = text
+                                objectSong.Album = text
+                                mp3file.save(v2_version=3)
+                                if isSongPlayed:
+                                    pygame.mixer.music.load(objectSong.filePath)
+                                    pygame.mixer.music.play()
+                                    pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                                    play_list.RESUMED = True
+                                if objectSong == self.Song:
+                                    self.AlbumTag.delete(0, tk.END)
+                                    self.AlbumTag.insert(tk.END, text)
+                            text = text.replace(" ", "+")
+                            url = "https://www.last.fm/music/" + artist + "/" + text # this is possible to change with time. Let's hope it doesn't
+                            try:
+                                response = http.request('GET', url)
+                                self.thisWindowTitleUpdate("Looking for Album year release...")
+                            except NewConnectionError as exp:  # This is the correct syntax
+                                #self.top.title("Error Message: " + str(exp))
+                                if MassFileEditor==False:
+                                    textDialog = ("Unable to establish connection to the server: last.fm" + "\nError Message: " + str(exp)
+                                    + "\nPlease check your internet connection before proceed.")
+                                    WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                                else:
+                                    return objectSong.fileName + "\nReason: " + str(exp) + "\n"
+                            except Exception as exp:
+                                if MassFileEditor==False:
+                                    textDialog = "An exception has been handled. \nI am sorry but I'm unable to retrieve info."
+                                    WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                                else:
+                                    return objectSong.fileName + "\nReason: " + str(exp) + "\n"
+                            else:
+                                if response.status == 200:
+                                    text = self.filterYearFromLastFM(response.data)
+                                    if text != False:
+                                        year = text.split(" ")[len(text.split(" "))-1] # because the I only want to store the year, discard the day and the month.
+                                        if MassFileEditor == False:
                                             self.YearTag.delete(0, tk.END)
                                             self.YearTag.insert(tk.END, year)
-                                else:
-                                    if MassFileEditor == False:
-                                        textDialog = "The year could not be found on Web."
-                                        WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
-
+                                        else:
+                                            isSongPlayed = False
+                                            if pygame.mixer.get_init() and play_list.validFiles.index(objectSong) == play_list.currentSongIndex and pygame.mixer.music.get_busy():
+                                                if play_list.RESUMED:
+                                                    play_list.currentSongPosition += pygame.mixer.music.get_pos()/1000 #recalculating the resume point of the playback
+                                                else:
+                                                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                                                pygame.mixer.music.stop()
+                                                pygame.mixer.music.load(clearPlaybackFile) #use this file to release the playback
+                                                isSongPlayed = True
+                                            mp3file = EasyID3(objectSong.filePath)
+                                            mp3file["date"] = year
+                                            objectSong.Year = year
+                                            mp3file.save(v2_version=3)
+                                            if isSongPlayed:
+                                                pygame.mixer.music.load(objectSong.filePath)
+                                                pygame.mixer.music.play()
+                                                pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                                                play_list.RESUMED = True
+                                            if objectSong == self.Song:
+                                                self.YearTag.delete(0, tk.END)
+                                                self.YearTag.insert(tk.END, year)
+                                    else:
+                                        if MassFileEditor == False:
+                                            textDialog = "The year could not be found on Web."
+                                            WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+                                        else:
+                                            return objectSong.fileName + "\nReason: the year could not be found on Web.\n"
+                        else:
+                            if MassFileEditor == False:
+                                textDialog = "There is no webpage available to find the year."
+                                WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+                            else:
+                                self.thisWindowTitleUpdate(self.Window_Title)
+                                return objectSong.fileName + "\nReason: there is no webpage available to find the year.\n"
                     else:
                         if MassFileEditor == False:
-                            textDialog = "There is no webpage available to find the year."
-                            WindowDialog(textDialog, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
+                            text = "There is no webpage available for this album."
+                            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
                         else:
                             self.thisWindowTitleUpdate(self.Window_Title)
-                            return objectSong.fileName #return the name of item which was not found on web
-                else:
-                    if MassFileEditor == False:
-                        text = "There is no webpage available for this album."
-                        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
-                    else:
-                        self.thisWindowTitleUpdate(self.Window_Title)
-                        return objectSong.fileName #return the name of item which was not found on web
+                            return objectSong.fileName + "\nReason: there is no webpage available for this album.\n"
+            else:
+                self.thisWindowTitleUpdate(self.Window_Title)
+                return objectSong.fileName + "\nReason: file does not exist.\n" #return the name of item which was not found on web
         else:
             self.thisWindowTitleUpdate(self.Window_Title)
-            return objectSong.fileName #return the name of item which was not found on web
+            return objectSong.fileName + " - " + "\nReason: Artist/Title tags are empty or not properly formated.\n"  # return the name of item which was not found on web
         self.thisWindowTitleUpdate(self.Window_Title)
         return None  #File was found.
 
@@ -2323,6 +2487,84 @@ class Mp3TagModifierTool(Window):
                 self.NameTag.insert(0, value.strip(" ").lower())
         showCurrentSongInList() #this will maintain selection.
 
+    def projection_composeArtistTitleAll(self):
+        messageForUser = ""
+        scheduler.canceled = True  # we will keep window refreshed in the loop
+        for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
+            self.thisWindowTitleUpdate(ttl)
+            viewProgress() # this will make the main window responsive
+            if self.top == None: #if window gets closed, terminate
+                return
+            if song.fileName != "":
+                if os.path.exists(song.filePath):
+                    if "-" in song.fileName:
+                        value = song.fileName
+                        value = value.replace(" & ", " and ")
+                        value = value.replace("_", " ")
+                        value = value.replace("%", " ")
+                        value = value.replace("*", " ")
+                        value = value.replace("@", " ")
+                        value = value.replace("#", " ")
+                        value = value.replace("+", " ")
+                        value = value.replace("/", " ")
+                        value = value.replace("\\", " ")
+                        value = value.replace("`", "'")
+                        value = value.replace(";", " ")
+                        value = value.replace(":", " ")
+                        value = value.split("-")
+                        #Perform string ethics and formatting for the Artist Name
+                        value[0] = value[0].strip(" ")
+                        value[0] = [n.capitalize() for n in value[0].split(" ")]
+                        value[0] = " ".join(value[0])
+                        value[0] = value[0].replace(" And ", " and ")
+                        value[0] = value[0].replace(" & ", " and ")
+                        value[0] = value[0].replace(" Feat. ", " and ")
+                        value[0] = value[0].replace(" Featuring ", " and ")
+                        value[0] = value[0].replace(" Feat ", " and ")
+                        value[0] = value[0].strip(" ")
+
+                        #Perform string ethics and formatting for the Song Title
+
+                        value[1] = value[1].strip(" ")
+
+                        #this will perform Capitalization and Semi-Capitalization for the Title
+                        value[1] = value[1].split(" ")
+                        if len(value[1]) > 2:
+                            value[1] = [n.capitalize() for n in value[1][:1]] + [n.lower() for n in value[1][1:]]
+                        else:
+                            value[1] = [n.capitalize() for n in value[1]]
+                        value[1] = " ".join(value[1])
+                        value[1] = value[1].replace(".mp3", "")
+                        value[1] = value[1].strip(" ")
+
+                        artist = song.Artist if song.Artist != "Various" else ""
+                        title = song.Title if song.Title != "Various" else ""
+
+                        messageForUser += "File: " + song.fileName + "\n"
+                        messageForUser += "Old Artist: '" + artist + "' will be changed to '" + value[0].strip("' ") + "'\n"
+                        messageForUser += "Old Title: '" + title + "' will be changed to '" + value[1].strip("' ") + "'\n\n"
+
+                    else:
+                        value = song.fileName.lower()
+                        value = value.strip(" ")
+                        value = value.replace(".mp3", "")
+
+                        messageForUser += "File: " + song.fileName + "\n"
+                        messageForUser += "Old Artist: '" + artist + "' will be changed to '" + value + "'\n"
+                        messageForUser += "Old Title: '" + title + "' will be changed to ''" + "\n\n"
+                else:
+                    messageForUser += "No change will be performed to File: " + song.fileName + "\nReason: File does not exist.\n\n"
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        self.thisWindowTitleUpdate(self.Window_Title)
+        text = "Change Log:\n\n" + messageForUser
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", self.composeArtistTitleAll), windowTitle = "Artist/Title Tag Change Log")
+
     def composeArtistTitleAll(self):
         dictionary={}
         dict_list=[]
@@ -2341,9 +2583,16 @@ class Mp3TagModifierTool(Window):
                 file = open(self.undoArtistTitleBackupFile, "wb")
         else:
             file = open(self.undoArtistTitleBackupFile, "wb")
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             ttl = "Compose Artist-Title: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
             if self.top == None: #if window gets closed, terminate
                 return
             if song.fileName != "":
@@ -2435,6 +2684,9 @@ class Mp3TagModifierTool(Window):
                         pygame.mixer.music.set_pos(play_list.currentSongPosition)
                         play_list.RESUMED = True
                     dictionary={}
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
         self.TitleTag.delete(0, tk.END)
@@ -2449,6 +2701,44 @@ class Mp3TagModifierTool(Window):
         else:
             self.undoMassArtistTitleComposeButton.config(state = tk.DISABLED)
 
+    def projection_undoComposeArtistTitleAll(self):
+        dict_list=[]
+        messageForUser = ""
+        try:
+            file = open(self.undoArtistTitleBackupFile, "rb")
+            dict_list = pickle.load(file)
+            file.close()
+        except Exception as exp:
+            dict_list = [] #make sure it's empty
+            text = ("Backup File Exception:  " + str(exp) +
+                    "\nFile: " + str(self.undoArtistTitleBackupFile)+ " might be corrupted.")
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+        else:
+            scheduler.canceled = True  # we will keep window refreshed in the loop
+            for song in play_list.validFiles:
+                if scheduler.userIntervention == True:
+                    # user changed something in the play_list that might affect the outcome of this loop
+                    scheduler.userIntervention = False
+                    break
+                ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
+                self.thisWindowTitleUpdate(ttl)
+                viewProgress() # this will make the main window responsive
+                for element in dict_list:
+                    if self.top == None: #if window gets closed, terminate
+                        return
+                    if element['fileName'] == song.fileName:
+                        messageForUser += "File: " + song.fileName + "\nArtist: '" + song.Artist +\
+                              "' will be changed to '" + element['oldArtist'] + "'\n" + \
+                              "Title: '" + element['oldTitle'] + "' will be changed to: " + element['oldTitle'] +"'\n\n"
+                        break
+
+            scheduler.canceled = False  # we will keep window refreshed using scheduler
+            scheduler.enter(progressViewRealTime, 1, viewProgress)
+            text = "Change Log: \n\n" + messageForUser
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", self.undoComposeArtistTitleAll) ,
+                         windowTitle = "Restore Previous Artist/Title Tags Change Log")
+            self.thisWindowTitleUpdate(self.Window_Title)
+
     def undoComposeArtistTitleAll(self):
         dict_list=[]
         try:
@@ -2460,9 +2750,16 @@ class Mp3TagModifierTool(Window):
             text = ("Backup File Exception:  " + str(exp) +
                     "\nFile: " + str(self.undoArtistTitleBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             ttl = "Undo composed Artist-Title: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
+            viewProgress()
             for element in dict_list:
                 if self.top == None: #if window gets closed, terminate
                     return
@@ -2494,11 +2791,15 @@ class Mp3TagModifierTool(Window):
                         pygame.mixer.music.set_pos(play_list.currentSongPosition)
                         play_list.RESUMED = True
                     break
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
         if len(dict_list) > 0 :
             message = ""
             for element in dict_list:
                 message += element['fileName'] + "\n"
-            text = "Some files not found within playlist:\n" + message
+            text = "Previous records also available for following files which are not part of the playlist:\n\n" + message
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
         else:
             text = "Operation Done\n\nPrevious Artist/Title tags have been restored."
@@ -2511,6 +2812,37 @@ class Mp3TagModifierTool(Window):
         file = open(self.undoArtistTitleBackupFile, "wb")
         pickle.dump(dict_list, file)
         file.close()
+
+    def projection_renameAllFiles(self):
+        messageForUser = ""
+        scheduler.canceled = True  # we will keep window refreshed in the loop
+        for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(
+                len(play_list.validFiles))
+            self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
+            if self.top == None:  # if the window get closed, terminate the operation
+                return
+            if song.Artist != "Various" and song.Title != "Various":
+                newFileName = song.Artist.strip(" ") + " - " + song.Title.strip(" ") + ".mp3"
+                if os.path.exists(song.filePath):
+                    messageForUser += "File: " + song.fileName + "\nwill be renamed to:\n" + newFileName +"\n\n"
+                else:
+                    messageForUser += "File: " + song.fileName + "\nwill NOT be renamed." + "\nReason: File does not exist.\n\n"
+            else:
+                messageForUser += "File: " + song.fileName + "\nwill NOT be renamed." + "\nReason: Invalid/Empty Artist/Title file tags.\n\n"
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        self.thisWindowTitleUpdate(self.Window_Title)
+        text = "The files will be renamed as follows: \n\n" +messageForUser
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", self.renameAllFiles),
+                            windowTitle="Renaming Change Log")
 
     def renameAllFiles(self):
         dictionary = {}
@@ -2532,9 +2864,16 @@ class Mp3TagModifierTool(Window):
                 file = open(self.undoRenameBackupFile, "wb")
         else:
             file = open(self.undoRenameBackupFile, "wb")
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             ttl = "Renamed files: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
             if self.top == None: #if the window get closed, terminate the operation
                 return
             if song.Artist != "Various" and song.Title != "Various":
@@ -2575,6 +2914,10 @@ class Mp3TagModifierTool(Window):
                     except Exception as Exp:
                         text = ("Exception during Mass Rename: " + str(Exp))
                         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
         displayElementsOnPlaylist()
         showCurrentSongInList()
         self.NameTag.delete(0, tk.END)
@@ -2589,6 +2932,51 @@ class Mp3TagModifierTool(Window):
         else:
             self.undoMassRenameButton.config(state=tk.DISABLED)
 
+    def projection_restorePreviousNames (self):
+        global play_list
+        dict_list=[]
+        messageForUser = ""
+        try:
+            file = open(self.undoRenameBackupFile, "rb")
+            dict_list = pickle.load(file)
+            file.close()
+        except Exception as exp:
+            dict_list = [] #make sure it's empty
+            text = ("Backup File Exception: " + exp
+                    +"\nFile: " + str(self.undoRenameBackupFile)+ " might be corrupted.")
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
+        for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
+            self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
+            for element in dict_list:
+                if self.top == None: #if window gets closed, terminate
+                    return
+                if element['newName'] == song.filePath:
+                    filePath = element['newName'].split(song.fileName)
+                    filePath = filePath[0]
+                    FileName = element['oldName'].split(filePath)
+                    FileName = FileName[1]
+                    messageForUser += "File: " + song.fileName + "\nwill be renamed to:\n" + FileName + "\n\n"
+                    break
+                if dict_list.index(element) == len(dict_list)-1 and element['newName'] != song.filePath:
+                    messageForUser += "File: " + song.fileName + "\nwill not be changed.\nReason: " \
+                                                                 "No records stored in the backup.\n\n"
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        self.thisWindowTitleUpdate(self.Window_Title)
+        text = "Change Log: \n\n" + messageForUser
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", self.restorePreviousNames),
+                     windowTitle = "Restore Previous Names Change Log")
+
     def restorePreviousNames (self):
         global play_list
         dict_list=[]
@@ -2602,9 +2990,16 @@ class Mp3TagModifierTool(Window):
             text = ("Backup File Exception: " + exp
                     +"\nFile: " + str(self.undoRenameBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             ttl = "Restored previous names: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will make the main window responsive
             for element in dict_list:
                 if self.top == None: #if window gets closed, terminate
                     return
@@ -2640,6 +3035,10 @@ class Mp3TagModifierTool(Window):
                     break
                 if dict_list.index(element) == len(dict_list)-1 and element['newName'] != song.filePath:
                     message += song.fileName + "\n"
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
         displayElementsOnPlaylist()
         showCurrentSongInList()
         self.NameTag.delete(0, tk.END)
@@ -2675,8 +3074,8 @@ class Mp3TagModifierTool(Window):
                     title+= value[i].capitalize() + " "
             title = title.strip(" ")  # remove the last blank space
             artist = artist.strip(" ")
-            if ".mp3" in title:
-                value = artist + " - " +title
+            if title.lower().endswith(".mp3"):
+                value = artist + " - " + title
             else:
                 value = artist + " - " + title + ".mp3"
             self.NameTag.delete(0, tk.END)
@@ -2758,7 +3157,7 @@ class Mp3TagModifierTool(Window):
                     title+= value[i].lower() + " "
             title = title.strip(" ") #remove the last blank space
             artist = artist.strip(" ")
-            if ".mp3" in title:
+            if title.lower().endswith(".mp3"):
                 value = artist + " - " +title
             else:
                 value = artist + " - " + title + ".mp3"
@@ -2775,7 +3174,7 @@ class Mp3TagModifierTool(Window):
         pathToFile = self.Song.filePath.split(self.Song.fileName)
         pathToFile = pathToFile[0]
         index = play_list.validFiles.index(self.Song)
-        if ".mp3" not in self.NameTag.get().lower():
+        if self.NameTag.get().lower().endswith(".mp3") == False:
             value = self.NameTag.get()
             self.NameTag = StringVar()
             self.NameTag.set(value + ".mp3")
@@ -2883,13 +3282,19 @@ class GrabLyricsTool(Window):
                                 +"the results are provided according to your internet connection speed.\n" \
                                 +"The Search is based on Artist - Title tags, if these tags are not set\n" \
                                 +"accordingly, the lyrics will never be found.")
-            tk.Label(self.top, textvariable=self.welcomeMessage, fg=fontColor.get(), font=allButtonsFont.get(), bg=color,anchor="e", justify=tk.LEFT).place(x=30, y=5)
+            self.welcomingLabel = tk.Label(self.top, textvariable=self.welcomeMessage, fg=fontColor.get(), font=allButtonsFont.get(), bg=color,anchor="e", justify=tk.LEFT)
+            self.welcomingLabel.place(x=30, y=5)
+
             self.Lyrics = StringVar()
             self.Lyrics.set("Lyrics")
-            tk.Label(self.top, textvariable=self.Lyrics, fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=5, y=115)
+            self.LabelSelectedFile = tk.Label(self.top, textvariable=self.Lyrics, fg=fontColor.get(), font=allButtonsFont.get(), bg=color)
+            self.LabelSelectedFile["wraplength"] = self.welcomingLabel.winfo_reqwidth()
+            self.LabelSelectedFile.place(x=30, y=115)
+
             self.frame = tk.Frame(self.top, width=500, height=30, bg=color, borderwidth=1)
-            self.frame.place(x=10, y=135)
-            self.scrlbar = tk.Scrollbar(self.frame, orient="vertical", width=10)
+            positionTkWidgetsVertically(10, self.LabelSelectedFile, self.frame, 10)
+
+            self.scrlbar = ttk.Scrollbar(self.frame, orient="vertical")
             self.listboxLyrics = tk.Listbox(self.frame, fg=fontColor.get(), font=allButtonsFont.get(), width=65, bg=color, height=20, relief=tk.GROOVE, \
                          yscrollcommand=self.scrlbar.set, borderwidth=2, selectbackground = fontColor.get(), selectforeground = color)
             self.listboxLyrics.pack(padx=10, pady=10, side = tk.LEFT)
@@ -2933,23 +3338,36 @@ class GrabLyricsTool(Window):
                     self.LyricsDisplay()
             else:
                 self.LyricsDisplay()
-
+            #Preparing parties for resizing window to fit content
+            self.frame["width"] = self.listboxLyrics.winfo_reqwidth() + self.scrlbar.winfo_reqwidth()
+            self.frame["height"] = self.listboxLyrics.winfo_reqheight() + self.scrlbar.winfo_reqheight()
+            calculateResizeWindow(self.top, [self.frame, self.LabelSelectedFile, self.welcomingLabel], 30)
         else:
             WindowDialog("Playlist is empty.", Button1_Functionality=ButtonFunctionality("OK", None),
                          windowTitle="Grab Lyrics Tool")
     def downloadAllLyrics(self):
         message = ""
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for i in range(0, len(play_list.validFiles)):
             if self.top == None:
                 return
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
             ttl = "Searched lyrics for: " + str(i) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
+            viewProgress() #this will keep the main window responsive
             self.songIndex = i
             text_list, source = self.accessPage()
             if len(text_list) > 0 and source != "":
                 self.saveLyrics(text_list)
             else:
                 message += play_list.validFiles[i].fileName + "\n"
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
         self.thisWindowTitleUpdate(self.Window_Title)
         if message!="":
             text = ("Lyrics not found for: " + str(message.count("\n")) + " songs \n\n" + message)
@@ -3366,7 +3784,7 @@ class GrabArtistBio(Window):
             tk.Label(self.top, textvariable=self.BioText, fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=15, y=45)
             self.frame = tk.Frame(self.top, width=100, height=30, bg=color, borderwidth=1)
             self.frame.place(x=5, y=65)
-            self.scrlbar = tk.Scrollbar(self.frame, orient="vertical", width=10)
+            self.scrlbar = ttk.Scrollbar(self.frame, orient="vertical")
             self.listboxLyrics = tk.Listbox(self.frame, fg=fontColor.get(), font=allButtonsFont.get(), width=55, bg=color, height=15, relief=tk.GROOVE, \
                                     yscrollcommand=self.scrlbar.set, borderwidth=2, selectbackground = fontColor.get(), selectforeground = color)
             self.listboxLyrics.pack(padx=10, pady=10, side=tk.LEFT, fill=tk.X)
@@ -3376,6 +3794,11 @@ class GrabArtistBio(Window):
             self.ArtistBioDisplay()
             self.top.bind("<Tab>", self.focus_out)
             self.top.bind("<Escape>", self.destroyEsc)
+
+            #Preparing parties for resizing window to fit content
+            self.frame["width"] = self.listboxLyrics.winfo_reqwidth() + self.scrlbar.winfo_reqwidth()
+            self.frame["height"] = self.listboxLyrics.winfo_reqheight() + self.scrlbar.winfo_reqheight()
+            calculateResizeWindow(self.top, [self.frame], 30)
         else:
             WindowDialog("Playlist is empty.", Button1_Functionality=ButtonFunctionality("OK", None),
                          windowTitle="Artist Bio")
@@ -3655,6 +4078,36 @@ class Skin():
             return False
 
 
+class Scheduler(sched.scheduler):
+    def __init__(self, timefunc=time.monotonic, delayfunc=time.sleep):
+        super().__init__(timefunc, delayfunc)
+        self.canceled = False #this variable will be used to signal the disabling of scheduling
+        self.userIntervention = False # this variable will be used to identify whether the user affected the play_list
+
+def formatSlashesInFilePath(filepath):
+    #this will turn every type of slashes into '/'
+    if "\\\\" in filepath:
+        # enter here if filepath is formated with \\ slashes
+        filepath = filepath.replace("\\\\", "/")
+    if "\\" in filepath:
+        # enter here if the filepath is formated with \ slash
+        filepath = filepath.replace("\\", "/")
+    elif "//" in filepath:
+        # enter here if filepath is formated with // slashes
+        filepath = filepath.replace("//", "/")
+
+    return filepath
+
+def getFileNameFromFilePath(filepath):
+    #this function will get the name of a file from the filepath
+    #should work also with directories if they don't end with slash
+    filename = ""
+
+    filepath = formatSlashesInFilePath(filepath)
+
+    filename = re.split("/", filepath)
+    filename = filename[len(filename) - 1]
+    return filename
 
 #menubar variable to store references to the separate menus added to the menubar
 menubar = MenuBar()
@@ -3665,6 +4118,18 @@ windowCascade = playerWindowCascade()
 #monitor of keyboard hotkeys
 hotkeyMonitor = hotkeyTriggers()
 
+scriptFileName = getFileNameFromFilePath(sys.argv[0])
+rootDirectory = str(sys.argv[0]).replace(scriptFileName, "")
+
+if rootDirectory.endswith("/") == True:
+    rootDirectory = rootDirectory[0:len(rootDirectory)-1]
+
+playerIcon = rootDirectory + "/resources/headphone_red.ico"
+
+clearPlaybackFile = rootDirectory + "/resources/clear.mp3"
+SongStatsFileName = rootDirectory + "/backup/SongStats.sts"
+automaticallyBackupFile = rootDirectory + "/backup/PlayListBackup.pypl"
+
 allButtonsWidth = 11
 allButtonsHeight = 1
 
@@ -3672,9 +4137,11 @@ allButtonsHeight = 1
 LyricsOnlineSources = ["all", "genius.com", "lyrics.my", "lyricsmix.net", "omnialyrics.it"]
 
 #list of custom colors available for selection in the Customize window
-custom_color_list = ["green", "yellow", "purple", "black", "brown", "sienna", "cyan", "magenta",
-                     "pink", "blue", "darkblue", "darkgreen", "deeppink", "red", \
-                     "orange", "gold", "silver", "indigo", "lightgray", "white"]
+custom_color_list = ["green", "yellow", "purple", "black", "brown", "sienna", "cyan", "magenta", "royalblue1",
+                      "midnight blue",
+                     "pink", "blue", "darkblue", "darkgreen", "deeppink", "red", "red2", "red3", "red4", "red3", \
+                     "orange", "gold", "silver", "indigo", "lightgray", "white", "gray", "indian red", "darkorchid4",
+                     "darkorchid3", "darkorchid2", "darkorchid1", "limegreen"]
 
 custom_color_list = sorted(custom_color_list)
 
@@ -3682,8 +4149,10 @@ custom_color_list = sorted(custom_color_list)
 custom_font_list = ["Arial 9", "Arial 10", "Arial 9 bold", "Arial 10 bold",
                     "Consolas 9", "Consolas 9 bold", "Consolas 10", "Consolas 10 bold", "Consolas 11", "Consolas 11 bold",
                     "Courier 9", "Courier 10", "Courier 11", "Courier 9 bold", "Courier 10 bold", "Courier 11 bold",
+                    "Century 9", "Century 10", "Century 9 bold", "Century 10 bold",
                     "Verdana 9", "Verdana 10", "Verdana 9 bold", "Verdana 10 bold",
                     "Georgia 9", "Georgia 10", "Georgia 9 bold", "Georgia 10 bold",
+                    "Garamond 9", "Garamond 10", "Garamond 11", "Garamond 9 bold", "Garamond 10 bold","Garamond 11 bold",
                     "Tahoma 9", "Tahoma 10", "Tahoma 11", "Tahoma 9 bold", "Tahoma 10 bold", "Tahoma 11 bold",
                     "Rockwell 9", "Rockwell 10", "Rockwell 11", "Rockwell 9 bold", "Rockwell 10 bold", "Rockwell 11 bold",
                     "Fixedsys 9","Fixedsys 10",
@@ -3695,6 +4164,8 @@ custom_font_list = ["Arial 9", "Arial 10", "Arial 9 bold", "Arial 10 bold",
                     "Stencil 9", "Stencil 10", "Stencil 11",
                     "Forte 9", "Forte 10", "Forte 11",
                     "System 9",
+                    "SimSun 9","SimSun 10", "SimSun 11", "SimSun 12", "SimSun 9 bold","SimSun 10 bold", "SimSun 11 bold", "SimSun 12 bold",
+                    "Terminal 9", "Terminal 10", "Terminal 11",
                     "Times 9", "Times 10", "Times 11", "Times 9 bold", "Times 10 bold", "Times 11 bold",
                     "Unispace 9", "Unispace 10", "Unispace 11",
                     "Haettenschweiler 9", "Haettenschweiler 10", "Haettenschweiler 11",
@@ -3711,20 +4182,29 @@ listBox_Song_selected_index = None #the active index for the listbox
 APPLICATION_EXIT = False #flag to tell us whether the user Closed the Main Window or not
 
 skinOptions = []
-skinOptions.append(Skin(skin_name = "Light Blue", button_bg = "blue", font="Consolas 10 bold", background_image="resources/default.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Red", button_bg = "red", font="Rockwell 10 bold", background_image="resources/minilights.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Gray", button_bg = "gray", font="Arial 10 italic", background_image="resources/road.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Green", button_bg = "green", font="Candara 10 bold", background_image="resources/darkg.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Deeppink", button_bg = "deeppink", font="Arial 10 bold", background_image="resources/leaves.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Darkblue", button_bg = "darkblue", font="Calibri 10 bold", background_image="resources/darkblue.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Sienna", button_bg = "sienna", font="Harrington 10 bold", background_image="resources/map.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Indigo", button_bg = "indigo", font="Fixedsys 11", background_image="resources/space.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Light Black", button_bg = "black", font="Stencil 10", background_image="resources/universe.gif", font_color="white"))
-skinOptions.append(Skin(skin_name = "Modern Red", button_bg = "black", font="Tahoma 9", background_image="resources/minilights.gif", font_color="red", unique_font_color=True, label_bg_color="black"))
-skinOptions.append(Skin(skin_name = "Modern White", button_bg = "white", font="Rockwell 10", background_image="resources/default.gif", font_color="black", unique_font_color=True, label_bg_color="white"))
-skinOptions.append(Skin(skin_name = "Modern Brown", button_bg = "brown", font="Verdana 9", background_image="resources/leaves.gif", font_color="black", unique_font_color=False, label_bg_color="black"))
-skinOptions.append(Skin(skin_name = "Modern Purple", button_bg = "purple", font="Verdana 9", background_image="resources/universe.gif", font_color="cyan", unique_font_color=True, label_bg_color="black"))
-skinOptions.append(Skin(skin_name = "Dark Black", button_bg = "black", font="Perpetua 11 bold", background_image="resources/space.gif", font_color="pink", unique_font_color=True, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Light Blue", button_bg = "blue", font="Consolas 10 bold", background_image=rootDirectory + "/resources/default.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Red", button_bg = "red", font="Rockwell 10 bold", background_image=rootDirectory + "/resources/minilights.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Gray", button_bg = "gray", font="Arial 10 italic", background_image=rootDirectory + "/resources/road.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Green", button_bg = "green", font="Candara 10 bold", background_image=rootDirectory + "/resources/darkg.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Deeppink", button_bg = "deeppink", font="Arial 10 bold", background_image=rootDirectory + "/resources/leaves.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Darkblue", button_bg = "darkblue", font="Calibri 10 bold", background_image=rootDirectory + "/resources/darkblue.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Sienna", button_bg = "sienna", font="Harrington 10 bold", background_image=rootDirectory + "/resources/map.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Indigo", button_bg = "indigo", font="Fixedsys 11", background_image=rootDirectory + "/resources/space.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Light Black", button_bg = "black", font="Stencil 10", background_image=rootDirectory + "/resources/universe.gif", font_color="white"))
+skinOptions.append(Skin(skin_name = "Modern Red", button_bg = "black", font="Tahoma 9", background_image=rootDirectory + "/resources/minilights.gif", font_color="red", unique_font_color=True, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Modern White", button_bg = "white", font="Rockwell 10", background_image=rootDirectory + "/resources/silver.gif", font_color="black", unique_font_color=True, label_bg_color="white"))
+skinOptions.append(Skin(skin_name = "Modern Brown", button_bg = "brown", font="Verdana 9", background_image=rootDirectory + "/resources/leaves.gif", font_color="black", unique_font_color=False, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Modern Purple", button_bg = "purple", font="Verdana 9", background_image=rootDirectory + "/resources/universe.gif", font_color="cyan", unique_font_color=True, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Dark Black", button_bg = "black", font="Perpetua 11 bold", background_image=rootDirectory + "/resources/space.gif", font_color="pink", unique_font_color=True, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Retro Red", button_bg = "red3", font="Terminal 11", background_image=rootDirectory + "/resources/retro_red.gif", font_color="black", unique_font_color=True, label_bg_color="red3"))
+skinOptions.append(Skin(skin_name = "Red Blue", button_bg = "blue2", font="Impact 10", background_image=rootDirectory + "/resources/red_blue.gif", font_color="red", unique_font_color=True, label_bg_color="blue2"))
+skinOptions.append(Skin(skin_name = "Blue Lights", button_bg = "black", font="Modern 10", background_image=rootDirectory + "/resources/blue_lights.gif", font_color="cyan", unique_font_color=True, label_bg_color="black"))
+skinOptions.append(Skin(skin_name = "Purple Neon", button_bg = "darkorchid4", font="Calibri 10 bold", background_image=rootDirectory + "/resources/purple_neon.gif", font_color="lightgray", unique_font_color=True, label_bg_color="darkorchid4"))
+skinOptions.append(Skin(skin_name = "Dark Cyan", button_bg = "gray14", font="Rockwell 9 bold", background_image=rootDirectory + "/resources/dark_cyan.gif", font_color="cyan", unique_font_color=True, label_bg_color="gray14"))
+skinOptions.append(Skin(skin_name = "Midnight Blue", button_bg = "midnight blue", font="Courier 9 bold", background_image=rootDirectory + "/resources/midnight_blue.gif", font_color="silver", unique_font_color=True, label_bg_color="midnight blue"))
+skinOptions.append(Skin(skin_name = "Royal Blue", button_bg = "gray12", font="Arial 10 bold", background_image=rootDirectory + "/resources/royal_blue.gif", font_color="royalblue1", unique_font_color=True, label_bg_color="gray12"))
+skinOptions.append(Skin(skin_name = "Black Green", button_bg = "gray10", font="Garamond 11 bold", background_image=rootDirectory + "/resources/black_green.gif", font_color="limegreen", unique_font_color=True, label_bg_color="gray10"))
+skinOptions.append(Skin(skin_name = "Black Red", button_bg = "gray8", font="SimSun 12 bold", background_image=rootDirectory + "/resources/black_red.gif", font_color="red2", unique_font_color=True, label_bg_color="gray8"))
 skinOptions.append(Skin(button_bg = "custom", font="", background_image="", font_color=""))
 
 play_list = Playlist() #playlist
@@ -3737,6 +4217,21 @@ s_rate = None # will store the sample_rate for the song loaded in the playback
 channels = None # will store the number of channels (Mono / Stereo) for the song loaded in the playback
 temp_SongEndPos = None #this variable will only be used when CrossFade is enabled.
 
+FLAGGED_MAXIMUM_ITERATIONS = 10 #threshold for invalid files looped consecutively
+flagged_files_looped_consecutively = 0 #variable to track how many invalid/flagged files get looped consecutively
+#will use it to stop the scheduling loop if a threshold is reached.
+
+# Setting up the scheduler
+scheduler = Scheduler(time.time, time.sleep)
+timeListenedProgress = 0 #variable to help calculate the time spent listening to song / playlist
+
+def calculateListenedTimeSinceLastIter(song_position):
+    #function to help calculate the time spent listening to song / playlist
+    global timeListenedProgress
+    value = song_position - timeListenedProgress
+    timeListenedProgress = song_position
+    return value
+
 def load_file(fileToPlay=None):
     #this function is called when clicking on Open File command in Menubar File Menu.
     #this function will validate the .mp3 file from user's selection.
@@ -3744,13 +4239,23 @@ def load_file(fileToPlay=None):
     global play_list
     global listBox_Song_selected_index
     #Open the file dialog only if the function is called without a parameter
-
+    if type(play_list.dirFilePath) == str:
+        #if using the old version of playlist - convert the data type for this variable
+        play_list.dirFilePath = list(play_list.dirFilePath)
     if fileToPlay==None:
-        dir = play_list.dirFilePath if play_list.dirFilePath != None else "/"
+        dir = play_list.dirFilePath[len(play_list.dirFilePath)-1] if len(play_list.dirFilePath) > 0 else "/"
         fileToPlay = filedialog.askopenfilenames(initialdir = dir, title = "Select file",filetypes = (("mp3 files","*.mp3"),("pypl files","*.pypl"),("all files","*.*")))
     if fileToPlay:
         fileToPlay = list(fileToPlay)
-        play_list.dirFilePath = fileToPlay[0].replace(getFileNameFromFilePath(fileToPlay[0]), "")
+        directory_path = fileToPlay[0].replace(getFileNameFromFilePath(fileToPlay[0]), "")
+        if directory_path.endswith("/"):
+            #if it ends with forward slash we will remove the forward slash.
+            #the filedialog.askdirectory does not end with forward slash, we will need to check if Locations are identical
+            #so we don't store them twice or loop through same dirs multiple times.
+            directory_path = directory_path[0: len(directory_path)-1]
+
+        play_list.dirFilePath.append(directory_path)
+        play_list.dirFilePath = list(set(play_list.dirFilePath)) #don't store duplicates
         dict_list = []
         if play_list.keepSongsStats and os.path.isfile(SongStatsFileName):
             try:
@@ -3761,37 +4266,51 @@ def load_file(fileToPlay=None):
                 text = ("Could not load the songs stats. File might be corrupted.")
                 WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         i=0
-        mp3FilesCausingException = ""
+        messageForUser = ""
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for file in fileToPlay:
-            if ".mp3" in file.lower():
+            if file.lower().endswith(".mp3"):
                 i+=1
+                if scheduler.userIntervention == True:
+                    # user changed something in the play_list that might affect the outcome of this loop
+                    scheduler.userIntervention = False
+                    break
                 windowCascade.root.title("Scanning: " + str(i) + " out of " + str(len(fileToPlay)) + " files")
-                mainWindowUpdate() #this will make he window more responsive
-
+                viewProgress() #this will make he window responsive
                 song = Song(file)
-                if song.Exception == None:
+                if song.Exception == None and song not in play_list.validFiles:
                     if play_list.keepSongsStats and dict_list != []:
                         loadSongStats(song, dict_list)
                     play_list.validFiles.append(song)
-                    play_list.currentSongIndex = 0
-                    listBox_Song_selected_index = 0
-                    SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+                    listbox.insert(len(play_list.validFiles)-1,
+                                   str(len(play_list.validFiles)-1) + ". " + song.fileName)
+                    if len(play_list.validFiles) == 1:
+                        #do this only when the first element is added
+                        play_list.currentSongIndex = 0
+                        listBox_Song_selected_index = 0
+                        SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
                     textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
-                    play_list.playTime += play_list.validFiles[play_list.currentSongIndex].Length
+                    play_list.playTime += song.Length
+                elif song in play_list.validFiles:
+                    messageForUser += str(song.filePath) + "\n" + "File already exists in the playlist at index: " \
+                                        + str(play_list.validFiles.index(song)) + "\n\n"
                 else:
-                    mp3FilesCausingException += str(song.filePath) + "\n" + "Reason: " + str(song.Exception) + "\n\n"
+                    messageForUser += str(song.filePath) + "\n" + "Reason: " + str(song.Exception) + "\n\n"
 
             elif ".pypl" in file:
                 loadPlaylistFile(file)
                 configurePlayer()
 
-        if mp3FilesCausingException != "":
-            text = "Unable to load the following MP3 Files: \n\n" + mp3FilesCausingException
-            WindowDialog(window, text, Button1_Functionality=ButtonFunctionality("OK", None),
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        if messageForUser != "":
+            text = "Unable to load the following MP3 Files: \n\n" + messageForUser
+            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None),
                                         windowTitle="Information")
 
         windowCascade.root.title(Project_Title)
-        displayElementsOnPlaylist()
+        #displayElementsOnPlaylist() #not neeed the listbox was populated above
         showCurrentSongInList()
         play_list.isListOrdered = 21 #this will mean Custom Sorting
         updateSortMenuLabel()
@@ -3806,8 +4325,8 @@ def loadPlaylistFile(fileURL):
         file.close()
     except Exception as exp:
         text = ("Load Playlist File Exception: " + str(exp) +
-                "\nFile: " + str(fileURL) + " might be corrupted.")
-        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+                "\n\nFile: " + str(fileURL) + " might be corrupted.")
+        tk.messagebox.showinfo("Warning", text)
     else:
         if isinstance(content, Playlist):
             existingFiles = play_list.validFiles
@@ -3859,14 +4378,21 @@ def loadPlaylistFile(fileURL):
             del content
         else:
             text = ("Playlist file has been corrupted.")
-            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+            tk.messagebox.showinfo("Warning", text)
 
 def configurePlayer():
     #this function is called at startup to configure the player Main Window elements
     global play_list
 
     if play_list.currentSongIndex != None and len(play_list.validFiles) > 0:
-        SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+        #in case the user uses older version of playlist
+        if hasattr(play_list.validFiles[play_list.currentSongIndex], "Exception") == False:
+            #add the missing attribute
+            setattr(play_list.validFiles[play_list.currentSongIndex], "Exception", None)
+        if(play_list.validFiles[play_list.currentSongIndex].Exception == None):
+            SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+        else:
+            SongName.set("Flagged: " + play_list.validFiles[play_list.currentSongIndex].fileName)
         SongSize.set("Size: " + str(play_list.validFiles[play_list.currentSongIndex].fileSize) + " MB")
         if play_list.progressTime == "Ascending":
             textProgress.set(
@@ -3912,20 +4438,29 @@ def load_directory(fpath=None):
     #this function is called when clicking on Open Directory command from menubar File menu
     global play_list
     global listBox_Song_selected_index
+    if type(play_list.dirFilePath) == str:
+        #if using the old version of playlist - convert the data type for this variable
+        play_list.dirFilePath = list(play_list.dirFilePath)
     if fpath == None:
-        play_list.dirFilePath = filedialog.askdirectory()
+        play_list.dirFilePath.append(filedialog.askdirectory())
     else:
-        play_list.dirFilePath = fpath
+        play_list.dirFilePath.append(fpath)
 
-    if play_list.dirFilePath:
+    play_list.dirFilePath = list(set(play_list.dirFilePath))  # don't store duplicates
+    if len(play_list.dirFilePath) > 0:
         startIndex = len(play_list.validFiles)
-        searchFilesInDirectories(play_list.dirFilePath)
+
+        #window become responsive in searchFilesInDirectories
+        searchFilesInDirectories(play_list.dirFilePath[len(play_list.dirFilePath)-1])
         play_list.currentSongIndex = 0
         play_list.currentSongPosition = 0
         textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
-        displayElementsOnPlaylist()
+        #displayElementsOnPlaylist() #not needed the searchFilesInDirectories also populates the listbox
         showCurrentSongInList()
-        SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+        if len(play_list.validFiles) > 0:
+            #window got responsive user might have operated on the play_list check again if we have
+            #anything available
+            SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
         play_list.isListOrdered = 21 #this will mean Custom Sorting
         updateSortMenuLabel()
 
@@ -3943,13 +4478,23 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
             text = ("Could not load the songs stats. File might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
     mp3FilesCausingException = ""
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for root, dirs, files in os.walk(dir):
         i=0
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
         for file in files:
             i+=1
+            if scheduler.userIntervention == True:
+                # user changed something in the play_list that might affect the outcome of this loop
+                break #break from here, the break from outter loop will clear the flag
             windowCascade.root.title("Scanning " + str(root) + ": " + str(i) + " out of " + str(len(files)) + " files")
-            mainWindowUpdate()
-            if ".mp3" in file.lower():
+            viewProgress() # this will keep the main window responsive
+
+            if file.lower().endswith(".mp3"):
                 filepath = root + "/" + file
 
                 song = Song(filepath)
@@ -3957,15 +4502,76 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
                     if play_list.keepSongsStats and dict_list != []:
                         loadSongStats(song, dict_list)
                     play_list.validFiles.append(song)
+                    listbox.insert(len(play_list.validFiles)-1,
+                                   str(len(play_list.validFiles)-1) + ". " + song.fileName)
                     play_list.playTime += song.Length
                 else:
                     mp3FilesCausingException += str(song.filePath) + "\n" + "Reason: " + str(song.Exception) + "\n\n"
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
     if mp3FilesCausingException != "":
         text = "Unable to load the following MP3 Files: \n\n" + mp3FilesCausingException
         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None),
                      windowTitle="Information")
 
     windowCascade.root.title(Project_Title)
+
+def scanForNewFilesInDirectories(dir_list: list): #this function is called when loading a directory.
+    #this function will scan for .mp3 files in given directory and append to the play_list any match
+    #that can be played.
+    global play_list
+    dict_list = []
+    messageForUser = ""
+    added_playTime = 0
+    if play_list.keepSongsStats and os.path.isfile(SongStatsFileName):
+        try:
+            file = open(SongStatsFileName, "rb")
+            dict_list = pickle.load(file)
+            file.close()
+        except:
+            messageForUser += ("Could not load the songs stats. File might be corrupted.")
+
+    scheduler.canceled = True # we will keep window refreshed in the loop
+    newFiles = []
+
+    for element in dir_list:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        for root, dirs, files in os.walk(element):
+            i=0
+            if scheduler.userIntervention == True:
+                # user changed something in the play_list that might affect the outcome of this loop
+                break #the break from outter loop will clear the flag
+            for file in files:
+                i+=1
+                if scheduler.userIntervention == True:
+                    # user changed something in the play_list that might affect the outcome of this loop
+                    break #the break from outter loop will clear the flag
+                windowCascade.root.title("Scanning " + str(root) + ": " + str(i) + " out of " + str(len(files)) + " files")
+                viewProgress() # this will eep the main window responsive
+                if file.lower().endswith(".mp3"):
+                    filepath = root + "/" + file
+
+                    song = Song(filepath)
+                    if song.Exception == None and song not in play_list.validFiles  and song not in newFiles:
+                        if play_list.keepSongsStats and dict_list != []:
+                            loadSongStats(song, dict_list)
+                        newFiles.append(song)
+                        added_playTime += song.Length
+                        messageForUser += "New File: " + str(song.filePath) + "\n\n"
+                    elif song.Exception != None and song not in play_list.validFiles  and song not in newFiles:
+                        messageForUser += "Invalid New File: " + str(song.filePath) + "\n" + \
+                                          "Reason: " + str(song.Exception) + "\n\n"
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+    windowCascade.root.title(Project_Title)
+    return messageForUser, newFiles, added_playTime
 
 def play_music():
     """
@@ -3978,104 +4584,122 @@ def play_music():
     global channels
     global temp_SongEndPos
     global Project_Title
+    global flagged_files_looped_consecutively
     if len(play_list.validFiles) > 0 and play_list.currentSongIndex!=None:
-        try:
-            if s_rate != play_list.validFiles[play_list.currentSongIndex].sample_rate or channels != play_list.validFiles[play_list.currentSongIndex].channels \
-                    or s_rate == None or channels == None:
-                s_rate = play_list.validFiles[play_list.currentSongIndex].sample_rate
-                channels = play_list.validFiles[play_list.currentSongIndex].channels
-                if pygame.mixer.get_init():
-                    pygame.mixer.quit() # quit it, to make sure it is reinitialized
-                    pygame.mixer.pre_init(frequency=s_rate, size=-16, channels=channels, buffer=4096)
-                else:
-                    pygame.mixer.pre_init(frequency=s_rate, size=-16, channels=channels, buffer=4096)
-                pygame.mixer.init()
-            if play_list.useCrossFade == True and play_list.currentSongPosition <= play_list.validFiles[play_list.currentSongIndex].startPos :
-                #let the next song start from seconds stored in play_list.crossFadeGap
-                play_list.currentSongPosition = play_list.crossFadeGap
+        if (hasattr(play_list.validFiles[play_list.currentSongIndex], "Exception") == False):
+            setattr(play_list.validFiles[play_list.currentSongIndex], "Exception", None)
+        if(play_list.validFiles[play_list.currentSongIndex].Exception == None):
+            #if the .mp3 file is flagged to cause Exception we will not attempt to play it
+            try:
+                if s_rate != play_list.validFiles[play_list.currentSongIndex].sample_rate or channels != play_list.validFiles[play_list.currentSongIndex].channels \
+                        or s_rate == None or channels == None:
+                    s_rate = play_list.validFiles[play_list.currentSongIndex].sample_rate
+                    channels = play_list.validFiles[play_list.currentSongIndex].channels
+                    if pygame.mixer.get_init():
+                        pygame.mixer.quit() # quit it, to make sure it is reinitialized
+                        pygame.mixer.pre_init(frequency=s_rate, size=-16, channels=channels, buffer=4096)
+                    else:
+                        pygame.mixer.pre_init(frequency=s_rate, size=-16, channels=channels, buffer=4096)
+                    pygame.mixer.init()
+                if play_list.useCrossFade == True and play_list.currentSongPosition <= play_list.validFiles[play_list.currentSongIndex].startPos :
+                    #let the next song start from seconds stored in play_list.crossFadeGap
+                    play_list.currentSongPosition = play_list.crossFadeGap
 
-                play_list.validFiles[play_list.currentSongIndex].fadein_duration = play_list.crossFadeDuration
-                play_list.validFiles[play_list.currentSongIndex].fadeout_duration = play_list.crossFadeDuration
-                temp_SongEndPos = play_list.validFiles[play_list.currentSongIndex].endPos
-                play_list.validFiles[play_list.currentSongIndex].endPos = (play_list.validFiles[play_list.currentSongIndex].Length - play_list.crossFadeGap*3)
-            if (play_list.validFiles[play_list.currentSongIndex].fadein_duration == 0  \
-                    or play_list.currentSongPosition > play_list.validFiles[play_list.currentSongIndex].fadein_duration):
-                pygame.mixer.music.set_volume(play_list.VolumeLevel) # you can set the Volume
-            else: # enter here if song uses fadein
-                pygame.mixer.music.set_volume(0.0) #the volume will start from 0.0 and will increase progressively
-            if listBox_Song_selected_index != None and len(searchValue.get()) == 0: #ignore this statement if Search is being used
-                if listBox_Song_selected_index != play_list.currentSongIndex:
-                    play_list.currentSongIndex = listBox_Song_selected_index
-                    play_list.currentSongPosition = play_list.validFiles[play_list.currentSongIndex].startPos
-                    play_list.RESUMED = False
-            elif listBox_Song_selected_index == play_list.currentSongIndex and len(searchValue.get()) == 0: #ignore this statement if Search is being used:
-                if play_list.danthologyMode == False:
-                    play_list.currentSongPosition=0
-                #otherwise keep the currentSongPosition from the previous one.
-            pygame.mixer.music.load(play_list.validFiles[play_list.currentSongIndex].filePath)
-            pygame.mixer.music.play()
-            PausedButtonText.set("Pause")
-            play_list.isSongPause = False
-            if play_list.danthologyDuration == 0 and play_list.danthologyMode: #start song from the beginning.
-                play_list.currentSongPosition = play_list.validFiles[play_list.currentSongIndex].startPos
-            if play_list.currentSongPosition > 0:
-                pygame.mixer.music.set_pos(play_list.currentSongPosition)
-                play_list.RESUMED = True
-            elif play_list.validFiles[play_list.currentSongIndex].startPos > 0:
-                start_pos = play_list.validFiles[play_list.currentSongIndex].startPos
-                if play_list.currentSongPosition == 0:
+                    play_list.validFiles[play_list.currentSongIndex].fadein_duration = play_list.crossFadeDuration
+                    play_list.validFiles[play_list.currentSongIndex].fadeout_duration = play_list.crossFadeDuration
+                    temp_SongEndPos = play_list.validFiles[play_list.currentSongIndex].endPos
+                    play_list.validFiles[play_list.currentSongIndex].endPos = (play_list.validFiles[play_list.currentSongIndex].Length - play_list.crossFadeGap*3)
+                if (play_list.validFiles[play_list.currentSongIndex].fadein_duration == 0  \
+                        or play_list.currentSongPosition > play_list.validFiles[play_list.currentSongIndex].fadein_duration):
+                    pygame.mixer.music.set_volume(play_list.VolumeLevel) # you can set the Volume
+                else: # enter here if song uses fadein
+                    pygame.mixer.music.set_volume(0.0) #the volume will start from 0.0 and will increase progressively
+                if listBox_Song_selected_index != None and len(searchValue.get()) == 0: #ignore this statement if Search is being used
+                    if listBox_Song_selected_index != play_list.currentSongIndex:
+                        play_list.currentSongIndex = listBox_Song_selected_index
+                        play_list.currentSongPosition = play_list.validFiles[play_list.currentSongIndex].startPos
+                        play_list.RESUMED = False
+                elif listBox_Song_selected_index == play_list.currentSongIndex and len(searchValue.get()) == 0: #ignore this statement if Search is being used:
                     if play_list.danthologyMode == False:
-                        play_list.currentSongPosition = start_pos
-                    # otherwise keep the currentSongPosition from the previous one.
-                pygame.mixer.music.set_pos(start_pos)
-                play_list.RESUMED = True
-            if play_list.danthologyDuration > 0 and play_list.danthologyMode:
-                play_list.danthologyTimer = time.time()
-        except Exception as e:
-            text = ("Play Music Function: \n" + str(e))
-            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                        play_list.currentSongPosition=0
+                    #otherwise keep the currentSongPosition from the previous one.
+                pygame.mixer.music.load(play_list.validFiles[play_list.currentSongIndex].filePath)
+                pygame.mixer.music.play()
+                PausedButtonText.set("Pause")
+                play_list.isSongPause = False
+                if play_list.danthologyDuration == 0 and play_list.danthologyMode: #start song from the beginning.
+                    play_list.currentSongPosition = play_list.validFiles[play_list.currentSongIndex].startPos
+                if play_list.currentSongPosition > 0:
+                    pygame.mixer.music.set_pos(play_list.currentSongPosition)
+                    play_list.RESUMED = True
+                elif play_list.validFiles[play_list.currentSongIndex].startPos > 0:
+                    start_pos = play_list.validFiles[play_list.currentSongIndex].startPos
+                    if play_list.currentSongPosition == 0:
+                        if play_list.danthologyMode == False:
+                            play_list.currentSongPosition = start_pos
+                        # otherwise keep the currentSongPosition from the previous one.
+                    pygame.mixer.music.set_pos(start_pos)
+                    play_list.RESUMED = True
+                if play_list.danthologyDuration > 0 and play_list.danthologyMode:
+                    play_list.danthologyTimer = time.time()
+            except Exception as e:
+                flagged_files_looped_consecutively+=1
+                SongName.set("Flagged: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+                play_list.validFiles[play_list.currentSongIndex].refreshSongData() #this will flag the .mp3 file as not playable
+                text = ("Play Music Function: \n" + str(e))
+                WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+            else:
+                SongName.set("Playing: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+                SongSize.set("Size: " + str(play_list.validFiles[play_list.currentSongIndex].fileSize) + " MB")
+                songLength = float("{0:.0f}".format(play_list.validFiles[play_list.currentSongIndex].Length))  # no decimals needed
+                textLength.set("Length: "+ formatTimeString(songLength))
+                textGenre.set("Genre: " + str(play_list.validFiles[play_list.currentSongIndex].Genre))
+                textArtist.set("Artist: " + str(play_list.validFiles[play_list.currentSongIndex].Artist))
+                textAlbum.set("Album: " + str(play_list.validFiles[play_list.currentSongIndex].Album))
+                textTitle.set("Title: " + str(play_list.validFiles[play_list.currentSongIndex].Title))
+                textYear.set("Year: " + str(play_list.validFiles[play_list.currentSongIndex].Year))
+                textSongListenedTime.set("Played time: " + formatTimeString(int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))
+                startPos = int(play_list.validFiles[play_list.currentSongIndex].startPos)
+                textStartTime.set("Starts at: " + formatTimeString(startPos))
+                endPos = int(play_list.validFiles[play_list.currentSongIndex].endPos)
+                textEndTime.set("Ends at: " + formatTimeString(endPos))
+                textFadeIn.set("FadeIn: " + str(play_list.validFiles[play_list.currentSongIndex].fadein_duration)+"s")
+                textFadeOut.set("FadeOut: " + str(play_list.validFiles[play_list.currentSongIndex].fadeout_duration) +"s")
+                mode = "Stereo" if play_list.validFiles[play_list.currentSongIndex].channels == 2 else "Mono"
+                textMonoStereoMode.set("Mode: " + mode)
+                textSampleRate.set("Sample Rate: " + str(play_list.validFiles[play_list.currentSongIndex].sample_rate))
+                progress["maximum"] = play_list.validFiles[play_list.currentSongIndex].Length
+                songRating.set(str(play_list.validFiles[play_list.currentSongIndex].Rating))
+                if play_list.playingFileNameTransition == "none":
+                    visualSongNameLabel = play_list.validFiles[play_list.currentSongIndex].fileName
+                elif play_list.playingFileNameTransition == "typewriting":
+                    visualSongNameLabel = ""
+                elif play_list.playingFileNameTransition == "separation":
+                    visualSongNameLabel = "_" + play_list.validFiles[play_list.currentSongIndex].fileName
+                updateRadioButtons()
+                #Make Window Title the song being currently played:
+                if play_list.useSongNameTitle:
+                    Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
+                    windowCascade.root.title(Project_Title)
+                play_list.validFiles[play_list.currentSongIndex].NumberOfPlays+=1
+                textNofPlays.set("No. of Plays: " + str(play_list.validFiles[play_list.currentSongIndex].NumberOfPlays))
+                flagged_files_looped_consecutively = 0
         else:
-            SongName.set("Playing: " + play_list.validFiles[play_list.currentSongIndex].fileName)
-            SongSize.set("Size: " + str(play_list.validFiles[play_list.currentSongIndex].fileSize) + " MB")
-            songLength = float("{0:.0f}".format(play_list.validFiles[play_list.currentSongIndex].Length))  # no decimals needed
-            textLength.set("Length: "+ formatTimeString(songLength))
-            textGenre.set("Genre: " + str(play_list.validFiles[play_list.currentSongIndex].Genre))
-            textArtist.set("Artist: " + str(play_list.validFiles[play_list.currentSongIndex].Artist))
-            textAlbum.set("Album: " + str(play_list.validFiles[play_list.currentSongIndex].Album))
-            textTitle.set("Title: " + str(play_list.validFiles[play_list.currentSongIndex].Title))
-            textYear.set("Year: " + str(play_list.validFiles[play_list.currentSongIndex].Year))
-            textSongListenedTime.set("Played time: " + formatTimeString(int(play_list.validFiles[play_list.currentSongIndex].SongListenedTime)))
-            startPos = int(play_list.validFiles[play_list.currentSongIndex].startPos)
-            textStartTime.set("Starts at: " + formatTimeString(startPos))
-            endPos = int(play_list.validFiles[play_list.currentSongIndex].endPos)
-            textEndTime.set("Ends at: " + formatTimeString(endPos))
-            textFadeIn.set("FadeIn: " + str(play_list.validFiles[play_list.currentSongIndex].fadein_duration)+"s")
-            textFadeOut.set("FadeOut: " + str(play_list.validFiles[play_list.currentSongIndex].fadeout_duration) +"s")
-            mode = "Stereo" if play_list.validFiles[play_list.currentSongIndex].channels == 2 else "Mono"
-            textMonoStereoMode.set("Mode: " + mode)
-            textSampleRate.set("Sample Rate: " + str(play_list.validFiles[play_list.currentSongIndex].sample_rate))
-            progress["maximum"] = play_list.validFiles[play_list.currentSongIndex].Length
-            songRating.set(str(play_list.validFiles[play_list.currentSongIndex].Rating))
-            if play_list.playingFileNameTransition == "none":
-                visualSongNameLabel = play_list.validFiles[play_list.currentSongIndex].fileName
-            elif play_list.playingFileNameTransition == "typewriting":
-                visualSongNameLabel = ""
-            elif play_list.playingFileNameTransition == "separation":
-                visualSongNameLabel = "_" + play_list.validFiles[play_list.currentSongIndex].fileName
-            updateRadioButtons()
-            #Make Window Title the song being currently played:
-            if play_list.useSongNameTitle:
-                Project_Title = "   " + play_list.validFiles[play_list.currentSongIndex].fileName + "   "
-                windowCascade.root.title(Project_Title)
-            play_list.validFiles[play_list.currentSongIndex].NumberOfPlays+=1
-            textNofPlays.set("No. of Plays: " + str(play_list.validFiles[play_list.currentSongIndex].NumberOfPlays))
+            #when the .mp3 file is flagged as not playable, we will attempt to refresh to see whatever problems
+            #it had are now fixed
+            SongName.set("Flagged: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+            flagged_files_looped_consecutively += 1
+            play_list.validFiles[play_list.currentSongIndex].refreshSongData()  # this will flag the .mp3 file as not playable
 
 def pause_music(): #this function is called when clicking on Play/Pause Button.
     #this function will determine whether we're meant play or pause the song
     global play_list
     if pygame.mixer.get_init(): #if the mixer is initialized it means music is loaded in the playback either currently playing, paused or stopped.
         try:
-            if play_list.isSongPause == False and pygame.mixer.music.get_busy(): #Music is currently playing
+            if play_list.validFiles[play_list.currentSongIndex].Exception != None:
+                #allow to stop looping if file became invalid
+                stop_music()
+            elif play_list.isSongPause == False and pygame.mixer.music.get_busy(): #Music is currently playing
                 pygame.mixer.music.pause()
                 PausedButtonText.set("Play")
                 play_list.isSongPause = True
@@ -4091,8 +4715,6 @@ def pause_music(): #this function is called when clicking on Play/Pause Button.
                     SongName.set("Playing: " + play_list.validFiles[play_list.currentSongIndex].fileName)
                 else:
                     SongName.set("Playing: ")
-                scheduler.enter(progressViewRealTime, 1, viewProgress)
-                scheduler.run()
             elif pygame.mixer.music.get_busy() == False: #Music is currently stopped and playback is free
                 play_music()
         except Exception as e:
@@ -4107,33 +4729,40 @@ def stop_music(): #this function is called when clicking on Stop Button.
     if pygame.mixer.get_init():
         try:
             if pygame.mixer.music.get_busy():
+                #stop the music if possible else only clear the labels and stop looping
                 pygame.mixer.music.stop()
-                SongName.set("Playing: ")
-                progress["value"] = 0
-                textLength.set("Length: ")
-                textGenre.set("Genre: ")
-                textAlbum.set("Album: ")
-                textYear.set("Year: ")
-                textTitle.set("Title: ")
-                textArtist.set("Artist: ")
-                textNofPlays.set("No. of Plays: ")
-                textEndTime.set("Ends at: ")
-                textStartTime.set("Starts at: ")
-                textMonoStereoMode.set("Mode: ")
-                textFadeIn.set("FadeIn: ")
-                textFadeOut.set("FadeOut: ")
-                textSampleRate.set("Sample Rate: ")
-                if play_list.progressTime == "Ascending":
-                    textProgress.set("Time Elapsed: ")
-                else:
-                    textProgress.set("Time Left: ")
-                SongSize.set("Size: ")
-                if play_list.danthologyMode == False:
-                    play_list.currentSongPosition=0
-                play_list.RESUMED = False
-                PausedButtonText.set("Play")
-                play_list.isSongPause = False
-                play_list.isSongStopped = True
+            else:
+                if (hasattr(play_list.validFiles[play_list.currentSongIndex], "Exception") == False):
+                    setattr(play_list.validFiles[play_list.currentSongIndex], "Exception", None)
+                if play_list.validFiles[play_list.currentSongIndex].Exception != None:
+                    #enter here on invalid files
+                    pygame.mixer.quit()
+            SongName.set("Playing: ")
+            progress["value"] = 0
+            textLength.set("Length: ")
+            textGenre.set("Genre: ")
+            textAlbum.set("Album: ")
+            textYear.set("Year: ")
+            textTitle.set("Title: ")
+            textArtist.set("Artist: ")
+            textNofPlays.set("No. of Plays: ")
+            textEndTime.set("Ends at: ")
+            textStartTime.set("Starts at: ")
+            textMonoStereoMode.set("Mode: ")
+            textFadeIn.set("FadeIn: ")
+            textFadeOut.set("FadeOut: ")
+            textSampleRate.set("Sample Rate: ")
+            if play_list.progressTime == "Ascending":
+                textProgress.set("Time Elapsed: ")
+            else:
+                textProgress.set("Time Left: ")
+            SongSize.set("Size: ")
+            if play_list.danthologyMode == False:
+                play_list.currentSongPosition=0
+            play_list.RESUMED = False
+            PausedButtonText.set("Play")
+            play_list.isSongPause = False
+            play_list.isSongStopped = True
         except Exception as e:
             text = ("Stop Music Function: \n" + str(e))
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
@@ -4154,45 +4783,45 @@ def next_song(): #this function is called when clicking on Next Button.
     # here we set up the playback to that it will play the next song selection
     global listBox_Song_selected_index
     global play_list
-    if len(searchValue.get()) == 0:
-        if len(play_list.validFiles) > 0 and play_list.currentSongIndex!=None:
-            if (play_list.SHUFFLE==False):
-                try:
-                    play_list.currentSongIndex+=1
-                    if play_list.currentSongIndex >= len(play_list.validFiles):
-                        if play_list.REPEAT==3: #End of playlist, do not repeat.
-                            play_list.currentSongIndex = len(play_list.validFiles)-1 #last file on playlist
-                            stop_music()
-                            clearLabels()
-                            return #silence must be heard.
+    if flagged_files_looped_consecutively < FLAGGED_MAXIMUM_ITERATIONS:
+        #in case of invalid files only loop through it for FLAGGED_MAXIMUM_ITERATIONS times
+        if len(searchValue.get()) == 0:
+            if len(play_list.validFiles) > 0 and play_list.currentSongIndex!=None:
+                if (play_list.SHUFFLE==False):
+                    try:
+                        play_list.currentSongIndex+=1
+                        if play_list.currentSongIndex >= len(play_list.validFiles):
+                            if play_list.REPEAT==3: #End of playlist, do not repeat.
+                                play_list.currentSongIndex = len(play_list.validFiles)-1 #last file on playlist
+                                stop_music()
+                                clearLabels()
+                                return #silence must be heard.
+                            else:
+                                play_list.currentSongIndex = 0
                         else:
-                            play_list.currentSongIndex = 0
-                    else:
-                        pass
-                except Exception as exp:
-                    text = ("Next Song Function: \n" + str(exp))
-                    WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
-            else:
-                play_list.shufflingHistory.append(play_list.currentSongIndex)
-                if shuffling_playlist() == False:
-                    play_list.currentSongIndex = 0
-                    stop_music()
-                    clearLabels()
-                    play_list.shufflingHistory=[] # this will enable restart on this pattern.
-                    return #stop it here, playlist has ended.
-            listBox_Song_selected_index = play_list.currentSongIndex #without this the song will not change
-            if play_list.danthologyMode == False:
-                play_list.currentSongPosition=0
-            else:
-                handleDanthology()
-            showCurrentSongInList()
-            play_music()
-            # play_music() function should always be called last.
-            # As this function triggers a scheduler which will only end during pause or stop
-            # statements placed ater play_music will not be executed until scheduler ends which
-            # produces huge delays in their execution
+                            pass
+                    except Exception as exp:
+                        text = ("Next Song Function: \n" + str(exp))
+                        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
+                else:
+                    play_list.shufflingHistory.append(play_list.currentSongIndex)
+                    if shuffling_playlist() == False:
+                        play_list.currentSongIndex = 0
+                        stop_music()
+                        clearLabels()
+                        play_list.shufflingHistory=[] # this will enable restart on this pattern.
+                        return #stop it here, playlist has ended.
+                listBox_Song_selected_index = play_list.currentSongIndex #without this the song will not change
+                if play_list.danthologyMode == False:
+                    play_list.currentSongPosition=0
+                else:
+                    handleDanthology()
+                showCurrentSongInList()
+                play_music()
+        else:
+            playNextSearchItem()
     else:
-        playNextSearchItem()
+        stop_music()
 
 def previous_song(): #this function is called when clicking on Previous Button.
     #here we set up the playback to that it will play the previous song selection
@@ -4252,7 +4881,19 @@ def makeProgress(value):
     else:
         SongLength = int(play_list.validFiles[play_list.currentSongIndex].Length - value)
         textProgress.set("Time Left: " + formatTimeString(SongLength))
+
     progress["value"] = value
+
+    if play_list.VolumeLevel > 0.0:  # only if Volume not Muted means listening to it.
+        play_list.validFiles[
+            play_list.currentSongIndex].SongListenedTime += calculateListenedTimeSinceLastIter(value)  # if entered here, means song is playing with volume!=0
+        play_list.PlaylistListenedTime += calculateListenedTimeSinceLastIter(value)  # if entered here, means song is playing with volume!=0
+        textSongListenedTime.set(
+            "Played time: " + formatTimeString(
+                play_list.validFiles[play_list.currentSongIndex].SongListenedTime))
+        textPlaylistListenedTime.set(
+            "Total listening time: " + formatTimeString(play_list.PlaylistListenedTime))
+
     if play_list.validFiles[play_list.currentSongIndex].fadein_duration > 0:
         if value <= play_list.validFiles[play_list.currentSongIndex].fadein_duration + 1:
             fadein(value - play_list.validFiles[play_list.currentSongIndex].startPos)
@@ -4322,7 +4963,6 @@ def viewProgress(): #this function is a scheduler called once every progressReal
     if SleepingTool.timer > 0:
         SleepingTool.whenIsEvent()
 
-    #readFileArgvFromClosingInstance()
     checkReadDataFromSharedMemory()
     if APPLICATION_EXIT == False:
         #Check if any hotkeys trigger events
@@ -4346,11 +4986,6 @@ def viewProgress(): #this function is a scheduler called once every progressReal
                 else:
                     play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
                     makeProgress(play_list.currentSongPosition)
-                if play_list.VolumeLevel > 0.0: #only if Volume not Muted means listening to it.
-                    play_list.validFiles[play_list.currentSongIndex].SongListenedTime+=progressViewRealTime #if entered here, means song is playing with volume!=0
-                    play_list.PlaylistListenedTime += progressViewRealTime #if entered here, means song is playing with volume!=0
-                    textSongListenedTime.set("Played time: " + formatTimeString(play_list.validFiles[play_list.currentSongIndex].SongListenedTime))
-                    textPlaylistListenedTime.set("Total listening time: " + formatTimeString(play_list.PlaylistListenedTime))
 
             elif pygame.mixer.music.get_busy() == False and play_list.isSongPause == False and play_list.isSongStopped == False:
                 #song has ended
@@ -4364,12 +4999,14 @@ def viewProgress(): #this function is a scheduler called once every progressReal
                 else:
                     #if repeat off
                     play_list.isSongStopped = True
-        try:
-            windowCascade.root.update()  # Force an update of the GUI
-            scheduler.enter(progressViewRealTime, 1, viewProgress)
-        except Exception as exp:
-            text = ("Play Music Function - starting scheduler: \n" + str(exp))
-            WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+
+        if (scheduler.canceled == False):
+            try:
+                scheduler.enter(progressViewRealTime, 1, viewProgress)
+            except Exception as exp:
+                text = ("View Progress Function: - enter scheduler \n" + str(exp))
+                WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+        windowCascade.root.update()  # Force an update of the GUI
     else:
         #Window was close - Application should be destroyed and Progress should be saved
         # Make a backup of everything:
@@ -4490,8 +5127,13 @@ def savingSongStats(): #this function is called when canceling the window to ens
         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         dict_list = [] #make sure this is empty
         dictionary = {} #make sure this is empty
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            # This loop can continue its work even under user intervention flag
+            # since this is executed before clearing the play_list content
             windowCascade.root.title("Saving Songs Stats: " + str(play_list.validFiles.index(song)) + " out of " + str(len(play_list.validFiles) ))
+            viewProgress() # this will keep the main window respnsive
             dictionary ["fileName"] = song.fileName
             dictionary ["Rating"] = song.Rating
             dictionary ["NumberOfPlays"] = song.NumberOfPlays
@@ -4502,9 +5144,15 @@ def savingSongStats(): #this function is called when canceling the window to ens
             dictionary ["SongListenedTime"] = song.SongListenedTime
             dict_list.append(dictionary)
             dictionary = {}
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
     else:
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            #This loop can continue its work even under user intervention flag
+            # since this is executed before clearing the play_list content
             windowCascade.root.title("Saving Songs Stats: " + str(play_list.validFiles.index(song)) + " out of " + str(len(play_list.validFiles) ))
+            viewProgress() # this will keep the main window responsive
             dictionary ["fileName"] = song.fileName
             dictionary ["Rating"] = song.Rating
             dictionary ["NumberOfPlays"] = song.NumberOfPlays
@@ -4520,6 +5168,8 @@ def savingSongStats(): #this function is called when canceling the window to ens
                 #print("Found duplicate: " + str(ifDuplicate[0]["fileName"].encode("utf-8")))
             dict_list.append(dictionary)
             dictionary = {}
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
     windowCascade.root.title(Project_Title)
     file = open(SongStatsFileName, "wb")
     pickle.dump(dict_list, file)
@@ -4545,6 +5195,13 @@ def loadSongStats(song: Song, dict_list: list): #this function is called when lo
 def new_playlist(): #this function is called when clicking clearing the playlist from menubar / File Menu
     global play_list
     global listBox_Song_selected_index
+    global scheduler
+
+    if scheduler.canceled == True:
+        #when scheduler is cancelled we might be in a loop iterating through play_list files
+        #the new_playlist() also handles removing everything within the playlist
+        scheduler.userIntervention = True #by setting this to true we can break the current operation
+        #before clearing the playlist
     savingSongStats() #saving song stats.
     if pygame.mixer.get_init():
         if pygame.mixer.music.get_busy():
@@ -4553,7 +5210,7 @@ def new_playlist(): #this function is called when clicking clearing the playlist
             if play_list.resetSettings == False:
                 play_list.isSongPause = False
                 play_list.isSongStopped = False
-                play_list.dirFilePath = None
+                play_list.dirFilePath = []
                 play_list.validFiles = []
                 play_list.currentSongIndex = None
                 play_list.currentSongPosition = 0
@@ -4575,7 +5232,7 @@ def new_playlist(): #this function is called when clicking clearing the playlist
         if play_list.resetSettings == False:
             play_list.isSongPause = False
             play_list.isSongStopped = False
-            play_list.dirFilePath = None
+            play_list.dirFilePath = []
             play_list.validFiles = []
             play_list.currentSongIndex = None
             play_list.currentSongPosition = 0
@@ -4626,19 +5283,40 @@ def elementPlaylistDoubleClicked(event): #function called on double-click event 
                 play_list.currentSongPosition += math.floor(pygame.mixer.music.get_pos() / 1000)
             play_music()
 
+def readjustSearchFormWidth():
+    # calculating the proper width for the search form so that it will always have same
+    # width as the listbox
+    SearchFormWidth = labelSearch.winfo_reqwidth() + ClearSearchButton.winfo_reqwidth() + searchValue.winfo_reqwidth()
+    diff = listbox.winfo_reqwidth() + scroll.winfo_reqwidth()
+    diff -= SearchFormWidth
+    diff = diff / calculateLetterWidthPixels()
+    searchValue["width"] += int(diff)
+
 def displayElementsOnPlaylist(): #this function will display playlist elements in the listbox
     global listbox
     mainWindowUpdate() #this will make the window more responsive
     listbox.delete(0, tk.END)
     index=0
+    scheduler.canceled = True # we will keep window refreshed in the loop
     for element in play_list.validFiles:
-        #if using old version of Song class - now it's good time to update the missin fields
-        if hasattr(element, "bitrate") == False:
-            setattr(element, "bitrate", "unknown")
-        listbox.insert(play_list.validFiles.index(element), str(play_list.validFiles.index(element))+". "+element.fileName)
-        if len(str(play_list.validFiles.index(element))+". "+element.fileName) > listbox["width"] and play_list.listboxWidth=="Auto": # this will resize the playlist in case there is not enough room to see the string
-            listbox["width"] = len(str(play_list.validFiles.index(element))+". "+element.fileName) + 5 # let there be 5 empty spaces before the end of playlist
-            searchValue["width"] = listbox["width"] - 16
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        viewProgress() # this will keep the main window responsive
+        if element in play_list.validFiles:
+            #window was responsive user might have impacted the playlist, check if the element is still there
+            windowCascade.root.title("Populating list: " + element.fileName)
+            #if using old version of Song class - now it's good time to update the missin fields
+            if hasattr(element, "bitrate") == False:
+                setattr(element, "bitrate", "unknown")
+            listbox.insert(play_list.validFiles.index(element), str(play_list.validFiles.index(element))+". "+element.fileName)
+            if len(str(play_list.validFiles.index(element))+". "+element.fileName) > listbox["width"] and play_list.listboxWidth=="Auto": # this will resize the playlist in case there is not enough room to see the string
+                listbox["width"] = len(str(play_list.validFiles.index(element))+". "+element.fileName) + 5 # let there be 5 empty spaces before the end of playlist
+                readjustSearchFormWidth()
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
     if play_list.viewModel == "PLAYLIST":
         changePlaylistView() # this will readjust the window.
@@ -4660,7 +5338,7 @@ def changingBackgroundElementColor(event):
     #changing listbox
     listbox["bg"]=SkinColor.get()
     listbox["selectforeground"] = SkinColor.get()
-    frame["bg"]=SkinColor.get()
+    ListboxFrame["bg"]=SkinColor.get()
     SearchForm["bg"]=SkinColor.get()
     SearchFrame["bg"]=SkinColor.get()
     labelSearch["bg"]=SkinColor.get()
@@ -4759,7 +5437,7 @@ def changeSkin(event): #this function will change the skin and readjust the appe
     global background_label
 
     if os.path.exists(backgroundFile) and os.path.isfile(backgroundFile):
-        background_image = tk.PhotoImage(file=backgroundFile)
+        background_image = ImageTk.PhotoImage(file=backgroundFile)
         background_label.configure(image=background_image)
         background_label.image = background_image
     else:
@@ -4775,6 +5453,7 @@ def changeSkin(event): #this function will change the skin and readjust the appe
     showCurrentSongInList()
     updateSkinMenuLabels()
     updateRadioButtons()
+    readjustSearchFormWidth()
     windowCascade.reinitializeOpenedWindows()
 
 def calculateScreenHeightWidth():
@@ -4795,7 +5474,7 @@ def calculateScreenHeightWidth():
     frameXPos = getPlayListFramePlacement()
 
     SearchForm.place(x=frameXPos, y=5)
-    frame.place(x=frameXPos, y=40)
+    ListboxFrame.place(x=frameXPos, y=40)
     screenWidth = frameXPos+ listbox.winfo_reqwidth()+scroll.winfo_reqwidth()+20
     return screenHeight, screenWidth
 
@@ -4955,22 +5634,45 @@ def remove_song():
     #this function handles the removal of a song within the playlist
     global listBox_Song_selected_index
     if listBox_Song_selected_index!=None:
-        if listBox_Song_selected_index < len(play_list.validFiles):
+        if listBox_Song_selected_index < len(play_list.validFiles) and len(play_list.validFiles) > 0:
+            #we will impacted the sze of the play_list.validFiles
+            if scheduler.canceled:
+                #if there are any ongoing loops iterating through play_list.validFiles they need to be stopped
+                scheduler.userIntervention = True
+
+
+            if listBox_Song_selected_index == play_list.currentSongIndex:
+                stop_music()
             if play_list.SHUFFLE:
-                if listBox_Song_selected_index == play_list.currentSongIndex:
-                    stop_music()
                 if listBox_Song_selected_index in play_list.shufflingHistory:
                     play_list.shufflingHistory.remove(listBox_Song_selected_index) #this entry will no longer be valid, since the song was removed.
             play_list.playTime -= play_list.validFiles[listBox_Song_selected_index].Length
             del play_list.validFiles[listBox_Song_selected_index]
-            displayElementsOnPlaylist()
-            textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
-            textTotalPlayTime.set("Total Length: " + formatTimeString(play_list.playTime))
-            listbox.selection_clear(0, tk.END)  # clear existing selection
-            listbox.see(listBox_Song_selected_index)
-            listbox.select_set(listBox_Song_selected_index)
-            listbox.activate(listBox_Song_selected_index)
-            #listBox_Song_selected_index=None #initialize this if u want to remove only onebyone
+
+            #displayElementsOnPlaylist()
+            listbox.delete(listBox_Song_selected_index)
+            if listBox_Song_selected_index >= len(play_list.validFiles) and len(play_list.validFiles) > 0:
+                listBox_Song_selected_index = len(play_list.validFiles)-1
+
+            if listBox_Song_selected_index < play_list.currentSongIndex:
+                #if removing song which is higher up in the playlist then, the currenSongIndex changes
+                play_list.currentSongIndex-=1
+
+            if len(play_list.validFiles) > 0:
+                textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
+                SongName.set("Paused: " + play_list.validFiles[play_list.currentSongIndex].fileName)
+                textTotalPlayTime.set("Total Length: " + formatTimeString(play_list.playTime))
+                listbox.selection_clear(0, tk.END)  # clear existing selection
+                listbox.see(listBox_Song_selected_index)
+                listbox.select_set(listBox_Song_selected_index)
+                listbox.activate(listBox_Song_selected_index)
+                #listBox_Song_selected_index=None #initialize this if u want to remove only onebyone
+            else:
+                textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
+                SongName.set("Paused: ")
+                textTotalPlayTime.set("Total Length: " + formatTimeString(play_list.playTime))
+                g_selected_index = None
+                play_list.currentSongIndex = None
 
 def list_selected_item(event):
     #this function gets called when listbox element is selected
@@ -5532,6 +6234,7 @@ def move_up(): #this function will move the selected song up in the playlist
             listbox.see(listBox_Song_selected_index)
             listbox.select_set(listBox_Song_selected_index)
             listbox.activate(listBox_Song_selected_index)
+
             # listBox_Song_selected_index=None #initialize this if u want to move only onebyone
             play_list.isListOrdered = 21 #this will mean Custom Sorting
             updateSortMenuLabel()
@@ -5958,6 +6661,12 @@ def resynchronizeFile(index):
     #function that resynchronizes / re-imports the relevant data from the drive
     #for specified song within the playlist
     play_list.validFiles[index].refreshSongData()
+    if play_list.validFiles[index].Exception != None:
+        text = "File: \n" + str(play_list.validFiles[index].filePath) + "\n" + \
+                "Reason: " + str(play_list.validFiles[index].Exception) + "\n\n"
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("Do Nothing", None),
+                     Button2_Functionality=ButtonFunctionality("Remove Invalid File", removeInvalidFiles([play_list.validFiles[index]])),
+                     windowTitle="Resynchronize Log")
 
 def rightClickListboxElement(event):
     #function that displays the context menu on right-click within the listbox
@@ -5994,11 +6703,11 @@ def showCurrentSongInList():
         if listbox.size() > 0 and play_list.currentSongIndex < listbox.size(): #make playing song visible
             listBox_Song_selected_index = play_list.currentSongIndex
             firstVisibleElementInList = listbox.nearest(0)
-            lastVisibleElementInList = listbox.nearest(0) + listbox["height"]-1
+            lastVisibleElementInList = listbox.nearest(0) + listbox["height"] - 1
             listbox.selection_clear(0, tk.END)  # clear existing selection
             listbox.select_set(listBox_Song_selected_index)
             listbox.activate(listBox_Song_selected_index)
-            #If the element playing is not visible in the listbox:
+            # If the element playing is not visible in the listbox:
             if listBox_Song_selected_index < firstVisibleElementInList or listBox_Song_selected_index > lastVisibleElementInList:
                 listbox.see(listBox_Song_selected_index)
 
@@ -6024,7 +6733,8 @@ def showMp3TagModifierWindow(index=None):
                 WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
 def showAboutWindow():
-    text = ("PyPlay MP3 Player is an application which was developed as challenge \n" +
+    text = ("Current Version: V4\n\n" + \
+            "PyPlay MP3 Player is an application which was developed as challenge \n" +
             "in order to improve knowledge, coding skills and understanding of \n" +
             "Python: high-level programming & scripting language \n\n" +
 
@@ -6035,7 +6745,69 @@ def showAboutWindow():
 
             "Portable Script: a python pre-installed version is available. This version \n"  +
             "contains the Python Script File (source code) and Python 3.10 with all the \n"+
-            "development libraries required to run the script.\n")
+            "development libraries required to run the script.\n\n" +
+            
+            "Versions deployed: \n"
+            "PyPlay Mp3 Player V3 \n"
+            "PyPlay Mp3 Player V4 \n\n"
+            
+            "PyPlay Mp3 Player V3 designed in 2019 developed using Python 3.4.\n"
+            "PyPlay Mp3 Player V4 improved version in 2025 updated to Python 3.10.\n\n"
+            
+            "For Windows: Compiled versions are available containing the executable file with all the resources required to run. \n"
+            "For PyPlay Mp3 Player V3 the compilation was done using: Py2Exe.\n"
+            "For PyPlay Mp3 Player V4 the compilation was done using: PyInstaller.\n\n"
+            
+            "Portability: The runnable scripts archives contain pre-installed version of Python used in the development. "
+            "The archives contain the .py python script files (source code) all resources required to run the script python.\n\n"
+            
+            "What can V3 script do:\n\n"
+            
+            "- playing .mp3 files,\n"
+            "- create and manage .mp3 file playlists.\n"
+            "- customizable player's appearance.\n"
+            "- rename and edit .mp3 file tags in Real-Time (without stopping the playback).\n"
+            "- adjust the playback length for the files within the playlist.\n"
+            "- add track independently fading in and fading out effects.\n"
+            "- rating system for the tracks within a playlist.\n"
+            "- Sleep and Wake Up timers.\n"
+            "- real-time web-crawling for Track Lyrics.\n"
+            "- real-time web-crawling for Artist Biographies.\n"
+            "- attach Slideshows.\n"
+            "- adds Cross-Fading for Track Transitions.\n"
+            "- Shuffling without repeats.\n"
+            "- sets automatic track switching time-intervals (Danthology Mode).\n"
+            "- tracking of the number of times each track was played.\n"
+            "- auto-filling of the missing MP3 Tag Information such us: Artist, Name, Album, Year directly from the Web.\n"
+            "- auto-text editing / renaming files taking as reference MP3 Tags.\n"
+            "- various sorting methods available.\n"
+            "- real-time search capability within playlists.\n"
+            "- playlists Stats tracking.\n"
+            "- able to generate Excel reports for Playlist & Track Statistics;\n"
+            "- string filtering and processing of file names. Able to remove unwanted characters"
+            "in real-time for every file in the playlist;\n\n"
+            
+            "What changed in V4:\n"
+            "- added menu bar on main window\n"
+            "- added search form on main window\n"
+            "- improved instant search\n"
+            "- added hotkeys for remote support of Play/Pause and Next/Previous track through use of Media"
+            "Play/Pause, Media Next, Media Previous button available from keyboard or wireless headsets.\n"
+            "- added support for associating PyPlay with .mp3 files.\n"
+            "- added more fonts\n"
+            "- added better styles for scrollbar, volume scale, progress bar\n"
+            "- improved performance regarding window responsiveness\n"
+            "- added resynchronize context menu command to validate / refresh / update  .mp3 "
+            "file data from drive into the player\n"
+            "- added flagging mechanism to monitor/determine the corruption of files within the playlist\n"
+            "- reduce the number of views available for the Player\n"
+            "- restructuring of resources and backup files\n"
+            "- amount of button elements was reduces\n"
+            "- new skin themes added\n"
+            "- fixed bugs regarding the Slideshow\n"
+            "- support for opening more than 2 windows at once\n"
+            "- added projections for the Mass File Editor options for handling multiple files within Mp3 Tag Modifier Tool\n"
+            "- limits the application instances to 1. The user can only open 1 instance of the player." )
 
     WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "About")
 
@@ -6067,12 +6839,93 @@ def showSlideshowWindow():
         text = "Slideshow is already opened."
         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Information")
 
-def resynchronizePlaylist():
-    # function that resynchronizes the playlist by re-importing all the relevant data from the drive for every song
+def checkResynchronizePlaylist():
+    # function that checks for updates regarding the playlist. Checks if new files can be imported from
+    # the playlist directories or if existing files are still valid
+
+    text = ""
+    invalidFiles = []
+    newFiles = []
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for element in play_list.validFiles:
-        mainWindowUpdate()  # this will make the window more responsive
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        viewProgress() # this will keep the main window responsive
         element.refreshSongData()
         windowCascade.root.title("Resynchronizing file: " + element.fileName)
+        if element.Exception != None:
+            invalidFiles.append(element)
+            text += "File: \n" + str(element.filePath) + "\n" + "Reason: " + str(element.Exception) + "\n\n"
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+    message = ""
+    added_playTime = 0
+    message, newFiles, added_playTime = scanForNewFilesInDirectories(play_list.dirFilePath)
+
+    text += message
+
+    windowCascade.root.title(Project_Title)
+    if text!="":
+        text = "Change Log: \n\n" + text
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("Update Playlist",
+                                   lambda: commitUpdatesToPlaylist(invalidFiles, newFiles, added_playTime)),
+                     windowTitle="Resynchronize Log")
+    else:
+        text = "No new changes."
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None),
+                     windowTitle="Information")
+
+def commitUpdatesToPlaylist(invalidFiles: list, newFiles: list, added_playTime: int):
+    #function to resynchronize the playlist
+    removeInvalidFiles(invalidFiles)
+    play_list.validFiles += newFiles
+    displayElementsOnPlaylist()
+    showCurrentSongInList()
+    updateSortMenuLabel()
+    play_list.isListOrdered = 21  # this will mean Custom Sorting
+    textFilesToPlay.set("Files: " + str(len(play_list.validFiles)))
+    play_list.playTime += added_playTime
+    textTotalPlayTime.set("Total Length: " + formatTimeString(play_list.playTime))
+
+def removeInvalidFiles(invalidFiles: list):
+    #function that will remove invalid files from the playlist after resynchronizing
+    scheduler.canceled = True  # we will keep window refreshed in the loop
+    for element in invalidFiles:
+        windowCascade.root.title("Removing from playlist: " + element.fileName)
+        if element in play_list.validFiles:
+            del play_list.validFiles[play_list.validFiles.index(element)]
+        viewProgress() #this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    displayElementsOnPlaylist()
+    windowCascade.root.title(Project_Title)
+
+def showFlaggedMp3Files():
+    messageForUser = ""
+    scheduler.canceled = True  # we will keep window refreshed in the loop
+    for element in play_list.validFiles:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        element.refreshSongData()
+        windowCascade.root.title("Scanning for Flagged Files: " + element.fileName)
+        if element.Exception != None:
+            messageForUser += "File: " + element.filePath + "\nReason: " + str(element.Exception) + "\n\n"
+        viewProgress() # this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    text = "No flagged mp3 files. All the files within the Playlist are playable."
+    if messageForUser != "":
+        text = "The following .mp3 files were flagged by the player. Check out the reasons below: \n\n" + messageForUser
+    WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Flagged Files")
     windowCascade.root.title(Project_Title)
 
 def rightClickOnWindow(event):
@@ -6089,45 +6942,101 @@ def rightClickOnWindow(event):
         aMenu.add_command(label='Read Artist Biography', command=showArtistBioWindow)
         aMenu.add_command(label='Playlist Info', command=showPlaylistInfo)
         aMenu.add_command(label='Open PyPlay Directory', command=openPyPlayDirectory)
-        aMenu.add_command(label='Resynchronize Playlist', command=resynchronizePlaylist)
+        aMenu.add_command(label='Resynchronize Playlist', command=checkResynchronizePlaylist)
+        aMenu.add_command(label='Flagged Files Status', command=showFlaggedMp3Files)
+        aMenu.add_command(label='Cancel Current Operation', command=cancelOperation)
         aMenu.post(event.x_root, event.y_root)
+
+def cancelOperation():
+    #this function will set the userIntervention flag which will break out of ongoing loops
+    global scheduler
+    if scheduler.canceled == True:
+        scheduler.userIntervention = True
 
 def openPyPlayDirectory():
     #function that opens the application root directory
-    ROOT_DIR = os.path.abspath("." )
     FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
-    subprocess.Popen([FILEBROWSER_PATH, '/open,', ROOT_DIR])
+    #windows explorer does not work well with forward slashes '/'
+    # so we will replace them in rootDirectory with backslashes '\'
+    subprocess.Popen([FILEBROWSER_PATH, '/open,', rootDirectory.replace("/", "\\")])
 
 def calculatePlaylistNumberOfPlays():
     #function that calculates the total number of plays in the playlist
     totalPlays = 0
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in play_list.validFiles:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        windowCascade.root.title("Calculating Playlist No. Of Plays: " + song.fileName)
         totalPlays+= song.NumberOfPlays
+        viewProgress() # this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+    windowCascade.root.title(Project_Title)
     return totalPlays
 
 def calculatePlaylistFilesSize():
     # function that calculated the total size for all songs in the playlist
     totalSize = 0
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in play_list.validFiles:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        windowCascade.root.title("Calculating Playlist File Size: " + song.fileName)
         totalSize+= song.fileSize
+        viewProgress() #this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     return totalSize
 
 def calculatePlaylistCutLength():
     # function that calculated the value of cutted length for the songs in the plaulist
     cutLength = 0
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in play_list.validFiles:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        windowCascade.root.title("Calculating Playlist Cut Length: " + song.fileName)
         cutLength+= song.Length - (song.endPos-song.startPos)
+        viewProgress()
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     return cutLength
 
 def findFavoriteGenre():
     ## function that determines which is the favorite genre in the playlist based on the listened time
     genres = {}
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in play_list.validFiles:
+        if scheduler.userIntervention == True:
+            # user changed something in the play_list that might affect the outcome of this loop
+            scheduler.userIntervention = False
+            break
+        windowCascade.root.title("Finding Favorite Musical Genre: " + song.fileName)
         if song.Genre not in genres.keys():
             genres[song.Genre] = song.SongListenedTime
         else:
             genres[song.Genre] += song.SongListenedTime
+        viewProgress() # this will keep the main window responsive
 
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     genres = sorted(genres.items(), key=lambda x: x[1], reverse=True)
     most_wanted = genres[0]
     return [str(most_wanted[0]), int(most_wanted[1])]
@@ -6136,9 +7045,19 @@ def findFavoriteTrack():
     # function that determines which is the favorite song in the playlist based on the listened time
     if len(play_list.validFiles) > 0:
         favoriteSong = play_list.validFiles[0]
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            windowCascade.root.title("Finding Favorite Song: " + song.fileName)
             if favoriteSong.SongListenedTime < song.SongListenedTime:
                 favoriteSong = song
+            viewProgress() #this will keep the main window responsive
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        windowCascade.root.title(Project_Title)
         return favoriteSong
     else:
         return "NA"
@@ -6151,12 +7070,20 @@ def findFavoriteArtist():
         favoriteArtistListenedTime = 0
         favoriteArtist = artists[0]
         favoriteArtistNoOfPlays = 0
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for artist in uniqueArtists:
+            windowCascade.root.title("Finding Favorite Artist: " + str(artist))
             calculatedArtistListenedTime = calculateArtistListenedTime(artist)
             if favoriteArtistListenedTime < calculatedArtistListenedTime:
                 favoriteArtistListenedTime = calculatedArtistListenedTime
                 favoriteArtist = artist
                 favoriteArtistNoOfPlays = calculateArtistNoOfPlays(favoriteArtist)
+            viewProgress() # this will keep the main window responsive
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        windowCascade.root.title(Project_Title)
         return [favoriteArtist, favoriteArtistListenedTime, favoriteArtistNoOfPlays]
     else:
         return "NA"
@@ -6166,9 +7093,17 @@ def findFavoriteSongOfArtist(Artist: str):
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     if len(artistSongs) > 0:
         mostListenedSong = artistSongs[0]
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for song in artistSongs:
+            windowCascade.root.title("Finding Favorite Song of Artist: " + str(song.fileName))
             if mostListenedSong.SongListenedTime < song.SongListenedTime:
                 mostListenedSong = song
+            viewProgress() # this will keep the main window responsive
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        windowCascade.root.title(Project_Title)
         return song.Title
     else:
         return None
@@ -6177,24 +7112,49 @@ def calculateArtistListenedTime(Artist: str):
     # function that calculates the amount of time the user listened to given artist in the playlist
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     listenedTime = 0
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in artistSongs:
+        windowCascade.root.title("Calculating Time Listened to Artist: " + str(song.fileName))
         listenedTime += song.SongListenedTime
+        viewProgress() # this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     return listenedTime
 
 def calculateArtistNoOfPlays(Artist: str):
     #function that calculates the number of song plays the user acumulated on a given artist in the playlist
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     noOfPlays = 0
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in artistSongs:
+        windowCascade.root.title("Calculating Artist No. Of Plays: " + str(song.fileName))
         noOfPlays += song.NumberOfPlays
+        viewProgress() #this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    windowCascade.root.title(Project_Title)
     return noOfPlays
 
 def getArtistMusicalGenre(Artist: str):
     #this function will return all musical genres from given artist within the playlist
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     musicalGenre = []
+
+    scheduler.canceled = True  # we will keep window refreshed in the loop
     for song in artistSongs:
+        windowCascade.root.title("Finding Musical Genre of Artist: " + str(song.fileName))
         musicalGenre.append(song.Genre)
+        viewProgress() # this will keep the main window responsive
+
+    scheduler.canceled = False  # we will keep window refreshed using scheduler
+    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+    windowCascade.root.title(Project_Title)
     musicalGenre = list(set(musicalGenre))
     musicalGenre = " | ".join(musicalGenre)
     return musicalGenre
@@ -6235,7 +7195,10 @@ def exportPlaylistInfoToXls():
         if len(play_list.validFiles) > 0:
             artists = [song.Artist for song in play_list.validFiles]
             uniqueArtists = set(artists)
+
+            scheduler.canceled = True  # we will keep window refreshed in the loop
             for artist in uniqueArtists:
+                windowCascade.root.title("Writing to XLS report: " + str(artist))
                 worksheet.write('A'+str(rowCounter), str(artist), regularRowFormat)
                 worksheet.write('B'+str(rowCounter), str(getArtistMusicalGenre(artist)), regularRowFormat)
                 worksheet.write('C'+str(rowCounter), str(formatTimeString(calculateArtistListenedTime(artist))).split('.')[0], regularRowFormat)
@@ -6244,7 +7207,11 @@ def exportPlaylistInfoToXls():
                 worksheet.write('F'+str(rowCounter), str(getArtistNumberOfSongs(artist)), regularRowFormat)
                 rowCounter+=1
                 windowCascade.root.title("Exporting report for: " + artist)
-                mainWindowUpdate()
+                viewProgress() #this will keep the main window responsive
+
+            scheduler.canceled = False  # we will keep window refreshed using scheduler
+            scheduler.enter(progressViewRealTime, 1, viewProgress)
+
         worksheet.set_column('A:B', 40)
         worksheet.set_column('C:D', 20)
         worksheet.set_column('E:E', 40)
@@ -6258,7 +7225,15 @@ def exportPlaylistInfoToXls():
         worksheet.write('D1', 'Listened Time', topRowFormat)
         worksheet.write('E1', 'Number of Plays', topRowFormat)
         rowCounter=2#top row is already set above
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
+
         for song in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            windowCascade.root.title("Writing to XLS report: " + song.fileName)
             worksheet.write('A'+str(rowCounter), song.Artist, regularRowFormat)
             worksheet.write('B'+str(rowCounter), song.Title, regularRowFormat)
             worksheet.write('C'+str(rowCounter), song.Genre, regularRowFormat)
@@ -6266,7 +7241,12 @@ def exportPlaylistInfoToXls():
             worksheet.write('E'+str(rowCounter), str(song.NumberOfPlays), regularRowFormat)
             rowCounter+=1
             windowCascade.root.title("Exporting report for: " + song.Artist + " - " + song.Title)
-            mainWindowUpdate()
+            viewProgress() #this will keep the main window responsive
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        windowCascade.root.title(Project_Title)
         worksheet.set_column('A:A', 40)
         worksheet.set_column('B:B', 60)
         worksheet.set_column('C:C', 15)
@@ -6299,7 +7279,7 @@ def showPlaylistInfo():
         +"\nFAVORITE GENRE:\n" \
         +"Favorite Genre:    " + findFavoriteGenre()[0] + "\n" \
         +findFavoriteGenre()[0] + " listened:   " + formatTimeString(findFavoriteGenre()[1]) + "\n")
-        if favoriteSong!="NA":
+        if isinstance(favoriteSong, Song):
             text+="\nMOST LISTENED TRACK:\n" \
             +favoriteSong.fileName + "\n" \
             +"Listen Time:       " + formatTimeString(int(favoriteSong.SongListenedTime)) + "\n" \
@@ -6311,17 +7291,27 @@ def showPlaylistInfo():
             +favoriteArtist[0] + "\n" \
             +"Listen Time:       " + formatTimeString(int(favoriteArtist[1])) + "\n" \
             +"Number of Plays:   " + str(favoriteArtist[2]) + "\n"
-        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), Button2_Functionality=ButtonFunctionality("Generate Playlist Report", exportPlaylistInfoToXls),
-        windowTitle = "Playlist Info")
+        WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None),
+                     Button2_Functionality=ButtonFunctionality("Generate Playlist Report",
+                           exportPlaylistInfoToXls), windowTitle = "Playlist Info")
     else:
         WindowDialog("Playlist is empty.", Button1_Functionality=ButtonFunctionality("OK", None),
                      windowTitle="Playlist Info")
 
 def focusListbox(event):
     listbox.focus()
+    listbox.see(play_list.currentSongIndex)  # Makes sure the given list index is visible. You can use an integer index,
+    listbox.selection_clear(0, tk.END)  # clear existing selection
+    listbox.select_set(play_list.currentSongIndex)
+    listbox.activate(play_list.currentSongIndex)
 
 def focusWindow(event):
     windowCascade.root.focus()
+
+def windows_focus_switch(event):
+    #this function will ensure that no matter which main window element is being focused
+    #the listbox does not lose its highlight and selection set
+    focusListbox(event)
 
 def packPositionListScrolOptionProgRadio():
     #Function called only at the start, to place the listbox, scrollbar, combobox, radiobuttons, progressbar,
@@ -6352,10 +7342,10 @@ def packPositionListScrolOptionProgRadio():
     windowCascade.root.bind('<ButtonPress-3>', rightClickOnWindow)
     windowCascade.root.bind('<Up>', focusListbox)
     windowCascade.root.bind('<Down>', focusListbox)
+    windowCascade.root.bind('<Tab>', windows_focus_switch)
 
     #these are used for instant search:
     searchValue.bind("<KeyRelease>", showSearchResults)
-
     searchValue.bind("<Escape>", focusWindow)
 
     scroll.config(command=listbox.yview)
@@ -6392,8 +7382,8 @@ def buttonAdjustments(): #this function will adjust some buttons (which are near
 
 def setLinearVolume(event): #function called when moving the Volume Slider
     global play_list
+    play_list.VolumeLevel = VolumeScale.get() / 100
     if pygame.mixer.get_init():
-        play_list.VolumeLevel = VolumeScale.get()/100
         if play_list.currentSongPosition - play_list.validFiles[play_list.currentSongIndex].startPos > \
                 play_list.validFiles[play_list.currentSongIndex].fadein_duration and play_list.currentSongPosition < \
                         play_list.validFiles[play_list.currentSongIndex].endPos - play_list.validFiles[
@@ -6539,24 +7529,25 @@ def playPreviousSearchItem():
     global play_list
     global listBox_Song_selected_index
     elements = listbox.get(0, tk.END)
-    if searchIndex == None:
-        searchIndex = len(elements) - 1
-    elif searchIndex - 1 >= 0:
-        searchIndex -= 1
-    else:
-        searchIndex = len(elements)-1
-    real_index = elements[searchIndex]
-    real_index = real_index.split(". ")
-    real_index = real_index[0]
-    listBox_Song_selected_index = searchIndex
-    listbox.selection_clear(0, tk.END)  # clear existing selection
-    listbox.select_set(listBox_Song_selected_index)
-    listbox.activate(listBox_Song_selected_index)
-    listbox.see(listBox_Song_selected_index)
-    play_list.currentSongIndex = int(real_index)
-    if play_list.danthologyMode == False:
-        play_list.currentSongPosition = 0
-    play_music()
+    if len(elements) > 0:
+        if searchIndex == None:
+            searchIndex = len(elements) - 1
+        elif searchIndex - 1 >= 0:
+            searchIndex -= 1
+        else:
+            searchIndex = len(elements)-1
+        real_index = elements[searchIndex]
+        real_index = real_index.split(". ")
+        real_index = real_index[0]
+        listBox_Song_selected_index = searchIndex
+        listbox.selection_clear(0, tk.END)  # clear existing selection
+        listbox.select_set(listBox_Song_selected_index)
+        listbox.activate(listBox_Song_selected_index)
+        listbox.see(listBox_Song_selected_index)
+        play_list.currentSongIndex = int(real_index)
+        if play_list.danthologyMode == False:
+            play_list.currentSongPosition = 0
+        play_music()
 
 def playNextSearchItem():
     #this function will be called when hitting Enter in searchbar (shortcut for playing Next Song)
@@ -6565,23 +7556,24 @@ def playNextSearchItem():
     global play_list
     global listBox_Song_selected_index
     elements = listbox.get(0,tk.END)
-    if searchIndex == None:
-        searchIndex = 0
-    elif searchIndex + 1 < len(elements):
-        searchIndex += 1
-    else:
-        searchIndex = 0
-    real_index = elements[searchIndex]
-    real_index = real_index.split(". ")
-    real_index = real_index[0]
-    listBox_Song_selected_index = searchIndex
-    listbox.selection_clear(0, tk.END)  # clear existing selection
-    listbox.select_set(listBox_Song_selected_index)
-    listbox.activate(listBox_Song_selected_index)
-    play_list.currentSongIndex = int(real_index)
-    if play_list.danthologyMode == False:
-        play_list.currentSongPosition = 0
-    play_music()
+    if len(elements) > 0:
+        if searchIndex == None:
+            searchIndex = 0
+        elif searchIndex + 1 < len(elements):
+            searchIndex += 1
+        else:
+            searchIndex = 0
+        real_index = elements[searchIndex]
+        real_index = real_index.split(". ")
+        real_index = real_index[0]
+        listBox_Song_selected_index = searchIndex
+        listbox.selection_clear(0, tk.END)  # clear existing selection
+        listbox.select_set(listBox_Song_selected_index)
+        listbox.activate(listBox_Song_selected_index)
+        play_list.currentSongIndex = int(real_index)
+        if play_list.danthologyMode == False:
+            play_list.currentSongPosition = 0
+        play_music()
 
 def SearchBoxClear():
     #this function will be called when hitting the clear button for the searchbox
@@ -6625,6 +7617,8 @@ def createMenuBar():
     playback_menu.add_command(label="Mute/Unmute", command=mutePlayback)
     playback_menu.add_separator()
     playback_menu.add_command(label="Show Current Track", command=showCurrentSongInList)
+    playback_menu.add_separator()
+    playback_menu.add_command(label="Cancel Current Operation", command=cancelOperation)
     menubar.root.add_cascade(label="Playback", menu=playback_menu)
     setattr(menubar, "playback_menu", playback_menu)
 
@@ -6697,13 +7691,17 @@ def createMenuBar():
     misc_menu = tk.Menu(menubar.root, tearoff=0)
     misc_menu.add_command(label="Search Lyrics Online", command=showGrabLyricsWindow)
     misc_menu.add_command(label="Read Artist Biography", command=showArtistBioWindow)
+    misc_menu.add_separator()
     misc_menu.add_command(label="Generate Playlist Report", command=exportPlaylistInfoToXls)
+    misc_menu.add_command(label="Resynchronize Playlist", command=checkResynchronizePlaylist)
+    misc_menu.add_command(label="Flagged Files Report", command=showFlaggedMp3Files)
     menubar.root.add_cascade(label="Misc", menu=misc_menu)
     setattr(menubar, "misc_menu", misc_menu)
 
     helpmenu = tk.Menu(menubar.root, tearoff=0)
     helpmenu.add_command(label="About", command=showAboutWindow)
     helpmenu.add_command(label="Keyboard Shortcuts", command=showKeybordShortcuts)
+    helpmenu.add_separator()
     helpmenu.add_command(label="Check for latest version", command=visitDownloadPage)
     helpmenu.add_command(label="Visit official webpage", command=visitOfficialWebpage)
     menubar.root.add_cascade(label="Help", menu=helpmenu)
@@ -6720,15 +7718,15 @@ def DragAndDrop(event):
         data = data.split("} {")
         data = tuple(data)
         load_file(data)
-    if (".pypl" in data and os.path.isfile(data)):
+    if (data.endswith(".pypl") and os.path.isfile(data)):
         loadPlaylistFile(data)
-    elif (".pypl" in data and os.path.isfile(data[1: len(data)-1])):
+    elif (data.endswith(".pypl") and os.path.isfile(data[1: len(data)-1])):
         loadPlaylistFile(data[1: len(data)-1])
-    elif (".mp3" in data and os.path.isfile(data)):
+    elif (data.endswith(".mp3") and os.path.isfile(data)):
         lst = []
         lst.append(data)
         load_file(lst)
-    elif (".mp3" in data and os.path.isfile(data[1: len(data)-1])):
+    elif (data.endswith(".mp3") and os.path.isfile(data[1: len(data)-1])):
         lst = []
         lst.append(data[1:len(data)-1])
         load_file(lst)
@@ -6796,14 +7794,29 @@ def checkOpenFile(data):
     "This function will handle opening files using commandline arguments argv"
     data = formatSlashesInFilePath(data)
     if len(data) > 0:
+        counter = 0
+
+        scheduler.canceled = True  # we will keep window refreshed in the loop
         for element in play_list.validFiles:
+            if scheduler.userIntervention == True:
+                #user changed something in the play_list that might affect the outcome of this loop
+                scheduler.userIntervention = False
+                break
+            windowCascade.root.title("Checking if Playlist contains: " + str(data) + " - " + str(counter) + " of " + len(play_list.validFiles))
             if element.filePath == data:
+                windowCascade.root.title(Project_Title)
                 return play_list.validFiles.index(element)
+            counter+=1
+            viewProgress() # this will keep the main window responsive
+
+        scheduler.canceled = False  # we will keep window refreshed using scheduler
+        scheduler.enter(progressViewRealTime, 1, viewProgress)
 
         #if reached here, it means song not in the list
         song = Song(data)
         play_list.validFiles.append(song)
         del song
+        windowCascade.root.title(Project_Title)
         return len(play_list.validFiles) - 1 #the song will be added at the end of the list
 
 shared_memory_buffer = SharedMemoryDict(name='config', size=1024)
@@ -6824,6 +7837,7 @@ def checkReadDataFromSharedMemory():
 
             elements = shared_memory_buffer["data"].split(share_memory_separator)
             for index in range(0, len(elements)-1):
+                #the main window will remain responsive in checkOpenFile
                 added_song_index = checkOpenFile(elements[index])
                 if index == 0:
                     #it's possible that user opened multiple selected files using pyplay as default app
@@ -6854,31 +7868,6 @@ def storeDataToSharedMemory(value):
         shared_memory_buffer["data"] = value
         shared_memory_buffer["processes"] = getAllowedInstancesOnApp() + 1
 
-def formatSlashesInFilePath(filepath):
-    #this will turn every type of slashes into '/'
-    if "\\\\" in filepath:
-        # enter here if filepath is formated with \\ slashes
-        filepath = filepath.replace("\\\\", "/")
-    if "\\" in filepath:
-        # enter here if the filepath is formated with \ slash
-        filepath = filepath.replace("\\", "/")
-    elif "//" in filepath:
-        # enter here if filepath is formated with // slashes
-        filepath = filepath.replace("//", "/")
-
-    return filepath
-
-def getFileNameFromFilePath(filepath):
-    #this function will get the name of a file from the filepath
-    #should work also with directories if they don't end with slash
-    filename = ""
-
-    filepath = formatSlashesInFilePath(filepath)
-
-    filename = re.split("/", filepath)
-    filename = filename[len(filename) - 1]
-    return filename
-
 def storeArgvForMainInstanceToFile(): #NOT USED - SHARED MEMORY FUNCTIONS ARE USED INSTEAD
     """Function used for storing cmd argv to a file in case user decides to open an .mp3 from explorer
     using context menu. This way we only need to read the argv from the new script instance, then we can
@@ -6905,17 +7894,42 @@ def readFileArgvFromClosingInstance(): #NOT USED - SHARED MEMORY FUNCTIONS ARE U
         f.close()
         os.remove(dataTransferFileLocation)
 
-scriptFileName = getFileNameFromFilePath(sys.argv[0])
-rootDirectory = str(sys.argv[0]).replace(scriptFileName, "")
+def positionTkWidgetsVertically(xPos:int, upperElementReference, elementToBePlaced, margin=0):
+    #function to place/position tk widget items vertically
+    if hasattr(upperElementReference, "place_info") == True and \
+        hasattr(upperElementReference, "winfo_reqheight") == True and \
+        hasattr(elementToBePlaced, "place") == True:
+        yPos = int(upperElementReference.place_info()["y"]) + upperElementReference.winfo_reqheight() + margin
+        elementToBePlaced.place(x = xPos, y = yPos)
 
-if rootDirectory.endswith("/") == True:
-    rootDirectory = rootDirectory[0:len(rootDirectory)-1]
+def calculateResizeWindow(window: tk, element_list: list, margin=0):
+    #function to resize the given window based on a list of elements
+    #if the elements are longer than the current size of the window, the size will be
+    #readjusted to fit the content
 
-playerIcon = rootDirectory + "/resources/headphone_red.ico"
+    #The provided list of elements should include the rightmost and bottom last. If the elements
+    #vary in size based on skin settings you can include more from both in the selection to
+    # ensure the proper computation / resizing.
 
-clearPlaybackFile = rootDirectory + "/resources/clear.mp3"
-SongStatsFileName = rootDirectory + "/backup/SongStats.sts"
-automaticallyBackupFile = rootDirectory + "/backup/PlayListBackup.pypl"
+    #NOTE: the elements included in the list need to be children of the window,
+    #in case of frame - they need to be resized based on the children they hold before
+    #being passed to this function.
+
+    if (type(margin) != int):
+        margin = 0
+    if isinstance(window, TkinterDnD.Tk) or isinstance(window, tk.Tk) or isinstance(window, tk.Toplevel):
+        window_width = int(window.winfo_geometry().split("x")[0])
+        window_height = int(window.winfo_geometry().split("x")[1].split("+")[0])
+        for item in element_list:
+            if item in window.winfo_children():
+                if item.winfo_reqwidth() + int(item.place_info()["x"]) > window_width:
+                    window_width = item.winfo_reqwidth() + int(item.place_info()["x"]) + margin
+                if item.winfo_reqheight() + int(item.place_info()["y"]) > window_height:
+                    window_height = item.winfo_reqheight() + int(item.place_info()["y"]) + margin
+
+        geometry = str(window_width) + "x" + str(window_height) + "+" + \
+                window.winfo_geometry().split("+")[1] + "+"+ window.winfo_geometry().split("+")[2]
+        window.geometry(geometry)
 
 def getAllowedInstancesOnApp():
     #this function will be used to get the maximum allowed of instances/processes for the application
@@ -7000,7 +8014,6 @@ else:
     windowCascade.root.dnd_bind('<<Drop>>', DragAndDrop)
     #================================================================================
 
-
     Project_Title = "   PyPlay MP3 Player in Python     "
     windowCascade.root.title(Project_Title)
 
@@ -7043,8 +8056,7 @@ else:
 
     #Loading default background
     if os.path.exists(backgroundFile) and os.path.isfile(backgroundFile):
-        play_list.skin_theme.background_image = backgroundFile
-        background_image = tk.PhotoImage(file=backgroundFile)
+        background_image = ImageTk.PhotoImage(Image.open(backgroundFile))
         background_label.configure(image=background_image)
         background_label.image = background_image
     else:
@@ -7280,9 +8292,9 @@ else:
                            borderwidth=1, fg=labelTextColor, background=labelBackground.get())
 
     #Creating a listbox
-    frame = tk.Frame(windowCascade.root, borderwidth=2, bg=SkinColor.get(), relief = tk.SUNKEN, padx=5, pady=5)
+    ListboxFrame = tk.Frame(windowCascade.root, borderwidth=2, bg=SkinColor.get(), relief = tk.SUNKEN, padx=5, pady=5)
 
-    #Creating style for progressbar
+    #Creating style for scrollbar
     scroll_style = ttk.Style()
     scroll_style.theme_use('clam')
     scroll_style.configure("Vertical.TScrollbar", background=SkinColor.get(), bordercolor=SkinColor.get(),
@@ -7290,9 +8302,9 @@ else:
                            activebackground = labelBackground.get())
 
     # Create a vertical scrollbar
-    scroll = ttk.Scrollbar(frame, orient='vertical')
+    scroll = ttk.Scrollbar(ListboxFrame, orient='vertical')
 
-    listbox = tk.Listbox(frame, fg=fontColor.get(), font=allButtonsFont.get(), bg=SkinColor.get(), height=play_list.listboxNoRows,
+    listbox = tk.Listbox(ListboxFrame, fg=fontColor.get(), font=allButtonsFont.get(), bg=SkinColor.get(), height=play_list.listboxNoRows,
                          width=70, relief=tk.GROOVE,
                          yscrollcommand=scroll.set, borderwidth=2, selectbackground = labelBackground.get(),
                          selectforeground = labelTextColor, activestyle="dotbox")
@@ -7300,7 +8312,7 @@ else:
     #Search form should be equal in width with the listbox
     if play_list.listboxWidth != "Auto":
         listbox["width"] = play_list.listboxWidth
-    searchValue["width"] = listbox["width"] - 16 #16 is the space required for Clear button and SearchLabel
+    readjustSearchFormWidth()
 
     #Creating style for progressbar
 
@@ -7364,9 +8376,6 @@ else:
     #If file was opened using context menu
     if len(sys.argv) > 1:
         play_music() # this will play the track right after being loaded
-
-    #Setting up the scheduler
-    scheduler = sched.scheduler(time.time, time.sleep)
 
     #Next time when the scheduler will run will call viewProgress function once within progressViewRealTime seconds
     scheduler.enter(progressViewRealTime, 1, viewProgress)
