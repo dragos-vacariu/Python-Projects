@@ -440,7 +440,7 @@ class CuttingTool(Window):
         message = ""
         i=0
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in play_list.validFiles:
             i+=1
             if scheduler.userIntervention == True:
@@ -448,7 +448,7 @@ class CuttingTool(Window):
                 scheduler.userIntervention = False
                 break
             self.top.title("Add Fading for: " + str(i) + " out of " + str(len(play_list.validFiles)) + " files")
-            viewProgress() # this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             try:#without this try-except block the window will freeze.
                 self.top.update()  # Force an update of the GUI
             except Exception as exp: pass
@@ -458,8 +458,7 @@ class CuttingTool(Window):
                 song.fadein_duration = int(self.FadeIn.get())
                 song.fadeout_duration = int(self.FadeOut.get())
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
         self.top.title(self.Window_Title)
         if message!= "":
             text = "Operation Done.\n\nFading was added to all Songs in the Playlist.\n\n" \
@@ -492,7 +491,7 @@ class CuttingTool(Window):
         global play_list
         i=0
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in play_list.validFiles:
             i+=1
             if scheduler.userIntervention == True:
@@ -500,7 +499,7 @@ class CuttingTool(Window):
                 scheduler.userIntervention = False
                 break
             self.top.title("Undo Cutting\Fading for: " + str(i) + " out of " + str(len(play_list.validFiles)) + " files")
-            viewProgress() # this will make the main window responsive
+            scheduler.single_loop()# this will make the main window responsive
             try:#without this try-except block the window will freeze.
                 self.top.update()  # Force an update of the GUI
             except Exception as exp: pass
@@ -509,8 +508,7 @@ class CuttingTool(Window):
             song.startPos = 0
             song.endPos = song.Length
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
         self.top.title(self.Window_Title)
         self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
         self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
@@ -1023,10 +1021,13 @@ class Customize(Window):
             self.colorBgLabels.set(1)
         else:
             self.colorBgLabels.set(0)
+
+        rbFgColor = fontColor.get() if fontColor.get() != "black" else "white"
+
         self.RbFalse = tk.Radiobutton(self.top, text="False", variable=self.colorBgLabels, value=0, width=5, bg=color,
-                            command=self.changingBackgroundedLabelsColor, fg=fontColor.get(), selectcolor="black", font=allButtonsFont.get())
+                            command=self.changingBackgroundedLabelsColor, fg=rbFgColor, selectcolor="black", font=allButtonsFont.get())
         self.RbTrue = tk.Radiobutton(self.top, text="True", variable=self.colorBgLabels, value=1, width=5, bg=color,
-                            command=self.changingBackgroundedLabelsColor, fg=fontColor.get(), selectcolor="black", font=allButtonsFont.get())
+                            command=self.changingBackgroundedLabelsColor, fg=rbFgColor, selectcolor="black", font=allButtonsFont.get())
 
         yPositionForElement += verticalSpaceBetweenElements
         self.RbFalse.place(x=columnTwo, y=yPositionForElement)
@@ -1098,7 +1099,7 @@ class Customize(Window):
         yPositionForElement += verticalSpaceBetweenElements
 
         self.PlaylistWidthBox = Combobox(self.top, textvariable=self.textPlaylistWidth, state="readonly", font=allButtonsFont.get(),
-                                         values=["Auto", "65", "70", "75", "80", "85", "90", "95"])
+                                 values=["65", "70", "75", "80", "85", "90", "95", "100", "105", "110"])
         self.PlaylistWidthBox.place(x=columnTwo, y=yPositionForElement)
         self.PlaylistWidthBox.bind("<<ComboboxSelected>>", self.changePlaylistWidth)
 
@@ -1282,15 +1283,8 @@ class Customize(Window):
         showCurrentSongInList() #select/highlight the current song in the listbox
 
     def changePlaylistWidth(self, event):
-        if self.textPlaylistWidth.get()!="Auto":
-            play_list.listboxWidth = int(self.textPlaylistWidth.get())
-            listbox["width"] = play_list.listboxWidth
-        else:
-            play_list.listboxWidth = "Auto"
-            displayElementsOnPlaylist()
-        if play_list.viewModel != "COMPACT":
-            if listbox["width"] < 75:
-                value = (75 - int(self.textPlaylistWidth.get())) // 5  # value shoud be between 0 and 2
+        play_list.listboxWidth = int(self.textPlaylistWidth.get())
+        listbox["width"] = play_list.listboxWidth
         readjustSearchFormWidth()
         changePlaylistView()  # this will rearrange elements and resize the window.
         showCurrentSongInList()  # select/highlight the current song in the listbox
@@ -1331,7 +1325,7 @@ class Customize(Window):
         play_list.buttonSpacing = 10
         play_list.keepSongsStats = True
         play_list.skin_theme.changingSkin()
-        displayElementsOnPlaylist()
+        #displayElementsOnPlaylist()
 
     def resetSettingsOnNewPlaylist(self):
         if self.resetSettingsVar.get() == 1:
@@ -1615,6 +1609,7 @@ class WindowDialog(Window):
 
                 # Add some text in the text widget
                 self.textElement.insert(tk.END, self.textValue)
+                self.textElement.configure(state=tk.DISABLED)
 
                 # Attach the scrollbar with the text widget
                 self.verticalScrollBar.config(command=self.textElement.yview)
@@ -1631,10 +1626,8 @@ class WindowDialog(Window):
                     Button1.pack(pady=10, padx=5)
                 else:
                     Button1.pack(pady=15, padx=15)
-                    print("else")
                     if self.Button1_Func.Functionality != None: #None is the default command
                         # if only one button passed ensuring after the command is executed we destroy the dialog window
-                        print("Here")
                         def wrapper_func():
                             self.destroy()
                             self.Button1_Func.Functionality()
@@ -1900,7 +1893,7 @@ class Mp3TagModifierTool(Window):
             messageForUser = ""
             other_available_records = ""
 
-            scheduler.canceled = True  # we will keep window refreshed in the loop
+            scheduler.suspend_mainloop()
             for song in play_list.validFiles:
                 if scheduler.userIntervention == True:
                     # user changed something in the play_list that might affect the outcome of this loop
@@ -1909,7 +1902,7 @@ class Mp3TagModifierTool(Window):
                 ttl = "Scanning: " + str(play_list.validFiles.index(song)) + " of " + str(
                     len(play_list.validFiles))
                 self.thisWindowTitleUpdate(ttl)
-                viewProgress() # this will make the main window responsive
+                scheduler.single_loop() # this will make the main window responsive
                 for element in dict_list:
                     isSongPlayed = False
                     if self.top == None:  # if window gets closed, terminate
@@ -1919,8 +1912,8 @@ class Mp3TagModifierTool(Window):
                         messageForUser += "File: " + song.filePath + "\n\n" + \
                             "Album: '" + song.Album + "' will be changed to: '" + element['oldAlbum'] +"'" +\
                             "\n" +"Year: '" + song.Year + "' will be changed to: '" + element['oldYear'] + "'" + "\n\n"
-            scheduler.canceled = False  # we will keep window refreshed using scheduler
-            scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+            scheduler.enter_mainloop()
 
             if len(dict_list) > 0:
                 for element in dict_list:
@@ -1941,7 +1934,7 @@ class Mp3TagModifierTool(Window):
             self.thisWindowTitleUpdate(self.Window_Title)
 
     def undoAlbumYearToAllFiles(self, dict_list):
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -1949,7 +1942,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "Album-Year undoed for: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             messageForUser = ""
             for element in dict_list:
                 isSongPlayed = False
@@ -1986,8 +1979,7 @@ class Mp3TagModifierTool(Window):
                     else:
                         messageForUser += "File: \n\n" + song.filePath + " does not exist.\n\n"
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         text = "Operation Done.\n\nThe projected changes were performed successfully."
         if messageForUser != "":
@@ -2022,13 +2014,13 @@ class Mp3TagModifierTool(Window):
                 dict_loaded = True
                 file.close()
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
                 scheduler.userIntervention = False
                 break
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             if self.top == None: #if window gets closed, terminate
                 return
             dictionary['fileName'] = song.fileName
@@ -2055,8 +2047,7 @@ class Mp3TagModifierTool(Window):
                 dict_list.append(dictionary)
             dictionary = {}
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
         if len(not_found) > 0:
             text = ("Operation Done\n\n" + messageForUser + \
                     "The data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
@@ -2489,7 +2480,7 @@ class Mp3TagModifierTool(Window):
 
     def projection_composeArtistTitleAll(self):
         messageForUser = ""
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2497,7 +2488,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() # this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             if self.top == None: #if window gets closed, terminate
                 return
             if song.fileName != "":
@@ -2559,8 +2550,8 @@ class Mp3TagModifierTool(Window):
                         messageForUser += "Old Title: '" + title + "' will be changed to ''" + "\n\n"
                 else:
                     messageForUser += "No change will be performed to File: " + song.fileName + "\nReason: File does not exist.\n\n"
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        scheduler.enter_mainloop()
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Change Log:\n\n" + messageForUser
         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", self.composeArtistTitleAll), windowTitle = "Artist/Title Tag Change Log")
@@ -2584,7 +2575,7 @@ class Mp3TagModifierTool(Window):
         else:
             file = open(self.undoArtistTitleBackupFile, "wb")
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop() # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2592,7 +2583,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "Compose Artist-Title: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             if self.top == None: #if window gets closed, terminate
                 return
             if song.fileName != "":
@@ -2684,8 +2675,8 @@ class Mp3TagModifierTool(Window):
                         pygame.mixer.music.set_pos(play_list.currentSongPosition)
                         play_list.RESUMED = True
                     dictionary={}
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+        scheduler.enter_mainloop()
 
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
@@ -2714,7 +2705,7 @@ class Mp3TagModifierTool(Window):
                     "\nFile: " + str(self.undoArtistTitleBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         else:
-            scheduler.canceled = True  # we will keep window refreshed in the loop
+            scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
             for song in play_list.validFiles:
                 if scheduler.userIntervention == True:
                     # user changed something in the play_list that might affect the outcome of this loop
@@ -2722,7 +2713,7 @@ class Mp3TagModifierTool(Window):
                     break
                 ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
                 self.thisWindowTitleUpdate(ttl)
-                viewProgress() # this will make the main window responsive
+                scheduler.single_loop() # this will make the main window responsive
                 for element in dict_list:
                     if self.top == None: #if window gets closed, terminate
                         return
@@ -2732,8 +2723,7 @@ class Mp3TagModifierTool(Window):
                               "Title: '" + element['oldTitle'] + "' will be changed to: " + element['oldTitle'] +"'\n\n"
                         break
 
-            scheduler.canceled = False  # we will keep window refreshed using scheduler
-            scheduler.enter(progressViewRealTime, 1, viewProgress)
+            scheduler.enter_mainloop()
             text = "Change Log: \n\n" + messageForUser
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", self.undoComposeArtistTitleAll) ,
                          windowTitle = "Restore Previous Artist/Title Tags Change Log")
@@ -2751,7 +2741,7 @@ class Mp3TagModifierTool(Window):
                     "\nFile: " + str(self.undoArtistTitleBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop() # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2759,7 +2749,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "Undo composed Artist-Title: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress()
+            scheduler.single_loop() # this will make the main window responsive
             for element in dict_list:
                 if self.top == None: #if window gets closed, terminate
                     return
@@ -2792,8 +2782,7 @@ class Mp3TagModifierTool(Window):
                         play_list.RESUMED = True
                     break
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         if len(dict_list) > 0 :
             message = ""
@@ -2815,7 +2804,7 @@ class Mp3TagModifierTool(Window):
 
     def projection_renameAllFiles(self):
         messageForUser = ""
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop() # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2824,7 +2813,7 @@ class Mp3TagModifierTool(Window):
             ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(
                 len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             if self.top == None:  # if the window get closed, terminate the operation
                 return
             if song.Artist != "Various" and song.Title != "Various":
@@ -2836,8 +2825,7 @@ class Mp3TagModifierTool(Window):
             else:
                 messageForUser += "File: " + song.fileName + "\nwill NOT be renamed." + "\nReason: Invalid/Empty Artist/Title file tags.\n\n"
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "The files will be renamed as follows: \n\n" +messageForUser
@@ -2865,7 +2853,7 @@ class Mp3TagModifierTool(Window):
         else:
             file = open(self.undoRenameBackupFile, "wb")
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop() # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2873,7 +2861,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "Renamed files: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             if self.top == None: #if the window get closed, terminate the operation
                 return
             if song.Artist != "Various" and song.Title != "Various":
@@ -2915,8 +2903,7 @@ class Mp3TagModifierTool(Window):
                         text = ("Exception during Mass Rename: " + str(Exp))
                         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         displayElementsOnPlaylist()
         showCurrentSongInList()
@@ -2946,7 +2933,7 @@ class Mp3TagModifierTool(Window):
                     +"\nFile: " + str(self.undoRenameBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2954,7 +2941,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "File: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             for element in dict_list:
                 if self.top == None: #if window gets closed, terminate
                     return
@@ -2969,8 +2956,7 @@ class Mp3TagModifierTool(Window):
                     messageForUser += "File: " + song.fileName + "\nwill not be changed.\nReason: " \
                                                                  "No records stored in the backup.\n\n"
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Change Log: \n\n" + messageForUser
@@ -2991,7 +2977,7 @@ class Mp3TagModifierTool(Window):
                     +"\nFile: " + str(self.undoRenameBackupFile)+ " might be corrupted.")
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -2999,7 +2985,7 @@ class Mp3TagModifierTool(Window):
                 break
             ttl = "Restored previous names: " + str(play_list.validFiles.index(song)) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will make the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             for element in dict_list:
                 if self.top == None: #if window gets closed, terminate
                     return
@@ -3036,8 +3022,7 @@ class Mp3TagModifierTool(Window):
                 if dict_list.index(element) == len(dict_list)-1 and element['newName'] != song.filePath:
                     message += song.fileName + "\n"
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         displayElementsOnPlaylist()
         showCurrentSongInList()
@@ -3348,7 +3333,7 @@ class GrabLyricsTool(Window):
     def downloadAllLyrics(self):
         message = ""
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for i in range(0, len(play_list.validFiles)):
             if self.top == None:
                 return
@@ -3358,7 +3343,7 @@ class GrabLyricsTool(Window):
                 break
             ttl = "Searched lyrics for: " + str(i) + " of " + str(len(play_list.validFiles))
             self.thisWindowTitleUpdate(ttl)
-            viewProgress() #this will keep the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             self.songIndex = i
             text_list, source = self.accessPage()
             if len(text_list) > 0 and source != "":
@@ -3366,8 +3351,7 @@ class GrabLyricsTool(Window):
             else:
                 message += play_list.validFiles[i].fileName + "\n"
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
         self.thisWindowTitleUpdate(self.Window_Title)
         if message!="":
             text = ("Lyrics not found for: " + str(message.count("\n")) + " songs \n\n" + message)
@@ -4077,12 +4061,50 @@ class Skin():
         else:
             return False
 
-
+#A class to define a customize scheduler
 class Scheduler(sched.scheduler):
-    def __init__(self, timefunc=time.monotonic, delayfunc=time.sleep):
+    def __init__(self, delay:float, priority: int, function:callable,  timefunc=time.monotonic, delayfunc=time.sleep):
         super().__init__(timefunc, delayfunc)
-        self.canceled = False #this variable will be used to signal the disabling of scheduling
+        self.isMainLoopSuspended = False #this variable will be used to signal the disabling of scheduling
         self.userIntervention = False # this variable will be used to identify whether the user affected the play_list
+        self.time_stamp = None
+        self.function = function
+        self.delay = delay
+        self.priority = priority
+
+    def enter_mainloop(self):
+        #this method will call recurrently the function self was initialzied with
+        #this method is supposed to be used outside indeterminate loops in order to maintain the GUI responsive
+        if APPLICATION_EXIT == False:
+            self.isMainLoopSuspended = False
+            if self.isMainLoopSuspended == False:
+                try:
+                    super().enter(self.delay, self.priority, self.enter_mainloop)
+                    self.function()
+                except Exception as exp:
+                    text = ("Enter Scheduler: \n" + str(exp))
+                    WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
+        else:
+            # Window was close - Application should be destroyed and Progress should be saved
+            # Make a backup of everything:
+            file = open(automaticallyBackupFile, "wb")
+            pickle.dump(play_list, file)
+            file.close()
+            sys.exit()
+
+    def suspend_mainloop(self):
+        #this method will suspend the recurent calling of self.function
+        self.isMainLoopSuspended = True
+
+    def single_loop(self):
+        #this method will call the self.function when the delay expires
+        #this method is supposed to be used within loops to provide responsiveness
+        if self.isMainLoopSuspended == True:
+            if self.time_stamp == None:
+                self.time_stamp = time.time()
+            if time.time() - self.time_stamp >= self.delay:
+                self.function()
+
 
 def formatSlashesInFilePath(filepath):
     #this will turn every type of slashes into '/'
@@ -4221,8 +4243,6 @@ FLAGGED_MAXIMUM_ITERATIONS = 10 #threshold for invalid files looped consecutivel
 flagged_files_looped_consecutively = 0 #variable to track how many invalid/flagged files get looped consecutively
 #will use it to stop the scheduling loop if a threshold is reached.
 
-# Setting up the scheduler
-scheduler = Scheduler(time.time, time.sleep)
 timeListenedProgress = 0 #variable to help calculate the time spent listening to song / playlist
 
 def calculateListenedTimeSinceLastIter(song_position):
@@ -4267,7 +4287,7 @@ def load_file(fileToPlay=None):
                 WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
         i=0
         messageForUser = ""
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for file in fileToPlay:
             if file.lower().endswith(".mp3"):
                 i+=1
@@ -4276,7 +4296,7 @@ def load_file(fileToPlay=None):
                     scheduler.userIntervention = False
                     break
                 windowCascade.root.title("Scanning: " + str(i) + " out of " + str(len(fileToPlay)) + " files")
-                viewProgress() #this will make he window responsive
+                scheduler.single_loop() # this will make the main window responsive
                 song = Song(file)
                 if song.Exception == None and song not in play_list.validFiles:
                     if play_list.keepSongsStats and dict_list != []:
@@ -4301,8 +4321,7 @@ def load_file(fileToPlay=None):
                 loadPlaylistFile(file)
                 configurePlayer()
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         if messageForUser != "":
             text = "Unable to load the following MP3 Files: \n\n" + messageForUser
@@ -4479,7 +4498,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
     mp3FilesCausingException = ""
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
     for root, dirs, files in os.walk(dir):
         i=0
         if scheduler.userIntervention == True:
@@ -4492,7 +4511,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
                 # user changed something in the play_list that might affect the outcome of this loop
                 break #break from here, the break from outter loop will clear the flag
             windowCascade.root.title("Scanning " + str(root) + ": " + str(i) + " out of " + str(len(files)) + " files")
-            viewProgress() # this will keep the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
 
             if file.lower().endswith(".mp3"):
                 filepath = root + "/" + file
@@ -4508,8 +4527,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
                 else:
                     mp3FilesCausingException += str(song.filePath) + "\n" + "Reason: " + str(song.Exception) + "\n\n"
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     if mp3FilesCausingException != "":
         text = "Unable to load the following MP3 Files: \n\n" + mp3FilesCausingException
@@ -4533,7 +4551,7 @@ def scanForNewFilesInDirectories(dir_list: list): #this function is called when 
         except:
             messageForUser += ("Could not load the songs stats. File might be corrupted.")
 
-    scheduler.canceled = True # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     newFiles = []
 
     for element in dir_list:
@@ -4552,7 +4570,7 @@ def scanForNewFilesInDirectories(dir_list: list): #this function is called when 
                     # user changed something in the play_list that might affect the outcome of this loop
                     break #the break from outter loop will clear the flag
                 windowCascade.root.title("Scanning " + str(root) + ": " + str(i) + " out of " + str(len(files)) + " files")
-                viewProgress() # this will eep the main window responsive
+                scheduler.single_loop() # this will make the main window responsive
                 if file.lower().endswith(".mp3"):
                     filepath = root + "/" + file
 
@@ -4567,8 +4585,7 @@ def scanForNewFilesInDirectories(dir_list: list): #this function is called when 
                         messageForUser += "Invalid New File: " + str(song.filePath) + "\n" + \
                                           "Reason: " + str(song.Exception) + "\n\n"
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     windowCascade.root.title(Project_Title)
     return messageForUser, newFiles, added_playTime
@@ -4951,8 +4968,8 @@ def animateGifImageBackground(): #NOT USED
                 gifImageObjectFrame = 0
 
 def viewProgress(): #this function is a scheduler called once every progressRealTime seconds
-    #this function will deal with Main Window updates and will respond to every user action
-    #will act as an infinite loop as long as Main Window is opened
+    #this function will deal with Main Window updates and will respond to every user action.
+    #It will act as an infinite loop as long as Main Window is opened.
     global play_list
     global nextSongTrigger
     global previousSongTrigger
@@ -4964,56 +4981,42 @@ def viewProgress(): #this function is a scheduler called once every progressReal
         SleepingTool.whenIsEvent()
 
     checkReadDataFromSharedMemory()
-    if APPLICATION_EXIT == False:
-        #Check if any hotkeys trigger events
-        if hotkeyMonitor.playPauseTrigger == True:
-            hotkeyMonitor.playPauseTrigger = False
-            pause_music()
-        if hotkeyMonitor.nextSongTrigger == True:
-            hotkeyMonitor.nextSongTrigger = False
-            next_song()
-        if hotkeyMonitor.previousSongTrigger == True:
-            hotkeyMonitor.previousSongTrigger = False
-            previous_song()
+    #Check if any hotkeys trigger events
+    if hotkeyMonitor.playPauseTrigger == True:
+        hotkeyMonitor.playPauseTrigger = False
+        pause_music()
+    if hotkeyMonitor.nextSongTrigger == True:
+        hotkeyMonitor.nextSongTrigger = False
+        next_song()
+    if hotkeyMonitor.previousSongTrigger == True:
+        hotkeyMonitor.previousSongTrigger = False
+        previous_song()
 
-        #Deal with the music and window
-        if pygame.mixer.get_init():
-            if pygame.mixer.music.get_busy() and play_list.isSongPause == False: # Music is currently playing
-                addFontTransitions()
-                if play_list.RESUMED:
-                    local_position = play_list.currentSongPosition + pygame.mixer.music.get_pos() / 1000
-                    makeProgress(local_position)
-                else:
-                    play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
-                    makeProgress(play_list.currentSongPosition)
+    #Deal with the music and window
+    if pygame.mixer.get_init():
+        if pygame.mixer.music.get_busy() and play_list.isSongPause == False: # Music is currently playing
+            addFontTransitions()
+            if play_list.RESUMED:
+                local_position = play_list.currentSongPosition + pygame.mixer.music.get_pos() / 1000
+                makeProgress(local_position)
+            else:
+                play_list.currentSongPosition = pygame.mixer.music.get_pos()/1000
+                makeProgress(play_list.currentSongPosition)
 
-            elif pygame.mixer.music.get_busy() == False and play_list.isSongPause == False and play_list.isSongStopped == False:
-                #song has ended
-                play_list.RESUMED = False
-                if (play_list.REPEAT == 1 or play_list.REPEAT == 3):
-                    #if repead all or repeat none
-                    next_song()  # this will keep repeating the playlist
-                elif play_list.REPEAT == 2:
-                    #if repeat one
-                    play_music()  # this will repeat the current song
-                else:
-                    #if repeat off
-                    play_list.isSongStopped = True
+        elif pygame.mixer.music.get_busy() == False and play_list.isSongPause == False and play_list.isSongStopped == False:
+            #song has ended
+            play_list.RESUMED = False
+            if (play_list.REPEAT == 1 or play_list.REPEAT == 3):
+                #if repead all or repeat none
+                next_song()  # this will keep repeating the playlist
+            elif play_list.REPEAT == 2:
+                #if repeat one
+                play_music()  # this will repeat the current song
+            else:
+                #if repeat off
+                play_list.isSongStopped = True
 
-        if (scheduler.canceled == False):
-            try:
-                scheduler.enter(progressViewRealTime, 1, viewProgress)
-            except Exception as exp:
-                text = ("View Progress Function: - enter scheduler \n" + str(exp))
-                WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle="Warning")
-        windowCascade.root.update()  # Force an update of the GUI
-    else:
-        #Window was close - Application should be destroyed and Progress should be saved
-        # Make a backup of everything:
-        file = open(automaticallyBackupFile, "wb")
-        pickle.dump(play_list, file)
-        file.close()
-        sys.exit()
+    windowCascade.root.update()  # Force an update of the GUI
 
 def volume_down(): #this function is called when changing Volume from Keyboard using < key
     global play_list
@@ -5128,12 +5131,12 @@ def savingSongStats(): #this function is called when canceling the window to ens
         dict_list = [] #make sure this is empty
         dictionary = {} #make sure this is empty
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
         for song in play_list.validFiles:
             # This loop can continue its work even under user intervention flag
             # since this is executed before clearing the play_list content
             windowCascade.root.title("Saving Songs Stats: " + str(play_list.validFiles.index(song)) + " out of " + str(len(play_list.validFiles) ))
-            viewProgress() # this will keep the main window respnsive
+            scheduler.single_loop() # this will make the main window responsive
             dictionary ["fileName"] = song.fileName
             dictionary ["Rating"] = song.Rating
             dictionary ["NumberOfPlays"] = song.NumberOfPlays
@@ -5144,15 +5147,14 @@ def savingSongStats(): #this function is called when canceling the window to ens
             dictionary ["SongListenedTime"] = song.SongListenedTime
             dict_list.append(dictionary)
             dictionary = {}
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
     else:
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in play_list.validFiles:
             #This loop can continue its work even under user intervention flag
             # since this is executed before clearing the play_list content
             windowCascade.root.title("Saving Songs Stats: " + str(play_list.validFiles.index(song)) + " out of " + str(len(play_list.validFiles) ))
-            viewProgress() # this will keep the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
             dictionary ["fileName"] = song.fileName
             dictionary ["Rating"] = song.Rating
             dictionary ["NumberOfPlays"] = song.NumberOfPlays
@@ -5168,8 +5170,7 @@ def savingSongStats(): #this function is called when canceling the window to ens
                 #print("Found duplicate: " + str(ifDuplicate[0]["fileName"].encode("utf-8")))
             dict_list.append(dictionary)
             dictionary = {}
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     file = open(SongStatsFileName, "wb")
     pickle.dump(dict_list, file)
@@ -5197,7 +5198,7 @@ def new_playlist(): #this function is called when clicking clearing the playlist
     global listBox_Song_selected_index
     global scheduler
 
-    if scheduler.canceled == True:
+    if scheduler.isMainLoopSuspended == True:
         #when scheduler is cancelled we might be in a loop iterating through play_list files
         #the new_playlist() also handles removing everything within the playlist
         scheduler.userIntervention = True #by setting this to true we can break the current operation
@@ -5226,7 +5227,8 @@ def new_playlist(): #this function is called when clicking clearing the playlist
                 play_list.skin_theme.changingSkin()
                 windowCascade.root.attributes('-alpha', play_list.windowOpacity)
             clearLabels()
-            displayElementsOnPlaylist()
+            # displayElementsOnPlaylist()
+            listbox.delete(0, tk.END)
             listBox_Song_selected_index = None
     else:
         if play_list.resetSettings == False:
@@ -5249,7 +5251,8 @@ def new_playlist(): #this function is called when clicking clearing the playlist
             play_list.skin_theme.changingSkin()
         listBox_Song_selected_index=None
         clearLabels()
-        displayElementsOnPlaylist()
+        # displayElementsOnPlaylist()
+        listbox.delete(0, tk.END)
 
 def updateSortMenuLabel(): #this function will update the sort menu labels
     # play_list.isListOrdered value : 0-By Filename ; 1-By Filename Reversed 2-Randomized; 3-By Rating etc.
@@ -5297,13 +5300,13 @@ def displayElementsOnPlaylist(): #this function will display playlist elements i
     mainWindowUpdate() #this will make the window more responsive
     listbox.delete(0, tk.END)
     index=0
-    scheduler.canceled = True # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for element in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
             scheduler.userIntervention = False
             break
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop() # this will make the main window responsive
         if element in play_list.validFiles:
             #window was responsive user might have impacted the playlist, check if the element is still there
             windowCascade.root.title("Populating list: " + element.fileName)
@@ -5311,11 +5314,8 @@ def displayElementsOnPlaylist(): #this function will display playlist elements i
             if hasattr(element, "bitrate") == False:
                 setattr(element, "bitrate", "unknown")
             listbox.insert(play_list.validFiles.index(element), str(play_list.validFiles.index(element))+". "+element.fileName)
-            if len(str(play_list.validFiles.index(element))+". "+element.fileName) > listbox["width"] and play_list.listboxWidth=="Auto": # this will resize the playlist in case there is not enough room to see the string
-                listbox["width"] = len(str(play_list.validFiles.index(element))+". "+element.fileName) + 5 # let there be 5 empty spaces before the end of playlist
-                readjustSearchFormWidth()
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
     if play_list.viewModel == "PLAYLIST":
@@ -5636,7 +5636,7 @@ def remove_song():
     if listBox_Song_selected_index!=None:
         if listBox_Song_selected_index < len(play_list.validFiles) and len(play_list.validFiles) > 0:
             #we will impacted the sze of the play_list.validFiles
-            if scheduler.canceled:
+            if scheduler.isMainLoopSuspended == True:
                 #if there are any ongoing loops iterating through play_list.validFiles they need to be stopped
                 scheduler.userIntervention = True
 
@@ -6847,21 +6847,20 @@ def checkResynchronizePlaylist():
     invalidFiles = []
     newFiles = []
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for element in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
             scheduler.userIntervention = False
             break
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop() # this will make the main window responsive
         element.refreshSongData()
         windowCascade.root.title("Resynchronizing file: " + element.fileName)
         if element.Exception != None:
             invalidFiles.append(element)
             text += "File: \n" + str(element.filePath) + "\n" + "Reason: " + str(element.Exception) + "\n\n"
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     message = ""
     added_playTime = 0
@@ -6894,21 +6893,20 @@ def commitUpdatesToPlaylist(invalidFiles: list, newFiles: list, added_playTime: 
 
 def removeInvalidFiles(invalidFiles: list):
     #function that will remove invalid files from the playlist after resynchronizing
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for element in invalidFiles:
         windowCascade.root.title("Removing from playlist: " + element.fileName)
         if element in play_list.validFiles:
             del play_list.validFiles[play_list.validFiles.index(element)]
-        viewProgress() #this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     displayElementsOnPlaylist()
     windowCascade.root.title(Project_Title)
 
 def showFlaggedMp3Files():
     messageForUser = ""
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for element in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
@@ -6918,10 +6916,9 @@ def showFlaggedMp3Files():
         windowCascade.root.title("Scanning for Flagged Files: " + element.fileName)
         if element.Exception != None:
             messageForUser += "File: " + element.filePath + "\nReason: " + str(element.Exception) + "\n\n"
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     text = "No flagged mp3 files. All the files within the Playlist are playable."
     if messageForUser != "":
         text = "The following .mp3 files were flagged by the player. Check out the reasons below: \n\n" + messageForUser
@@ -6950,7 +6947,7 @@ def rightClickOnWindow(event):
 def cancelOperation():
     #this function will set the userIntervention flag which will break out of ongoing loops
     global scheduler
-    if scheduler.canceled == True:
+    if scheduler.isMainLoopSuspended == True:
         scheduler.userIntervention = True
 
 def openPyPlayDirectory():
@@ -6963,7 +6960,7 @@ def openPyPlayDirectory():
 def calculatePlaylistNumberOfPlays():
     #function that calculates the total number of plays in the playlist
     totalPlays = 0
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
@@ -6971,10 +6968,9 @@ def calculatePlaylistNumberOfPlays():
             break
         windowCascade.root.title("Calculating Playlist No. Of Plays: " + song.fileName)
         totalPlays+= song.NumberOfPlays
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     windowCascade.root.title(Project_Title)
     return totalPlays
@@ -6983,7 +6979,7 @@ def calculatePlaylistFilesSize():
     # function that calculated the total size for all songs in the playlist
     totalSize = 0
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
@@ -6991,10 +6987,9 @@ def calculatePlaylistFilesSize():
             break
         windowCascade.root.title("Calculating Playlist File Size: " + song.fileName)
         totalSize+= song.fileSize
-        viewProgress() #this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     return totalSize
 
@@ -7002,7 +6997,7 @@ def calculatePlaylistCutLength():
     # function that calculated the value of cutted length for the songs in the plaulist
     cutLength = 0
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
@@ -7010,10 +7005,9 @@ def calculatePlaylistCutLength():
             break
         windowCascade.root.title("Calculating Playlist Cut Length: " + song.fileName)
         cutLength+= song.Length - (song.endPos-song.startPos)
-        viewProgress()
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     return cutLength
 
@@ -7021,7 +7015,7 @@ def findFavoriteGenre():
     ## function that determines which is the favorite genre in the playlist based on the listened time
     genres = {}
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in play_list.validFiles:
         if scheduler.userIntervention == True:
             # user changed something in the play_list that might affect the outcome of this loop
@@ -7032,10 +7026,9 @@ def findFavoriteGenre():
             genres[song.Genre] = song.SongListenedTime
         else:
             genres[song.Genre] += song.SongListenedTime
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     genres = sorted(genres.items(), key=lambda x: x[1], reverse=True)
     most_wanted = genres[0]
@@ -7045,7 +7038,7 @@ def findFavoriteTrack():
     # function that determines which is the favorite song in the playlist based on the listened time
     if len(play_list.validFiles) > 0:
         favoriteSong = play_list.validFiles[0]
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -7054,9 +7047,9 @@ def findFavoriteTrack():
             windowCascade.root.title("Finding Favorite Song: " + song.fileName)
             if favoriteSong.SongListenedTime < song.SongListenedTime:
                 favoriteSong = song
-            viewProgress() #this will keep the main window responsive
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+            scheduler.single_loop()  # this will make the main window responsive
+
+        scheduler.enter_mainloop()
         windowCascade.root.title(Project_Title)
         return favoriteSong
     else:
@@ -7071,7 +7064,7 @@ def findFavoriteArtist():
         favoriteArtist = artists[0]
         favoriteArtistNoOfPlays = 0
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for artist in uniqueArtists:
             windowCascade.root.title("Finding Favorite Artist: " + str(artist))
             calculatedArtistListenedTime = calculateArtistListenedTime(artist)
@@ -7079,10 +7072,9 @@ def findFavoriteArtist():
                 favoriteArtistListenedTime = calculatedArtistListenedTime
                 favoriteArtist = artist
                 favoriteArtistNoOfPlays = calculateArtistNoOfPlays(favoriteArtist)
-            viewProgress() # this will keep the main window responsive
+            scheduler.single_loop()  # this will make the main window responsive
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
         windowCascade.root.title(Project_Title)
         return [favoriteArtist, favoriteArtistListenedTime, favoriteArtistNoOfPlays]
     else:
@@ -7094,14 +7086,14 @@ def findFavoriteSongOfArtist(Artist: str):
     if len(artistSongs) > 0:
         mostListenedSong = artistSongs[0]
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for song in artistSongs:
             windowCascade.root.title("Finding Favorite Song of Artist: " + str(song.fileName))
             if mostListenedSong.SongListenedTime < song.SongListenedTime:
                 mostListenedSong = song
-            viewProgress() # this will keep the main window responsive
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+            scheduler.single_loop()  # this will make the main window responsive
+
+        scheduler.enter_mainloop()
 
         windowCascade.root.title(Project_Title)
         return song.Title
@@ -7113,14 +7105,13 @@ def calculateArtistListenedTime(Artist: str):
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     listenedTime = 0
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in artistSongs:
         windowCascade.root.title("Calculating Time Listened to Artist: " + str(song.fileName))
         listenedTime += song.SongListenedTime
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     return listenedTime
 
@@ -7129,14 +7120,13 @@ def calculateArtistNoOfPlays(Artist: str):
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     noOfPlays = 0
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in artistSongs:
         windowCascade.root.title("Calculating Artist No. Of Plays: " + str(song.fileName))
         noOfPlays += song.NumberOfPlays
-        viewProgress() #this will keep the main window responsive
+        scheduler.single_loop() # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
     windowCascade.root.title(Project_Title)
     return noOfPlays
 
@@ -7145,14 +7135,13 @@ def getArtistMusicalGenre(Artist: str):
     artistSongs = list(filter(lambda song: song.Artist == Artist, play_list.validFiles))
     musicalGenre = []
 
-    scheduler.canceled = True  # we will keep window refreshed in the loop
+    scheduler.suspend_mainloop()
     for song in artistSongs:
         windowCascade.root.title("Finding Musical Genre of Artist: " + str(song.fileName))
         musicalGenre.append(song.Genre)
-        viewProgress() # this will keep the main window responsive
+        scheduler.single_loop() # this will make the main window responsive
 
-    scheduler.canceled = False  # we will keep window refreshed using scheduler
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     windowCascade.root.title(Project_Title)
     musicalGenre = list(set(musicalGenre))
@@ -7196,7 +7185,7 @@ def exportPlaylistInfoToXls():
             artists = [song.Artist for song in play_list.validFiles]
             uniqueArtists = set(artists)
 
-            scheduler.canceled = True  # we will keep window refreshed in the loop
+            scheduler.suspend_mainloop()
             for artist in uniqueArtists:
                 windowCascade.root.title("Writing to XLS report: " + str(artist))
                 worksheet.write('A'+str(rowCounter), str(artist), regularRowFormat)
@@ -7207,10 +7196,9 @@ def exportPlaylistInfoToXls():
                 worksheet.write('F'+str(rowCounter), str(getArtistNumberOfSongs(artist)), regularRowFormat)
                 rowCounter+=1
                 windowCascade.root.title("Exporting report for: " + artist)
-                viewProgress() #this will keep the main window responsive
+                scheduler.single_loop()
 
-            scheduler.canceled = False  # we will keep window refreshed using scheduler
-            scheduler.enter(progressViewRealTime, 1, viewProgress)
+            scheduler.enter_mainloop()
 
         worksheet.set_column('A:B', 40)
         worksheet.set_column('C:D', 20)
@@ -7226,7 +7214,7 @@ def exportPlaylistInfoToXls():
         worksheet.write('E1', 'Number of Plays', topRowFormat)
         rowCounter=2#top row is already set above
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
 
         for song in play_list.validFiles:
             if scheduler.userIntervention == True:
@@ -7241,10 +7229,9 @@ def exportPlaylistInfoToXls():
             worksheet.write('E'+str(rowCounter), str(song.NumberOfPlays), regularRowFormat)
             rowCounter+=1
             windowCascade.root.title("Exporting report for: " + song.Artist + " - " + song.Title)
-            viewProgress() #this will keep the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         windowCascade.root.title(Project_Title)
         worksheet.set_column('A:A', 40)
@@ -7796,7 +7783,7 @@ def checkOpenFile(data):
     if len(data) > 0:
         counter = 0
 
-        scheduler.canceled = True  # we will keep window refreshed in the loop
+        scheduler.suspend_mainloop()
         for element in play_list.validFiles:
             if scheduler.userIntervention == True:
                 #user changed something in the play_list that might affect the outcome of this loop
@@ -7807,10 +7794,9 @@ def checkOpenFile(data):
                 windowCascade.root.title(Project_Title)
                 return play_list.validFiles.index(element)
             counter+=1
-            viewProgress() # this will keep the main window responsive
+            scheduler.single_loop() # this will make the main window responsive
 
-        scheduler.canceled = False  # we will keep window refreshed using scheduler
-        scheduler.enter(progressViewRealTime, 1, viewProgress)
+        scheduler.enter_mainloop()
 
         #if reached here, it means song not in the list
         song = Song(data)
@@ -8310,8 +8296,7 @@ else:
                          selectforeground = labelTextColor, activestyle="dotbox")
 
     #Search form should be equal in width with the listbox
-    if play_list.listboxWidth != "Auto":
-        listbox["width"] = play_list.listboxWidth
+    listbox["width"] = play_list.listboxWidth
     readjustSearchFormWidth()
 
     #Creating style for progressbar
@@ -8371,6 +8356,9 @@ else:
     listener = pynput.keyboard.Listener(on_press=pressedHotkey)
     listener.start()
 
+    # Setting up the scheduler
+    scheduler = Scheduler(progressViewRealTime, 1, viewProgress)
+
     configurePlayer()
 
     #If file was opened using context menu
@@ -8378,7 +8366,7 @@ else:
         play_music() # this will play the track right after being loaded
 
     #Next time when the scheduler will run will call viewProgress function once within progressViewRealTime seconds
-    scheduler.enter(progressViewRealTime, 1, viewProgress)
+    scheduler.enter_mainloop()
 
     #Run the scheduler
     scheduler.run()
