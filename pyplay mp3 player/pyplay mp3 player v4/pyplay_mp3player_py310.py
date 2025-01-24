@@ -5603,6 +5603,11 @@ def squareBracketsReleased(event):
 def on_closing(): #this function is called only when the Main Window is canceled/closed
     global APPLICATION_EXIT
     global play_list
+    if scheduler.isMainLoopSuspended == True:
+        #when scheduler is cancelled we might be in a loop iterating through play_list files
+        #the new_playlist() also handles removing everything within the playlist
+        scheduler.userIntervention = True #by setting this to true we can break the current operation
+        #before clearing the playlist
     APPLICATION_EXIT = True
     # Make a backup of everything:
     if(len(play_list.validFiles) == 0):
