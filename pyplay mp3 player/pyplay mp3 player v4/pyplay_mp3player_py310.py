@@ -458,7 +458,7 @@ class CuttingTool(Window):
                 song.fadein_duration = int(self.FadeIn.get())
                 song.fadeout_duration = int(self.FadeOut.get())
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         self.top.title(self.Window_Title)
         if message!= "":
             text = "Operation Done.\n\nFading was added to all Songs in the Playlist.\n\n" \
@@ -508,7 +508,7 @@ class CuttingTool(Window):
             song.startPos = 0
             song.endPos = song.Length
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         self.top.title(self.Window_Title)
         self.FadeIn.set(str(play_list.validFiles[self.index].fadein_duration))
         self.FadeOut.set(str(play_list.validFiles[self.index].fadeout_duration))
@@ -1913,7 +1913,7 @@ class Mp3TagModifierTool(Window):
                             "Album: '" + song.Album + "' will be changed to: '" + element['oldAlbum'] +"'" +\
                             "\n" +"Year: '" + song.Year + "' will be changed to: '" + element['oldYear'] + "'" + "\n\n"
 
-            scheduler.enter_mainloop()
+            scheduler.resume_mainloop()
 
             if len(dict_list) > 0:
                 for element in dict_list:
@@ -1979,7 +1979,7 @@ class Mp3TagModifierTool(Window):
                     else:
                         messageForUser += "File: \n\n" + song.filePath + " does not exist.\n\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         text = "Operation Done.\n\nThe projected changes were performed successfully."
         if messageForUser != "":
@@ -2047,7 +2047,7 @@ class Mp3TagModifierTool(Window):
                 dict_list.append(dictionary)
             dictionary = {}
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         if len(not_found) > 0:
             text = ("Operation Done\n\n" + messageForUser + \
                     "The data for the following items could not be retrieved: \n\n" + "\n".join(not_found))
@@ -2551,7 +2551,7 @@ class Mp3TagModifierTool(Window):
                 else:
                     messageForUser += "No change will be performed to File: " + song.fileName + "\nReason: File does not exist.\n\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Change Log:\n\n" + messageForUser
         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", self.composeArtistTitleAll), windowTitle = "Artist/Title Tag Change Log")
@@ -2676,7 +2676,7 @@ class Mp3TagModifierTool(Window):
                         play_list.RESUMED = True
                     dictionary={}
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         self.ArtistTag.delete(0, tk.END)
         self.ArtistTag.insert(0, self.Song.Artist)
@@ -2723,7 +2723,7 @@ class Mp3TagModifierTool(Window):
                               "Title: '" + element['oldTitle'] + "' will be changed to: " + element['oldTitle'] +"'\n\n"
                         break
 
-            scheduler.enter_mainloop()
+            scheduler.resume_mainloop()
             text = "Change Log: \n\n" + messageForUser
             WindowDialog(text, Button1_Functionality=ButtonFunctionality("Continue", self.undoComposeArtistTitleAll) ,
                          windowTitle = "Restore Previous Artist/Title Tags Change Log")
@@ -2782,7 +2782,7 @@ class Mp3TagModifierTool(Window):
                         play_list.RESUMED = True
                     break
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         if len(dict_list) > 0 :
             message = ""
@@ -2825,7 +2825,7 @@ class Mp3TagModifierTool(Window):
             else:
                 messageForUser += "File: " + song.fileName + "\nwill NOT be renamed." + "\nReason: Invalid/Empty Artist/Title file tags.\n\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "The files will be renamed as follows: \n\n" +messageForUser
@@ -2903,7 +2903,7 @@ class Mp3TagModifierTool(Window):
                         text = ("Exception during Mass Rename: " + str(Exp))
                         WindowDialog(text, Button1_Functionality=ButtonFunctionality("OK", None), windowTitle = "Warning")
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         displayElementsOnPlaylist()
         showCurrentSongInList()
@@ -2956,7 +2956,7 @@ class Mp3TagModifierTool(Window):
                     messageForUser += "File: " + song.fileName + "\nwill not be changed.\nReason: " \
                                                                  "No records stored in the backup.\n\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         self.thisWindowTitleUpdate(self.Window_Title)
         text = "Change Log: \n\n" + messageForUser
@@ -3022,7 +3022,7 @@ class Mp3TagModifierTool(Window):
                 if dict_list.index(element) == len(dict_list)-1 and element['newName'] != song.filePath:
                     message += song.fileName + "\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         displayElementsOnPlaylist()
         showCurrentSongInList()
@@ -3351,7 +3351,7 @@ class GrabLyricsTool(Window):
             else:
                 message += play_list.validFiles[i].fileName + "\n"
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         self.thisWindowTitleUpdate(self.Window_Title)
         if message!="":
             text = ("Lyrics not found for: " + str(message.count("\n")) + " songs \n\n" + message)
@@ -4076,7 +4076,6 @@ class Scheduler(sched.scheduler):
         #this method will call recurrently the function self was initialzied with
         #this method is supposed to be used outside indeterminate loops in order to maintain the GUI responsive
         if APPLICATION_EXIT == False:
-            self.isMainLoopSuspended = False
             if self.isMainLoopSuspended == False:
                 try:
                     super().enter(self.delay, self.priority, self.enter_mainloop)
@@ -4095,6 +4094,12 @@ class Scheduler(sched.scheduler):
     def suspend_mainloop(self):
         #this method will suspend the recurent calling of self.function
         self.isMainLoopSuspended = True
+
+    def resume_mainloop(self):
+        #this method will resume the recurrent calling of self.function
+        if self.isMainLoopSuspended == True:
+            self.isMainLoopSuspended = False
+            self.enter_mainloop()
 
     def single_loop(self):
         #this method will call the self.function when the delay expires
@@ -4321,7 +4326,7 @@ def load_file(fileToPlay=None):
                 loadPlaylistFile(file)
                 configurePlayer()
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         if messageForUser != "":
             text = "Unable to load the following MP3 Files: \n\n" + messageForUser
@@ -4527,7 +4532,7 @@ def searchFilesInDirectories(dir): #this function is called when loading a direc
                 else:
                     mp3FilesCausingException += str(song.filePath) + "\n" + "Reason: " + str(song.Exception) + "\n\n"
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
 
     if mp3FilesCausingException != "":
         text = "Unable to load the following MP3 Files: \n\n" + mp3FilesCausingException
@@ -4585,7 +4590,7 @@ def scanForNewFilesInDirectories(dir_list: list): #this function is called when 
                         messageForUser += "Invalid New File: " + str(song.filePath) + "\n" + \
                                           "Reason: " + str(song.Exception) + "\n\n"
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
 
     windowCascade.root.title(Project_Title)
     return messageForUser, newFiles, added_playTime
@@ -5147,7 +5152,7 @@ def savingSongStats(): #this function is called when canceling the window to ens
             dictionary ["SongListenedTime"] = song.SongListenedTime
             dict_list.append(dictionary)
             dictionary = {}
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
     else:
         scheduler.suspend_mainloop()
         for song in play_list.validFiles:
@@ -5170,7 +5175,7 @@ def savingSongStats(): #this function is called when canceling the window to ens
                 #print("Found duplicate: " + str(ifDuplicate[0]["fileName"].encode("utf-8")))
             dict_list.append(dictionary)
             dictionary = {}
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     file = open(SongStatsFileName, "wb")
     pickle.dump(dict_list, file)
@@ -5315,7 +5320,7 @@ def displayElementsOnPlaylist(): #this function will display playlist elements i
                 setattr(element, "bitrate", "unknown")
             listbox.insert(play_list.validFiles.index(element), str(play_list.validFiles.index(element))+". "+element.fileName)
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
     if play_list.viewModel == "PLAYLIST":
@@ -5604,10 +5609,8 @@ def on_closing(): #this function is called only when the Main Window is canceled
     global APPLICATION_EXIT
     global play_list
     if scheduler.isMainLoopSuspended == True:
-        #when scheduler is cancelled we might be in a loop iterating through play_list files
-        #the new_playlist() also handles removing everything within the playlist
-        scheduler.userIntervention = True #by setting this to true we can break the current operation
-        #before clearing the playlist
+        scheduler.userIntervention = True
+
     APPLICATION_EXIT = True
     # Make a backup of everything:
     if(len(play_list.validFiles) == 0):
@@ -6865,7 +6868,7 @@ def checkResynchronizePlaylist():
             invalidFiles.append(element)
             text += "File: \n" + str(element.filePath) + "\n" + "Reason: " + str(element.Exception) + "\n\n"
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
 
     message = ""
     added_playTime = 0
@@ -6905,7 +6908,7 @@ def removeInvalidFiles(invalidFiles: list):
             del play_list.validFiles[play_list.validFiles.index(element)]
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     displayElementsOnPlaylist()
     windowCascade.root.title(Project_Title)
 
@@ -6923,7 +6926,7 @@ def showFlaggedMp3Files():
             messageForUser += "File: " + element.filePath + "\nReason: " + str(element.Exception) + "\n\n"
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     text = "No flagged mp3 files. All the files within the Playlist are playable."
     if messageForUser != "":
         text = "The following .mp3 files were flagged by the player. Check out the reasons below: \n\n" + messageForUser
@@ -6958,9 +6961,7 @@ def cancelOperation():
 def openPyPlayDirectory():
     #function that opens the application root directory
     FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
-    #windows explorer does not work well with forward slashes '/'
-    # so we will replace them in rootDirectory with backslashes '\'
-    subprocess.Popen([FILEBROWSER_PATH, '/open,', rootDirectory.replace("/", "\\")])
+    subprocess.Popen([FILEBROWSER_PATH, '/select,', os.path.normpath(sys.argv[0])])
 
 def calculatePlaylistNumberOfPlays():
     #function that calculates the total number of plays in the playlist
@@ -6975,7 +6976,7 @@ def calculatePlaylistNumberOfPlays():
         totalPlays+= song.NumberOfPlays
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
 
     windowCascade.root.title(Project_Title)
     return totalPlays
@@ -6994,7 +6995,7 @@ def calculatePlaylistFilesSize():
         totalSize+= song.fileSize
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     return totalSize
 
@@ -7012,7 +7013,7 @@ def calculatePlaylistCutLength():
         cutLength+= song.Length - (song.endPos-song.startPos)
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     return cutLength
 
@@ -7033,7 +7034,7 @@ def findFavoriteGenre():
             genres[song.Genre] += song.SongListenedTime
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     genres = sorted(genres.items(), key=lambda x: x[1], reverse=True)
     most_wanted = genres[0]
@@ -7054,7 +7055,7 @@ def findFavoriteTrack():
                 favoriteSong = song
             scheduler.single_loop()  # this will make the main window responsive
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         windowCascade.root.title(Project_Title)
         return favoriteSong
     else:
@@ -7079,7 +7080,7 @@ def findFavoriteArtist():
                 favoriteArtistNoOfPlays = calculateArtistNoOfPlays(favoriteArtist)
             scheduler.single_loop()  # this will make the main window responsive
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
         windowCascade.root.title(Project_Title)
         return [favoriteArtist, favoriteArtistListenedTime, favoriteArtistNoOfPlays]
     else:
@@ -7098,7 +7099,7 @@ def findFavoriteSongOfArtist(Artist: str):
                 mostListenedSong = song
             scheduler.single_loop()  # this will make the main window responsive
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         windowCascade.root.title(Project_Title)
         return song.Title
@@ -7116,7 +7117,7 @@ def calculateArtistListenedTime(Artist: str):
         listenedTime += song.SongListenedTime
         scheduler.single_loop()  # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     return listenedTime
 
@@ -7131,7 +7132,7 @@ def calculateArtistNoOfPlays(Artist: str):
         noOfPlays += song.NumberOfPlays
         scheduler.single_loop() # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
     windowCascade.root.title(Project_Title)
     return noOfPlays
 
@@ -7146,7 +7147,7 @@ def getArtistMusicalGenre(Artist: str):
         musicalGenre.append(song.Genre)
         scheduler.single_loop() # this will make the main window responsive
 
-    scheduler.enter_mainloop()
+    scheduler.resume_mainloop()
 
     windowCascade.root.title(Project_Title)
     musicalGenre = list(set(musicalGenre))
@@ -7203,7 +7204,7 @@ def exportPlaylistInfoToXls():
                 windowCascade.root.title("Exporting report for: " + artist)
                 scheduler.single_loop()
 
-            scheduler.enter_mainloop()
+            scheduler.resume_mainloop()
 
         worksheet.set_column('A:B', 40)
         worksheet.set_column('C:D', 20)
@@ -7236,7 +7237,7 @@ def exportPlaylistInfoToXls():
             windowCascade.root.title("Exporting report for: " + song.Artist + " - " + song.Title)
             scheduler.single_loop() # this will make the main window responsive
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         windowCascade.root.title(Project_Title)
         worksheet.set_column('A:A', 40)
@@ -7801,7 +7802,7 @@ def checkOpenFile(data):
             counter+=1
             scheduler.single_loop() # this will make the main window responsive
 
-        scheduler.enter_mainloop()
+        scheduler.resume_mainloop()
 
         #if reached here, it means song not in the list
         song = Song(data)
