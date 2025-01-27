@@ -5304,24 +5304,19 @@ def displayElementsOnPlaylist(): #this function will display playlist elements i
     global listbox
     mainWindowUpdate() #this will make the window more responsive
     listbox.delete(0, tk.END)
-    index=0
-    scheduler.suspend_mainloop()
-    for element in play_list.validFiles:
-        if scheduler.userIntervention == True:
-            # user changed something in the play_list that might affect the outcome of this loop
-            scheduler.userIntervention = False
-            break
-        scheduler.single_loop() # this will make the main window responsive
-        if element in play_list.validFiles:
-            #window was responsive user might have impacted the playlist, check if the element is still there
-            windowCascade.root.title("Populating list: " + element.fileName)
-            #if using old version of Song class - now it's good time to update the missin fields
-            if hasattr(element, "bitrate") == False:
-                setattr(element, "bitrate", "unknown")
-            listbox.insert(play_list.validFiles.index(element), str(play_list.validFiles.index(element))+". "+element.fileName)
 
+    lst = []
+
+    scheduler.suspend_mainloop()
+    for index in range(0, len(play_list.validFiles)-1):
+        lst.append(str(index) + ". " + play_list.validFiles[index].fileName)
+        if hasattr(play_list.validFiles[index], "bitrate") == False:
+            setattr(play_list.validFiles[index], "bitrate", "unknown")
+        scheduler.single_loop()
+
+    listbox.insert(tk.END, *lst)
     scheduler.resume_mainloop()
-    windowCascade.root.title(Project_Title)
+
     textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
     if play_list.viewModel == "PLAYLIST":
         changePlaylistView() # this will readjust the window.
