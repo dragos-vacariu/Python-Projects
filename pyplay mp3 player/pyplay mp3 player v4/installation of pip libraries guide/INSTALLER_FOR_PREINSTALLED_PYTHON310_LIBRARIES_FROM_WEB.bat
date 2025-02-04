@@ -11,4 +11,5 @@
 "../Python310/python.exe" -m pip install psutil
 "../Python310/python.exe" -m pip install shared_memory_dict
 "../Python310/python.exe" -m pip install tkinterdnd2
+"../Python310/python.exe" -m pip install cxfreeze
 pause

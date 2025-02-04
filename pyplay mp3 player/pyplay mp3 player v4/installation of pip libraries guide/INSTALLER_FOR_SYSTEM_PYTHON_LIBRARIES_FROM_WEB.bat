@@ -11,4 +11,5 @@
 "python.exe" -m pip install psutil
 "python.exe" -m pip install shared_memory_dict
 "python.exe" -m pip install tkinterdnd2
+"python.exe" -m pip install cxfreeze
 pause
