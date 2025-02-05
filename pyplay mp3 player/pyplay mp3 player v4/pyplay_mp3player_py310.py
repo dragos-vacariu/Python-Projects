@@ -4293,7 +4293,9 @@ def load_file(fileToPlay=None):
         i=0
         messageForUser = ""
         scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
+        print("Files to play: " + str(fileToPlay))
         for file in fileToPlay:
+            print("SCanning: " + str(file))
             if file.lower().endswith(".mp3"):
                 i+=1
                 if scheduler.userIntervention == True:
@@ -5307,15 +5309,15 @@ def displayElementsOnPlaylist(): #this function will display playlist elements i
 
     lst = []
 
-    scheduler.suspend_mainloop()
-    for index in range(0, len(play_list.validFiles)-1):
+    #scheduler.suspend_mainloop() # this is not needed the user will not see the changes we updated the window before removing the listbox
+    for index in range(0, len(play_list.validFiles)):
         lst.append(str(index) + ". " + play_list.validFiles[index].fileName)
         if hasattr(play_list.validFiles[index], "bitrate") == False:
             setattr(play_list.validFiles[index], "bitrate", "unknown")
-        scheduler.single_loop()
+        #scheduler.single_loop()
 
     listbox.insert(tk.END, *lst)
-    scheduler.resume_mainloop()
+    #scheduler.resume_mainloop()
 
     textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
     if play_list.viewModel == "PLAYLIST":
@@ -7565,10 +7567,11 @@ def playNextSearchItem():
 
 def SearchBoxClear():
     #this function will be called when hitting the clear button for the searchbox
-    searchValue.delete(0, tk.END)
-    searchIndex=play_list.currentSongIndex
-    displayElementsOnPlaylist()
-    showCurrentSongInList()
+    if searchValue.get() != "":
+        searchValue.delete(0, tk.END)
+        searchIndex=play_list.currentSongIndex
+        displayElementsOnPlaylist()
+        showCurrentSongInList()
 
 def visitDownloadPage():
     # this function will open up a webpage in the default web browser
@@ -7698,32 +7701,23 @@ def createMenuBar():
     windowCascade.root.config(menu=menubar.root)
 
 def DragAndDrop(event):
-    #this function will handle drag and drop. Designed for tkinterdnd2 but not supperted by pyinstaller or py2exe
+    #this function will handle drag and drop. Designed for tkinterdnd2 but not supported by pyinstaller or py2exe
     data = event.data
-    if "} {" in data: #if multiple files were dropped
-        #Convert string to tuple so that I can use the already existing functions
-        data = data[1:len(data) - 1]
-        data = data.split("} {")
-        data = tuple(data)
-        load_file(data)
-    if (data.endswith(".pypl") and os.path.isfile(data)):
-        loadPlaylistFile(data)
-    elif (data.endswith(".pypl") and os.path.isfile(data[1: len(data)-1])):
-        loadPlaylistFile(data[1: len(data)-1])
-    elif (data.endswith(".mp3") and os.path.isfile(data)):
-        lst = []
-        lst.append(data)
-        load_file(lst)
-    elif (data.endswith(".mp3") and os.path.isfile(data[1: len(data)-1])):
-        lst = []
-        lst.append(data[1:len(data)-1])
-        load_file(lst)
-    elif type(data) == str : #directories consist only of strings not tuples or lists
-        if os.path.isdir(data):
-            load_directory(data)
-        elif os.path.isdir(data[1: len(data)-1]):
-            load_directory(data[1: len(data)-1])
-
+    data = windowCascade.root.tk.splitlist(data) #converting whatever string we get from drag&drop into a list
+    
+    mp3_files = []
+    for element in data:
+        if os.path.isfile(element):
+            if element.endswith(".mp3"):
+                mp3_files.append(element)
+            elif element.endswith(".pypl"):
+                loadPlaylistFile(element)
+                displayElementsOnPlaylist()
+        elif os.path.isdir(element): 
+            load_directory(element)
+    if len(mp3_files) > 0:
+        load_file(mp3_files)
+    
 def formatTimeString(time):
     # this function will format seconds in time string
     seconds_to_minute = 60
@@ -7778,33 +7772,24 @@ def pressedHotkey(key):
         hotkeyMonitor.nextSongTrigger = True
 
 def checkOpenFile(data):
+    """This function will handle opening files using commandline arguments argv"""
     global play_list
-    "This function will handle opening files using commandline arguments argv"
     data = formatSlashesInFilePath(data)
     if len(data) > 0:
-        counter = 0
+        #this indeterminate loop shall not suspend the scheduler main loop, and should not be used
+        #for single looping the scheduler, as this function may get called before everything in the gui
+        #would exist. That also includes the scheduler. The scheduler gets created only for the main instance.
 
-        scheduler.suspend_mainloop()
         for element in play_list.validFiles:
-            if scheduler.userIntervention == True:
-                #user changed something in the play_list that might affect the outcome of this loop
-                scheduler.userIntervention = False
-                break
-            windowCascade.root.title("Checking if Playlist contains: " + str(data) + " - " + str(counter) + " of " + len(play_list.validFiles))
             if element.filePath == data:
-                windowCascade.root.title(Project_Title)
                 return play_list.validFiles.index(element)
-            counter+=1
-            scheduler.single_loop() # this will make the main window responsive
-
-        scheduler.resume_mainloop()
 
         #if reached here, it means song not in the list
         song = Song(data)
         play_list.validFiles.append(song)
         del song
-        windowCascade.root.title(Project_Title)
         return len(play_list.validFiles) - 1 #the song will be added at the end of the list
+
 
 shared_memory_buffer = SharedMemoryDict(name='config', size=1024)
 share_memory_separator = "$<?*@>#sep" #a separator for string elements stored in shared_memory_dict
@@ -7825,6 +7810,7 @@ def checkReadDataFromSharedMemory():
             elements = shared_memory_buffer["data"].split(share_memory_separator)
             for index in range(0, len(elements)-1):
                 #the main window will remain responsive in checkOpenFile
+                currentSize = len(play_list.validFiles) 
                 added_song_index = checkOpenFile(elements[index])
                 if index == 0:
                     #it's possible that user opened multiple selected files using pyplay as default app
@@ -7833,7 +7819,10 @@ def checkReadDataFromSharedMemory():
                     play_list.currentSongPosition = 0
                     listBox_Song_selected_index = play_list.currentSongIndex
                     play_music()
-            displayElementsOnPlaylist()
+                if currentSize < len(play_list.validFiles): 
+                    #if we added a song, we will insert it in the listbox
+                    listbox.insert(len(play_list.validFiles) - 1,
+                                   str(len(play_list.validFiles) - 1) + ". " + play_list.validFiles[len(play_list.validFiles) - 1].fileName)
             showCurrentSongInList()
             shared_memory_buffer["data"] = ""
     except Exception as exp:
@@ -7927,9 +7916,16 @@ def getAllowedInstancesOnApp():
 
     if scriptFileName.endswith(".exe") == True:
         # if script is .exe it means the system created the processes before running this function
-        # we need to check if we have 2 instances because we have 2 processes on the .exe one for the
-        # pynput keyboard listener, and another one for the tkinter mainloop
-        return 2
+        
+        # IMPORTANT: Based on which options are passed to PyInstaller,we need to check if we have 
+        # 2 processes for 1 instance or just 1 process per instance.
+        # IF Pyinstaller Executable is built as --onefile without any dependencies than we will have 
+        # 2 processes on the .exe, probably one for the pynput keyboard listener, 
+        # and another one for the tkinter mainloop
+        
+        #IF that's the case - make sure to change the statement below to 'return  2'
+        
+        return 1
     else:
         #application run via python
         return 0 #no separate process outside python
