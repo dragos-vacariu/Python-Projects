@@ -1,17 +1,6 @@
 @echo off REM comments will not be displayed in console/terminal window
-REM Getting python root directory stored into a variable PYTHONPATH
 
-FOR /f %%p in ('where python') do SET PYTHONPATH=%%p
-
-REM removing '/python.exe' - 11 characters from filepath
-
-SET PythonDir=%PYTHONPATH:~0,-11%
-
-ECHO ================
-ECHO %PythonDir%
-ECHO ================
-
-%PythonDir%"/Scripts/pyinstaller.exe" --add-data "%PythonDir%/Lib/site-packages/tkinterdnd2/tkdnd:." ^
+"pyinstaller" --add-data "./data_for_pyinstaller/tkinterdnd2/tkdnd:." ^
 --icon=./resources/headphone_red.ico -F --onedir --distpath="build_pyinstaller" --workpath="temp_pyinstaller" ^
 --noconsole pyplay_mp3player_py310.py
 
