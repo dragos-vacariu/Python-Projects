@@ -289,7 +289,10 @@ class Song:
             return False
 
     def __repr__(self):
-        return str(self.fileName) + "   " + str(formatTimeString(self.SongListenedTime)) +  "   " + str(self.NumberOfPlays)
+        if self in play_list.validFiles:
+            return str(play_list.validFiles.index(self)) + ". " + str(self.fileName)
+        else:
+            return str(self.fileName) + "   " + str(formatTimeString(self.SongListenedTime)) +  "   " + str(self.NumberOfPlays)
 
 #abstract class to encapsulate some common behavior for all our windowses
 class Window(ABC): #let this class be abstract
@@ -914,6 +917,7 @@ class Customize(Window):
 
         tk.Label(self.top, text="Font: ", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne, y=yPositionForElement)
 
+        #elements could be placed vertically using positionTkWidgetsVertically instead of recalculating yPositionForElement
         yPositionForElement += verticalSpaceBetweenElements
 
         self.fontBox = Combobox(self.top, textvariable=allButtonsFont, values=custom_font_list, state="readonly", font=allButtonsFont.get())
@@ -952,6 +956,7 @@ class Customize(Window):
                                             state="readonly", font=allButtonsFont.get())
         self.FontTransitionBox.place(x=columnOne, y=yPositionForElement)
         self.FontTransitionBox.bind("<<ComboboxSelected>>", self.changeFileNameTransition)
+
 
         yPositionForElement += verticalSpaceBetweenElements
 
@@ -1748,104 +1753,130 @@ class Mp3TagModifierTool(Window):
         columnOne=5
         columnTwo = 150
         columnThree = 290
-        FormatComboBoxesXPos = 500
+
+        startingYPos = 5
+        verticalSpaceBetweenLabels = 30
+        verticalSpaceBetweenButtons = 35
+        yPositionForElement = startingYPos
+
         self.Song = play_list.validFiles[fileIndex]
         self.top.title(self.Window_Title)
         self.top.protocol("WM_DELETE_WINDOW", self.destroy)
         self.top.attributes('-alpha', play_list.windowOpacity)
-        tk.Label(self.top, text="File Name:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne, y=5)
-        self.NameTag = tk.Entry(self.top, width=80)
+        tk.Label(self.top, text="File Name:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color).place(x=columnOne, y=yPositionForElement)
+
+        namingCase = tk.Label(self.top, text="Naming Case:", fg=fontColor.get(),
+                 font=allButtonsFont.get(), bg=color)
+        namingCaseYPos = yPositionForElement
+        textConversionValues=["NA","Capitalize", "SemiCapitalize", "Upper Case", "Lower Case"]
+
+        # elements could be placed vertically using positionTkWidgetsVertically instead of recalculating yPositionForElement
+        yPositionForElement += verticalSpaceBetweenLabels
+        self.NameTag = tk.Entry(self.top, width=70)
         self.NameTag.insert(0, self.Song.fileName)
-        self.NameTag.place(x=columnOne, y=25)
+        self.NameTag.place(x=columnOne, y=yPositionForElement)
         self.NameTag.bind("<Key>", self.setNAOnName)
 
-        tk.Label(self.top, text="Naming Case:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=500, y=5)
-        textConversionValues=["NA","Capitalize", "SemiCapitalize", "Upper Case", "Lower Case"]
+        formatBoxXPos = int(self.NameTag.place_info()["x"]) + self.NameTag.winfo_reqwidth() + 20
         self.nameTextFormat = StringVar()
         self.nameTextFormat.set("NA")
-        self.NameFormatBox = Combobox(self.top, textvariable=self.nameTextFormat, values=textConversionValues, width=10, state="readonly", font=allButtonsFont.get())
-        self.NameFormatBox.place(x=FormatComboBoxesXPos, y=25)
+        self.NameFormatBox = Combobox(self.top, textvariable=self.nameTextFormat,
+                values=textConversionValues, width=10, state="readonly", font=allButtonsFont.get())
+        self.NameFormatBox.place(x=formatBoxXPos, y=verticalSpaceBetweenLabels)
+        namingCase.place(x=formatBoxXPos, y=namingCaseYPos)
         self.NameFormatBox.bind("<<ComboboxSelected>>", self.changeNameFormat)
 
-        tk.Label(self.top, text="Genre:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne, y=45)
+        yPositionForElement+=verticalSpaceBetweenLabels
+
+        tk.Label(self.top, text="Genre:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color).place(x=columnOne, y=yPositionForElement)
+        tk.Label(self.top, text="Year:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color).place(x=columnTwo, y=yPositionForElement)
+        tk.Label(self.top, text="Album:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color).place(x=columnThree, y=yPositionForElement)
+        taggingCase = tk.Label(self.top, text="Tagging Case:", fg=fontColor.get(),
+                 font=allButtonsFont.get(), bg=color)
+        taggingCaseYPos = yPositionForElement
+
+        yPositionForElement += verticalSpaceBetweenLabels
         self.GenreTag = tk.Entry(self.top, width=15)
         self.GenreTag.insert(0, self.Song.Genre)
-        self.GenreTag.place(x=columnOne, y=65)
+        self.GenreTag.place(x=columnOne, y=yPositionForElement)
         self.GenreTag.bind("<Key>", self.setNAOnTags)
 
-        tk.Label(self.top, text="Tagging Case:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=500, y=65)
-        self.tagTextFormat = StringVar()
-        self.tagTextFormat.set("NA")
-        self.TagFormatBox = Combobox(self.top, textvariable=self.tagTextFormat, values=textConversionValues, width=10, state="readonly", font=allButtonsFont.get())
-        self.TagFormatBox.place(x=FormatComboBoxesXPos, y=85)
-        self.TagFormatBox.bind("<<ComboboxSelected>>", self.changeTagFormat)
-
-        tk.Label(self.top, text="Year:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnTwo, y=45)
         self.YearTag = tk.Entry(self.top, width=15)
         self.YearTag.insert(0, self.Song.Year)
-        self.YearTag.place(x=columnTwo, y=65)
+        self.YearTag.place(x=columnTwo, y=yPositionForElement)
         self.YearTag.bind("<Key>", self.setNAOnTags)
 
-        tk.Label(self.top, text="Album:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnThree, y=45)
         self.AlbumTag = tk.Entry(self.top, width=30)
         self.AlbumTag.insert(0, self.Song.Album)
-        self.AlbumTag.place(x=columnThree, y=65)
+        self.AlbumTag.place(x=columnThree, y=yPositionForElement)
         self.AlbumTag.bind("<Key>", self.setNAOnTags)
 
-        tk.Label(self.top, text="Artist:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=columnOne, y=85)
+        self.tagTextFormat = StringVar()
+        self.tagTextFormat.set("NA")
+
+        self.TagFormatBox = Combobox(self.top, textvariable=self.tagTextFormat, values=textConversionValues, width=10, state="readonly", font=allButtonsFont.get())
+        self.TagFormatBox.place(x=formatBoxXPos, y=yPositionForElement)
+        taggingCase.place(x=formatBoxXPos, y=taggingCaseYPos)
+        self.TagFormatBox.bind("<<ComboboxSelected>>", self.changeTagFormat)
+
+        yPositionForElement += verticalSpaceBetweenLabels
+
+        tk.Label(self.top, text="Artist:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color).place(x=columnOne, y=yPositionForElement)
+        titleTagLabel = tk.Label(self.top, text="Title:", fg=fontColor.get(), font=allButtonsFont.get(),
+                 bg=color)
+        titleTagLabelYPos = yPositionForElement
+
+        yPositionForElement += verticalSpaceBetweenLabels
         self.ArtistTag = tk.Entry(self.top, width=35)
         self.ArtistTag.insert(0, self.Song.Artist)
-        self.ArtistTag.place(x=columnOne, y=105)
+        self.ArtistTag.place(x=columnOne, y=yPositionForElement)
         self.ArtistTag.bind("<Key>", self.setNAOnTags)
 
-        tk.Label(self.top, text="Title:", fg=fontColor.get(), font=allButtonsFont.get(), bg=color).place(x=250, y=85)
         self.TitleTag = tk.Entry(self.top, width=35)
         self.TitleTag.insert(0, self.Song.Title)
-        self.TitleTag.place(x=250, y=105)
+        titleTagXPos = int(self.ArtistTag.place_info()["x"]) + self.ArtistTag.winfo_reqwidth() + 20
+        self.TitleTag.place(x=titleTagXPos, y=yPositionForElement)
+        titleTagLabel.place(x=titleTagXPos, y=titleTagLabelYPos)
         self.TitleTag.bind("<Key>", self.setNAOnTags)
 
         RemoveCharsButton = tk.Button(self.top, text="Remove Special Characters", command=self.removeChars, fg=fontColor.get(), font=allButtonsFont.get(),
                                 bg=color)
-        RemoveCharsButton.place(x=columnOne, y=145)
-
         GrabAlbumYearButton = tk.Button(self.top, text="Search Album\Year Tags Online", command=self.grabAlbumAndYear, fg=fontColor.get(), font=allButtonsFont.get(),
                                 bg=color)
-        GrabAlbumYearButton.place(x=columnOne, y=235)
-
         SaveChangesButton = tk.Button(self.top, text="Save Changes", command=self.SaveChanges, fg=fontColor.get(), font=allButtonsFont.get(),
                                 bg=color)
-        SaveChangesButton.place(x=columnOne, y=295)
-
         ComposeFileNameButton = tk.Button(self.top, text="Set FileName from 'Artist - Title' Tags", command=self.composeFileName, fg=fontColor.get(), font=allButtonsFont.get(),
-                                        bg=color)
-        ComposeFileNameButton.place(x=columnOne, y=175)
+                                bg=color)
         ComposeArtistTitleButton = tk.Button(self.top, text="Set Artist/Title Tags from FileName", command=self.composeArtistTitle, fg=fontColor.get(), font=allButtonsFont.get(),
-                                        bg=color)
-        ComposeArtistTitleButton.place(x=columnOne, y=205)
-
+                                bg=color)
         self.MassRenameButton = tk.Button(self.top, text="Rename All Files to 'Artist - Title.mp3'", command=self.projection_renameAllFiles, fg=fontColor.get(), font=allButtonsFont.get(),
-                                      bg=color)
+                                bg=color)
         if play_list.useMassFileEditor:
             self.MassRenameButton.config(state = tk.NORMAL)
         else:
             self.MassRenameButton.config(state = tk.DISABLED)
 
         self.undoMassRenameButton = tk.Button(self.top, text="Restore Previous FileNames to All Files.", command=self.projection_restorePreviousNames, fg=fontColor.get(), font=allButtonsFont.get(),
-                                      bg=color)
+                                bg=color)
         if os.path.isfile(self.undoRenameBackupFile) and play_list.useMassFileEditor:
             self.undoMassRenameButton.config(state = tk.NORMAL)
         else:
             self.undoMassRenameButton.config(state = tk.DISABLED)
 
         self.MassArtistTitleComposeButton = tk.Button(self.top, text="Set Artist/Title Tags from FileName to All Files", command=self.projection_composeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
-                                      bg=color)
+                                bg=color)
         if play_list.useMassFileEditor:
             self.MassArtistTitleComposeButton.config(state = tk.NORMAL)
         else:
             self.MassArtistTitleComposeButton.config(state = tk.DISABLED)
 
         self.undoMassArtistTitleComposeButton = tk.Button(self.top, text="Restore Previous Artist/Title Tags to All Files", command=self.projection_undoComposeArtistTitleAll, fg=fontColor.get(), font=allButtonsFont.get(),
-                                      bg=color)
+                               bg=color)
         if play_list.useMassFileEditor and os.path.isfile(self.undoArtistTitleBackupFile):
             self.undoMassArtistTitleComposeButton.config(state = tk.NORMAL)
         else:
@@ -1865,20 +1896,37 @@ class Mp3TagModifierTool(Window):
         else:
             undoAlbumYearToAll.config(state = tk.DISABLED)
 
+        yPositionForElement += verticalSpaceBetweenLabels*1.5
         buttonColumnTwo = columnOne + ComposeFileNameButton.winfo_reqwidth() + 50 #50 will be the margin between the 2 columns
-        self.MassRenameButton.place(x=buttonColumnTwo, y=145)
-        self.undoMassRenameButton.place(x=buttonColumnTwo, y=175)
-        self.MassArtistTitleComposeButton.place(x=buttonColumnTwo, y=205)
-        self.undoMassArtistTitleComposeButton.place(x=buttonColumnTwo, y=235)
-        GrabAlbumYearToAll.place(x=buttonColumnTwo, y=265)
-        undoAlbumYearToAll.place(x=buttonColumnTwo, y=295)
+        self.MassRenameButton.place(x=buttonColumnTwo, y=yPositionForElement)
+        RemoveCharsButton.place(x=columnOne, y=yPositionForElement)
 
-        windowWidth = buttonColumnTwo + self.MassArtistTitleComposeButton.winfo_reqwidth() + 20 #  #20 will be the margin between button and end of window.
-        if FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50 > windowWidth: #make sure this element is also visible in the given window.
-            windowWidth = FormatComboBoxesXPos + self.NameFormatBox.winfo_reqwidth()+50
-        self.top.geometry(str(windowWidth)+"x360+" + str(windowCascade.root.winfo_x()+100) + "+" + str(windowCascade.root.winfo_y()+100))
+        yPositionForElement += verticalSpaceBetweenButtons
+        self.undoMassRenameButton.place(x=buttonColumnTwo, y=yPositionForElement)
+        ComposeFileNameButton.place(x=columnOne, y=yPositionForElement)
+
+        yPositionForElement += verticalSpaceBetweenButtons
+        self.MassArtistTitleComposeButton.place(x=buttonColumnTwo, y=yPositionForElement)
+        ComposeArtistTitleButton.place(x=columnOne, y=yPositionForElement)
+
+        yPositionForElement += verticalSpaceBetweenButtons
+        self.undoMassArtistTitleComposeButton.place(x=buttonColumnTwo, y=yPositionForElement)
+        GrabAlbumYearButton.place(x=columnOne, y=yPositionForElement)
+
+        yPositionForElement += verticalSpaceBetweenButtons
+        GrabAlbumYearToAll.place(x=buttonColumnTwo, y=yPositionForElement)
+
+        yPositionForElement += verticalSpaceBetweenButtons
+        undoAlbumYearToAll.place(x=buttonColumnTwo, y=yPositionForElement)
+        SaveChangesButton.place(x=columnOne, y=yPositionForElement)
+
         self.top.bind("<Tab>", self.focus_out)
         self.top.bind("<Escape>", self.destroyEsc)
+
+        calculateResizeWindow(self.top, [self.MassArtistTitleComposeButton, self.TitleTag,
+                                         self.TagFormatBox, SaveChangesButton], 20)
+
+
 
     def projecting_undoEffectsForAlbumYearAllFiles(self):
         try:
@@ -3277,7 +3325,7 @@ class GrabLyricsTool(Window):
             self.LabelSelectedFile.place(x=30, y=115)
 
             self.frame = tk.Frame(self.top, width=500, height=30, bg=color, borderwidth=1)
-            positionTkWidgetsVertically(10, self.LabelSelectedFile, self.frame, 10)
+            positionTkWidgetsVertically(10, self.LabelSelectedFile, self.frame, 30)
 
             self.scrlbar = ttk.Scrollbar(self.frame, orient="vertical")
             self.listboxLyrics = tk.Listbox(self.frame, fg=fontColor.get(), font=allButtonsFont.get(), width=65, bg=color, height=20, relief=tk.GROOVE, \
@@ -3286,19 +3334,25 @@ class GrabLyricsTool(Window):
             self.listboxLyrics.bind('<ButtonPress-3>', self.rightClickOnLyrics)
             self.scrlbar.config(command=self.listboxLyrics.yview)
             self.scrlbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            #Preparing parties for resizing window to fit content and element vertical placement
+            self.frame["width"] = self.listboxLyrics.winfo_reqwidth() + self.scrlbar.winfo_reqwidth()
+            self.frame["height"] = self.listboxLyrics.winfo_reqheight()
+
             self.SaveLyrics = tk.Button(self.top, text="Save Lyrics",command=self.saveLyrics, fg=fontColor.get(), font=allButtonsFont.get(),
                                               bg=color, state=tk.DISABLED)
-            self.SaveLyrics.place(x=10,y=500)
+
+            positionTkWidgetsVertically(20, self.frame, self.SaveLyrics, 30)
 
             self.RemoveLyrics = tk.Button(self.top, text="Remove Lyrics", command=self.removeLyrics, fg=fontColor.get(),
                                         font=allButtonsFont.get(),
                                         bg=color, state=tk.DISABLED)
-            self.RemoveLyrics.place(x=120, y=500)
+            self.RemoveLyrics.place(x=130, y=self.SaveLyrics.place_info()["y"])
 
             self.DownloadLyricsAll = tk.Button(self.top, text="Download All Lyrics", command=self.downloadAllLyrics, fg=fontColor.get(),
                                           font=allButtonsFont.get(),
                                           bg=color)
-            self.DownloadLyricsAll.place(x=260, y=500)
+            self.DownloadLyricsAll.place(x=260, y=self.SaveLyrics.place_info()["y"])
             self.top.bind("<Tab>", self.focus_out)
             self.top.bind("<Escape>", self.destroyEsc)
             if os.path.exists(self.LyricsDownloads):
@@ -3323,10 +3377,8 @@ class GrabLyricsTool(Window):
                     self.LyricsDisplay()
             else:
                 self.LyricsDisplay()
-            #Preparing parties for resizing window to fit content
-            self.frame["width"] = self.listboxLyrics.winfo_reqwidth() + self.scrlbar.winfo_reqwidth()
-            self.frame["height"] = self.listboxLyrics.winfo_reqheight() + self.scrlbar.winfo_reqheight()
-            calculateResizeWindow(self.top, [self.frame, self.LabelSelectedFile, self.welcomingLabel], 30)
+
+            calculateResizeWindow(self.top, [self.frame, self.LabelSelectedFile, self.welcomingLabel, self.SaveLyrics], 30)
         else:
             WindowDialog("Playlist is empty.", Button1_Functionality=ButtonFunctionality("OK", None),
                          windowTitle="Grab Lyrics Tool")
@@ -3724,7 +3776,7 @@ class GrabLyricsTool(Window):
         else:
             self.Lyrics.set("Lyrics for '" + play_list.validFiles[self.songIndex].Artist + " - " \
                             + play_list.validFiles[self.songIndex].Title + "' -> were NOT found!\n" +
-                            "Make sure you have Artist and Title Tags completed properly.")
+                            "Make sure you have 'Artist' and 'Title' Tags filled properly.")
 
     def copy_to_clipboard(self, event, value):
         self.top.clipboard_clear()
@@ -4293,9 +4345,7 @@ def load_file(fileToPlay=None):
         i=0
         messageForUser = ""
         scheduler.suspend_mainloop()  # we will keep window refreshed in the loop
-        print("Files to play: " + str(fileToPlay))
         for file in fileToPlay:
-            print("SCanning: " + str(file))
             if file.lower().endswith(".mp3"):
                 i+=1
                 if scheduler.userIntervention == True:
@@ -5258,6 +5308,7 @@ def new_playlist(): #this function is called when clicking clearing the playlist
             play_list.skin_theme.changingSkin()
         listBox_Song_selected_index=None
         clearLabels()
+        textTotalPlayTime.set("Total Length: " + formatTimeString(int(play_list.playTime)))
         # displayElementsOnPlaylist()
         listbox.delete(0, tk.END)
 
@@ -7497,12 +7548,26 @@ def showSearchResults(event):
         #or key pressed is backspace or delete
         global listBox_Song_selected_index
         if len(searchValue.get()) > 0:
-            listbox.delete(0, tk.END)
             value = searchValue.get().lower()
-            result = [item for item in play_list.validFiles if value in item.fileName.lower()]
+            #result = [item for item in play_list.validFiles if value in item.fileName.lower()]
+            #result = [str(play_list.validFiles.index(item)) + ". " + item.fileName for item in play_list.validFiles if value in item.fileName.lower()]
+            result = []
+            for element in play_list.validFiles:
+                mainWindowUpdate() #this will make the window and the search form responsive
+                if searchValue.get().lower() != value:
+                    #abort the search if user is still typing
+                    return
+                if value in element.fileName.lower():
+                    result.append(str(play_list.validFiles.index(element)) + ". " + element.fileName)
+
             if len(result) > 0:
-                for item in result:
-                    listbox.insert(tk.END, str(play_list.validFiles.index(item)) + ". " + item.fileName)
+                listbox.delete(0, tk.END)
+                listbox.insert(tk.END, *result) #full list insert
+                #Inserting of elements 1 by 1 within the FOR loop is considerably slower than full list insert
+                #for item in result:
+                #    listbox.insert(tk.END, str(play_list.validFiles.index(item)) + ". " + item.fileName)
+            else:
+                listbox.delete(0, tk.END)
         else:
             displayElementsOnPlaylist()
             showCurrentSongInList()
@@ -7872,6 +7937,11 @@ def readFileArgvFromClosingInstance(): #NOT USED - SHARED MEMORY FUNCTIONS ARE U
 
 def positionTkWidgetsVertically(xPos:int, upperElementReference, elementToBePlaced, margin=0):
     #function to place/position tk widget items vertically
+
+    #NOTE: the upperElementReference is a frame
+    #they need to be resized based on the children they hold before
+    #being passed to this function.
+
     if hasattr(upperElementReference, "place_info") == True and \
         hasattr(upperElementReference, "winfo_reqheight") == True and \
         hasattr(elementToBePlaced, "place") == True:
@@ -7917,13 +7987,11 @@ def getAllowedInstancesOnApp():
     if scriptFileName.endswith(".exe") == True:
         # if script is .exe it means the system created the processes before running this function
         
-        # IMPORTANT: Based on which options are passed to PyInstaller,we need to check if we have 
-        # 2 processes for 1 instance or just 1 process per instance.
-        # IF Pyinstaller Executable is built as --onefile without any dependencies than we will have 
-        # 2 processes on the .exe, probably one for the pynput keyboard listener, 
+        # IMPORTANT: For PyInstaller executables we need to check if we have 2 instances because there will 
+        # be 2 processes on the .exe one for the pynput keyboard listener, 
         # and another one for the tkinter mainloop
         
-        #IF that's the case - make sure to change the statement below to 'return  2'
+        #make sure to change the statement below to 'return  2'
         
         return 1
     else:
