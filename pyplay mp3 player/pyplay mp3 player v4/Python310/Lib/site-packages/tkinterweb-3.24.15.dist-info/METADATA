@@ -1,0 +1,48 @@
+Metadata-Version: 2.1
+Name: tkinterweb
+Version: 3.24.15
+Summary: HTML/CSS viewer for Tkinter
+Home-page: https://github.com/Andereoo/TkinterWeb
+License: MIT
+Keywords: tkinter,Tkinter,tkhtml,Tkhtml,Tk,HTML,CSS,webbrowser
+Classifier: Intended Audience :: Developers
+Classifier: License :: Freeware
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development
+Description-Content-Type: text/markdown
+Requires-Dist: pillow
+
+# TkinterWeb 
+**A fast and lightweight cross-platform webbrowser for Tkinter.**
+
+&nbsp;
+&nbsp;
+## Overview
+**TkinterWeb offers bindings for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, which enables loading HTML and CSS code into Tkinter applications.**
+
+All major operating systems running Python 3+ are supported. 
+
+&nbsp;
+&nbsp;
+## Usage
+
+**TkinterWeb provides a webbrowser frame, a label widget capable of displaying styled HTML, and an HTML-based geometry manager.**
+
+**TkinterWeb can be used in any Tkinter application. Here is an example:**
+```
+import tkinter as tk #import Tkinter
+from tkinterweb import HtmlFrame #import the HTML browser
+
+root = tk.Tk() #create the tkinter window
+frame = HtmlFrame(root) #create HTML browser
+
+frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") #load a website
+frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
+root.mainloop()
+```
+
+**Refer to the [GitHub home page](https://github.com/Andereoo/TkinterWeb)  for more information.**
