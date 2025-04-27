@@ -32,7 +32,8 @@ this script.
 clear.mp3 is a file used to clear the playback when making some changes for the file currently loaded.
 
 
-Presentation video: https://dragos-vacariu.github.io/Python-Projects/pyplay%20mp3%20player/PyPlay%20Mp3%20Player.html
+Presentation video: 
+https://dragos-vacariu.github.io/catalogue/Python-Projects/PyPlay%20Mp3%20Player.html
 
 Portable Downloads:
 https://github.com/dragos-vacariu/Portable-Downloads/tree/main/PyPlay%20MP3%20Player
