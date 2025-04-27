@@ -1,0 +1,23 @@
+*** Installation started 2019/02/24 13:38 ***
+Source: C:\Users\Black\Desktop\tk-1.0.win32.exe
+999 Root Key: HKEY_CURRENT_USER
+020 Reg DB Key: [Software\Microsoft\Windows\CurrentVersion\Uninstall]tk-py3.4
+040 Reg DB Value: [Software\Microsoft\Windows\CurrentVersion\Uninstall\tk-py3.4]DisplayName=Python 3.4 tk-1.0
+040 Reg DB Value: [Software\Microsoft\Windows\CurrentVersion\Uninstall\tk-py3.4]UninstallString="C:\Python34\Removetk.exe" -u "C:\Python34\tk-wininst.log"
+200 File Copy: C:\Python34\Lib\site-packages\tk-1.0-py2.7.egg-info
+100 Made Dir: C:\Python34\Lib\site-packages\tk
+200 File Copy: C:\Python34\Lib\site-packages\tk\gpl-3.0.txt
+200 File Copy: C:\Python34\Lib\site-packages\tk\graphics.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\graphTools.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\README.txt
+200 File Copy: C:\Python34\Lib\site-packages\tk\setup.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\tkBase.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\tkExtra.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\ttkExtra.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\__init__.py
+100 Made Dir: C:\Python34\Lib\site-packages\tk\latex
+200 File Copy: C:\Python34\Lib\site-packages\tk\latex\latexConstants.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\latex\LatexText.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\latex\Symbols.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\latex\ttkLatexText.py
+200 File Copy: C:\Python34\Lib\site-packages\tk\latex\__init__.py
