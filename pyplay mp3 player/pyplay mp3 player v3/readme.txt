@@ -1,4 +1,4 @@
-If the script crashes on startup, problem should be caused by the backup files.
+This directory contains the Portable Version of Python34 and all the resources needed to run the script.
 
 LEGEND:
 
@@ -26,8 +26,6 @@ LEGEND:
 As long as you keep all your .backup files, you will always be able to undo any change the Script has done to your Mp3 Files.
 
 clear.mp3 is a file used to clear the playback when making some changes for the file currently loaded.
-
-The Python34 directory contains the portable version of Python with all the required libraries that are needed to run the script.
 
 The .PNG files from "installation of pip libraries guide" contains a guide upon how to install the libraries.
 

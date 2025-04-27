@@ -1,4 +1,4 @@
-If the script crashes on startup, problem should be caused by the backup files.
+This directory contains the Portable Version of Python310 and all the resources needed to run the script.
 
 LEGEND:
 
@@ -27,8 +27,6 @@ As long as you keep all your .backup files, you will always be able to undo any 
 
 The resources directory contains all the resources needed to run the script:
     clear.mp3 is a file used to clear the playback when making some changes for the file currently loaded.
-
-The Python310 directory contains the portable version of Python with all the required libraries that are needed to run the script.
 
 The .PNG files from "installation of pip libraries guide" contains a guide upon how to install the libraries.
 
